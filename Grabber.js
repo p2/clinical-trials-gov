@@ -7,14 +7,13 @@ function Grabber($scope, $http) {
 	$scope.waiting_for = 0;
 	$scope.must_stop = false;
 	
-	$scope.num_all = 0;
-	$scope.num_recr = 0;
+	$scope.num_expected = 0;
 	$scope.num_curr = 0;
 	$scope.num_elig = 0;
 	
 	// starting and stopping
 	$scope.start = function() {
-		grabAll();
+		grabAndExtractEligible();
 	}
 	
 	$scope.stop = function() {
@@ -53,33 +52,23 @@ function Grabber($scope, $http) {
 			var min_age = parseInt(elig.minimum_age);
 			var max_age = parseInt(elig.maximum_age);
 			var has_criteria = ('criteria' in elig && 'textblock' in elig.criteria && elig.criteria.textblock.length > 0 && 'No eligibility criteria' != elig.criteria.textblock);
+			var url = ('required_header' in res && 'url' in res.required_header) ? res.required_header.url : '?';
 			
 			// we need at least an age boundary or a description
 			if (!isNaN(min_age) || !isNaN(max_age) || has_criteria) {
 				$scope.num_elig++;
-				$scope.raw = elig.criteria.textblock;
+				$scope.raw = url + "\n" + 'Age ' + min_age + ' - ' + max_age + "\n\n" + elig.criteria.textblock;
 				//console.log(elig, elig.criteria.textblock.length);
 			}
 		}
 	}
 	
 	
-	// grab all
-	grabAll = function() {
-		grab('http://api.lillycoi.com/v1/trials.json?fields=id&limit=1', function(data) {
-			$scope.num_all = data.totalCount;
-			
-			grabRecr();
-		});
-	}
-	
-	// grab recruiting
+	// grab all recruiting trials
 	grabRecr = function() {
-		var url = 'http://api.lillycoi.com/v1/trials/search.json?fields=id&query=recr:open&limit=1';		// limit is not respected
+		var url = 'http://api.lillycoi.com/v1/trials/search.json?fields=id&query=recr:open';
 		grab(url, function(data) {
-			$scope.num_recr = data.totalCount;
-			
-			grabAndExtractEligible();
+			alert('Total number recruiting: ' + data.totalCount);
 		});
 	}
 	
@@ -90,17 +79,29 @@ function Grabber($scope, $http) {
 			return;
 		}
 		
+		$scope.num_expected = 0;
 		$scope.num_curr = 0;
 		$scope.num_elig = 0;
 		$scope.must_stop = false;
 		grabUntilCurrIter = 0;
 		
+		// condition filter
+		if (!$scope.condition) {
+			$scope.condition = 'diabetes';
+		}
+		
+		// GET!
 		//var url = 'http://api.lillycoi.com/v1/trials.json?fields=id,eligibility&limit=100';
-		var url = 'http://clinicaltrials.gov/search?displayxml=true&cond=diabetes&pg=1';
+		var url = 'http://clinicaltrials.gov/search?displayxml=true&cond=' + encodeURIComponent('"' + $scope.condition + '"') + '&pg=1';
 		grabUntil(url, 0,
 		
 		// process function
 		function(data) {
+			if ($scope.num_expected < 1) {
+				//$scope.num_expected = ...
+				$scope.num_expected = data.search_results._count;
+			}
+			
 			//var results = data.results;
 			var results = data.search_results.clinical_study;
 			if (results && results.length > 0) {
@@ -130,6 +131,11 @@ function Grabber($scope, $http) {
 			// process
 			if (process_func) {
 				process_func(data);
+			}
+			
+			// for CT.gov we must make sure we stop when no new data comes in
+			if (max < 1 && $scope.num_expected > 0) {
+				max = Math.ceil($scope.num_expected / 20);
 			}
 			
 			// next if we're not at max and if we have a next page URI

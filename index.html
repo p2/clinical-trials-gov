@@ -12,23 +12,26 @@
 </head>
 <body>
 	<h3>ClinicalTrials.gov</h3>
-	<div ng-controller="Grabber">
-		<div class="error" ng-cloak ng-show="error_msg != null" ng-hide="error_msg == null" ng-bind-html-unsafe="error_msg"></div>
+	<form ng-submit="start()" ng-controller="Grabber">
+		<p class="error" ng-cloak ng-show="error_msg != null" ng-hide="error_msg == null" ng-bind-html-unsafe="error_msg"></p>
 		
-		<div>All trials: {{ num_all || "Waiting..." }}</div>
-		<div>Recruiting: {{ num_recr || "Waiting..." }}</div>
-		<div>Eligibility: {{ num_elig || 0 }} of {{ num_curr || 0 }} ({{ num_elig / num_curr * 100 | number:2 }}%)</div>
+		<!-- query conditions -->
+		<p>Condition: <input type="text" ng-model="condition" value="{{ condition }}" /></p>
 		
+		<!-- stats -->
+		<div>Trials: {{ num_expected || "Waiting..." }}</div>
+		<div>Running: {{ num_elig || 0 }} of {{ num_curr || 0 }} ({{ num_elig / num_curr * 100 | number:2 }}%)</div>
+		
+		<!-- actions -->
 		<p>
-			<button ng-click="start()" ng-cloak ng-show="!running" ng-hide="running">Run</button>
-			<button ng-click="stop()" ng-cloak ng-show="running" ng-hide="!running">Abort</button>
+			<button type="submit" ng-cloak ng-show="!running" ng-hide="running">Run</button>
+			<button type="button" ng-click="stop()" ng-cloak ng-show="running" ng-hide="!running">Abort</button>
 		</p>
-		<p class="faded small" ng-cloak ng-show="waiting_for > 0" ng-hide="waiting_for < 1">
-			Working...
-		</p>
+		<p class="faded small" ng-cloak ng-show="waiting_for > 0" ng-hide="waiting_for < 1">Working...</p>
 		
+		<!-- debug output -->
 		<pre class="raw" ng-cloak ng-show="raw != null" ng-hide="raw == null">{{ raw }}</pre>
-	</div>
+	</form>
 	
 	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.2/angular.min.js"></script>
 	<script src="xml2json.js"></script><!-- http://code.google.com/p/x2js/ -->
