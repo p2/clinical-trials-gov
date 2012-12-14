@@ -52,12 +52,16 @@ function Grabber($scope, $http) {
 			var min_age = parseInt(elig.minimum_age);
 			var max_age = parseInt(elig.maximum_age);
 			var has_criteria = ('criteria' in elig && 'textblock' in elig.criteria && elig.criteria.textblock.length > 0 && 'No eligibility criteria' != elig.criteria.textblock);
-			var url = ('required_header' in res && 'url' in res.required_header) ? res.required_header.url : '?';
+			var url = ('required_header' in res && 'url' in res.required_header) ? res.required_header.url : null;
+			if (!url) {
+				url = ('id' in res && res.id) ? res.id : '?';
+			}
 			
 			// we need at least an age boundary or a description
 			if (!isNaN(min_age) || !isNaN(max_age) || has_criteria) {
 				$scope.num_elig++;
-				$scope.raw = url + "\n" + 'Age ' + min_age + ' - ' + max_age + "\n\n" + elig.criteria.textblock;
+				var debug_text = url + "\n" + 'Age ' + min_age + ' - ' + max_age + "\n\n" + elig.criteria.textblock;
+				$scope.raw = debug_text;
 				//console.log(elig, elig.criteria.textblock.length);
 			}
 		}
@@ -91,26 +95,30 @@ function Grabber($scope, $http) {
 		}
 		
 		// GET!
-		//var url = 'http://api.lillycoi.com/v1/trials.json?fields=id,eligibility&limit=100';
-		var url = 'http://clinicaltrials.gov/search?displayxml=true&cond=' + encodeURIComponent('"' + $scope.condition + '"') + '&pg=1';
+		var url = 'http://api.lillycoi.com/v1/trials/search.json?fields=id,eligibility&limit=100&query=recr:open,cond:' + encodeURIComponent('"' + $scope.condition + '"');
+		//var url = 'http://clinicaltrials.gov/search?displayxml=true&cond=' + encodeURIComponent('"' + $scope.condition + '"') + '&pg=1';
 		grabUntil(url, 0,
 		
 		// process function
 		function(data) {
+			var results = 'results' in data ? data.results : null;
+			//var results = data.search_results.clinical_study;
+			console.log(data);
 			if ($scope.num_expected < 1) {
-				//$scope.num_expected = ...
-				$scope.num_expected = data.search_results._count;
+				$scope.num_expected = 'totalCount' in data ? data.totalCount : 0;
+				//$scope.num_expected = data.search_results._count;
 			}
 			
-			//var results = data.results;
-			var results = data.search_results.clinical_study;
 			if (results && results.length > 0) {
 				for (var i = 0; i < results.length; i++) {
 					$scope.num_curr++;
 					
-					//processStudyLilly(results[i], $scope);
-					processStudyCTgov(results[i], $scope);
+					processStudyLilly(results[i], $scope);
+					//processStudyCTgov(results[i], $scope);
 				}
+			}
+			else {
+				$scope.error_msg = 'No results for "' + $scope.condition + '"';
 			}
 		},
 		null);
