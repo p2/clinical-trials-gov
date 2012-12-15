@@ -5,21 +5,31 @@
 
 
 from ClinicalTrials.lillycoi import LillyCOI
+from ClinicalTrials.sqlite import SQLite
+from ClinicalTrials.study import Study
 
 
 # main
 if __name__ == "__main__":
-    lilly = LillyCOI()
-    
-    # get the condition
-    condition = raw_input("Condition: ")
-    
-    # search
-    print "Fetching..."
-    results = lilly.search_for(condition if condition else 'spondylitis')
-    print 'Num results: %d (%d)' % (lilly.totalCount, len(results))
-    
-    # debug
-    for study in results:
-        print '->  %s: %d-%d' % (study.nct, study.eligibility.minAge, study.eligibility.maxAge)
+	
+	# get the condition
+	condition = raw_input("Condition: ")
+	
+	# search for studies
+	print "Fetching..."
+	lilly = LillyCOI()
+	results = lilly.search_for(condition if condition else 'spondylitis')
+	print 'Num results: %d (%d)' % (lilly.totalCount, len(results))
+	
+	# process all studies
+	Study.setup_tables()
+	
+	for study in results:
+		study.load()
+		study.process_eligibility()
+		#print "%s\n-----\n%s\n^^^^^" % (study.nct, study.eligibility_formatted)
+		study.store()
+	
+	# commit to storage
+	SQLite.commit()
 

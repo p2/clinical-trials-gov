@@ -37,7 +37,7 @@ class LillyCOI (object):
 	def search_for(self, condition, recruiting=True):
 		cond = condition.replace(' ', '-')
 		recr = 'open' if recruiting is True else 'closed'
-		params = 'fields=id,eligibility&limit=20&query=recr:%s,cond:%s' % (recr, cond)		# bug in Lilly's API, first page only returns at max 20 results, so don't go higher
+		params = 'fields=id,eligibility&limit=50&query=recr:%s,cond:%s' % (recr, cond)
 		
 		# loop page after page
 		results = self.get('trials/search.json', params)
@@ -80,12 +80,10 @@ class LillyCOI (object):
 		self.resultCount = data.get('resultCount')
 		self.totalCount = data.get('totalCount')
 		
-		#print '==>  got: %d' % len(data.get('results', []))
-		
 		# instantiate study objects
 		studies = []
 		for s in data.get('results', []):
-			study = Study(0)
+			study = Study()
 			study.from_dict(s)
 			studies.append(study)
 		
