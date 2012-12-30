@@ -8,6 +8,11 @@ from ClinicalTrials.lillycoi import LillyCOI
 from ClinicalTrials.sqlite import SQLite
 from ClinicalTrials.study import Study
 
+CTAKES = {
+	'INPUT': '../input',
+	'OUTPUT': '../output'
+}
+
 
 # main
 if __name__ == "__main__":
@@ -19,17 +24,27 @@ if __name__ == "__main__":
 	print "Fetching..."
 	lilly = LillyCOI()
 	results = lilly.search_for(condition if condition else 'spondylitis')
-	print 'Num results: %d (%d)' % (lilly.totalCount, len(results))
+	
+	# setup studies
+	Study.setup_tables()
+	Study.setup_ctakes(CTAKES)
 	
 	# process all studies
-	Study.setup_tables()
-	
+	run_ctakes = False
+	print 'Processing %d results (%d)...' % (len(results), lilly.totalCount)
 	for study in results:
-		study.load()
+		study.sync_with_db()
 		study.process_eligibility()
+		study.codify_eligibility()
 		#print "%s\n-----\n%s\n^^^^^" % (study.nct, study.eligibility_formatted)
-		study.store()
+		if study.waiting_for_ctakes():
+			run_ctakes = True
 	
 	# commit to storage
 	SQLite.commit()
+	
+	# run cTakes
+	if run_ctakes:
+		print 'Running cTakes...'
+		
 

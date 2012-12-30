@@ -7,6 +7,8 @@
 
 import datetime
 import dateutil.parser
+import os.path
+import codecs
 
 from sqlite import SQLite
 from nlp import split_inclusion_exclusion
@@ -101,8 +103,12 @@ class Study (object):
 		)
 	
 	
-	# codify our plain text eligibility criteria
+	# extract single criteria from plain text eligibility criteria
 	def process_eligibility(self):
+		""" Does nothing if the "criteria" property already holds at least one
+		StudyEligibility object, otherwise parses "criteria_text" into such
+		objects.
+		"""
 		if self.criteria and len(self.criteria) > 0:
 			return
 		
@@ -124,11 +130,43 @@ class Study (object):
 			crit.append(obj)
 		
 		self.criteria = crit
+		self.store_criteria()
 	
 	
+	# assigns codes to all eligibility criteria
+	def codify_eligibility(self):
+		""" Retrieves the codes from SQLite or, if there are none, passes the
+		text criteria to cTakes.
+		"""
+		if self.criteria and len(self.criteria) > 0:
+			for criterium in self.criteria:
+				criterium.codify()
+	
+	
+	def waiting_for_ctakes(self):
+		""" Returns True if any of our criteria needs to run through cTakes.
+		"""
+		if self.criteria and len(self.criteria) > 0:
+			for criterium in self.criteria:
+				if criterium.waiting_for_ctakes:
+					return True
+		
+		return False
+	
+	
+	# loads and stores
+	def sync_with_db(self):
+		""" Loads from SQLite and stores again.
+		Don't forget to commit manually at one point!
+		"""
+		self.load()
+		self.store()
+	
+			
 	# store properties to SQLite
 	def store(self):
-		""" Stores the receiver's data to SQLite.
+		""" Stores the receiver's properties, including all StudyEligibility
+		objects, to SQLite.
 		You need to MANUALLY COMMIT when you think it's appropriate!
 		"""
 		if self.nct is None:
@@ -150,21 +188,27 @@ class Study (object):
 			self.criteria_text
 		)
 		
-		SQLite.execute(sql, params)
-		
-		# store our criteria
-		for crit in self.criteria:
-			crit.store()
+		return SQLite.execute(sql, params)
+	
+	
+	def store_criteria(self):
+		""" Stores our criteria to SQLite.
+		"""
+		if self.criteria and len(self.criteria) > 0:
+			for criterium in self.criteria:
+				criterium.store()
 	
 	
 	def load(self):
-		""" Load from SQLite
+		""" Load from SQLite.
+		Will fill all stored properties and load all StudyEligibility belonging
+		to this study into the "criteria" property.
 		"""
 		if self.nct is None:
 			raise Exception('NCT is not set')
 		
 		# get from SQLite
-		sql = '''SELECT * FROM studies WHERE nct = ?'''
+		sql = 'SELECT * FROM studies WHERE nct = ?'
 		data = SQLite.executeOne(sql, (self.nct,))
 		
 		# populate ivars
@@ -178,7 +222,7 @@ class Study (object):
 			self.healthy_volunteers = data[7]
 			self.criteria_text = data[8]
 			
-			# populate parsed eligibility critiria
+			# populate parsed eligibility criteria
 			self.criteria = StudyEligibility.load_for_study(self)
 	
 	
@@ -197,6 +241,12 @@ class Study (object):
 		)''')
 		
 		StudyEligibility.setup_tables()
+	
+	@classmethod
+	def setup_ctakes(cls, setting):
+		StudyEligibility.CTAKES = setting
+
+
 
 
 # Study eligibility criteria management
@@ -207,11 +257,14 @@ class StudyEligibility (object):
 	
 	def __init__(self, study):
 		self.id = None
+		self.hydrated = False
 		self.study = study
 		self.updated = None
 		self.is_inclusion = False
 		self.text = None
 		self.codes = []
+		self.has_been_parsed = False
+		self.waiting_for_ctakes = False
 	
 	
 	@classmethod
@@ -228,41 +281,90 @@ class StudyEligibility (object):
 		for rslt in SQLite.execute(sql, (study.nct,)):
 			elig = StudyEligibility(study)
 			elig.from_db(rslt)
+			elig.hydrated = True
 			found.append(elig)
 		
 		return found
 	
 	
 	def from_db(self, data):
-		""" Fill from an SQLite-retrieved list
+		""" Fill from an SQLite-retrieved list.
 		"""
 		self.id = data[0]
 		self.updated = dateutil.parser.parse(data[2])
 		self.is_inclusion = True if 1 == data[3] else False
 		self.text = data[4]
-		self.codes = data[5]
+		self.codes = data[5].split('|') if data[5] else None
+		self.has_been_parsed = (1 == data[6])
+	
+	
+	def codify(self):
+		""" Three stages:
+		      1. Reads the codes from SQLite, if they are there
+		      2. Reads and stores the codes from the cTakes output dir, if they
+		         are there
+		      3. Writes the criteria to the cTakes input directory
+		"""
+		if self.codes and len(self.codes) > 0:
+			return
+		
+		# 1. no codes and not hydrated, fetch from SQLite
+		if not self.hydrated:
+			raise Exception('not implemented')
+		
+		# 2. not there, look in cTakes OUTPUT directory
+		ct = StudyEligibility.CTAKES
+		if ct['OUTPUT'] and os.path.exists(ct['OUTPUT']):
+			myfile = os.path.join(ct['OUTPUT'], '%d.txt' % self.id)
+			if os.path.exists(myfile):
+				lines = [line.strip() for line in codecs.open(myfile, 'r', 'utf-8')]
+				self.codes = lines.split('|') if len(lines) > 0 else None
+				close(myfile)
+				# TODO: remove the files in input and output!
+				return
+		
+		# 3. not yet processed, put it there and wait for cTakes to process it
+		if ct['INPUT'] and os.path.exists(ct['INPUT']):
+			myfile = os.path.join(ct['INPUT'], '%d.txt' % self.id)
+			if not os.path.exists(myfile):
+				handle = codecs.open(myfile, 'w', 'utf-8')
+				handle.write(self.text)
+				handle.close()
+			self.waiting_for_ctakes = True
 	
 	
 	def store(self):
-		""" Stores the receiver's data to SQLite
+		""" Stores the receiver's data to SQLite.
 		"""
 		if self.study is None or self.study.nct is None:
 			raise Exception('Study NCT is not set')
 		
-		# replace into
-		sql = '''REPLACE INTO criteria
-			(criterium_id, study, updated, is_inclusion, text, codes)
-			VALUES
-			(?, ?, datetime(), ?, ?, ?)'''
+		# insert if we don't have an id
+		if self.id is None:
+			sql = '''INSERT OR IGNORE INTO criteria
+				(criterium_id, study) VALUES (?, ?)'''
+			params = (
+				self.id,
+				self.study.nct
+			)
+			self.id = SQLite.executeInsert(sql, params)
+		
+		# update the remaining stuff
+		sql = '''UPDATE criteria SET
+			updated = datetime(), is_inclusion = ?, text = ?, codes = ?
+			WHERE criterium_id = ?'''
 		params = (
-			self.id,
-			self.study.nct,
 			1 if self.is_inclusion else 0,
 			self.text,
 			'|'.join(self.codes),
+			self.id
 		)
 		
-		SQLite.execute(sql, params)
+		if SQLite.execute(sql, params):
+			self.hydrated = True
+			return True
+		
+		return False
 	
 	
 	@classmethod
@@ -273,6 +375,7 @@ class StudyEligibility (object):
 			updated TIMESTAMP,
 			is_inclusion INTEGER,
 			text TEXT,
-			codes TEXT
+			codes TEXT,
+			has_been_parsed INTEGER DEFAULT 0
 		)''')
 
