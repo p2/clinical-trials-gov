@@ -31,15 +31,18 @@ def split_inclusion_exclusion(string):
 			continue
 		
 		# detect switching to inclusion criteria
-		if re.search('Inclusion Criteria', string, re.IGNORECASE) is not None:
+		if re.search('^inclusion criteria', string, re.IGNORECASE) is not None \
+			and re.search('exclusion', string, re.IGNORECASE) is None:
 			at_inc = True
 			at_exc = False
 		
 		# detect switching to exclusion criteria
-		elif re.search('Exclusion Criteria', string, re.IGNORECASE) is not None:
+		elif re.search('exclusion criteria', string, re.IGNORECASE) is not None \
+			and re.search('inclusion', string, re.IGNORECASE) is None:
 			at_inc = False
 			at_exc = True
 		
+		# assign accordingly
 		elif at_inc:
 			inc.append(string)
 		elif at_exc:

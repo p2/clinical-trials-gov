@@ -1,4 +1,16 @@
 .DS_Store
 *.pyc
+
+# ignore SQLite databases
 storage.db
+umls.db
+
+# ignore ctakes
+ctakes
+ctakes_input
+ctakes_output
+
+# ignore our UMLS username/password file
+umls.sh
+SnomedCT_Release_INT_*
 

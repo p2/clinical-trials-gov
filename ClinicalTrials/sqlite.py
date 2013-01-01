@@ -9,11 +9,34 @@
 import sqlite3
 
 
-class _SQLite (object):
+SQLITE_INSTANCES = {}
+
+
+class SQLite (object):
 	""" SQLite access
 	"""
 	
-	def __init__(self):
+	@classmethod
+	def get(cls, database=None):
+		""" Use this to get SQLite instances for a given database. Avoids
+		creating multiple instances for the same database.
+		"""
+		if database is None:
+			raise Exception('No database provided')
+		
+		global SQLITE_INSTANCES
+		if database not in SQLITE_INSTANCES:
+			sql = SQLite(database)
+			SQLITE_INSTANCES[database] = sql
+		
+		return SQLITE_INSTANCES[database]
+	
+	
+	def __init__(self, database=None):
+		if database is None:
+			raise Exception('No database provided')
+		
+		self.database = database
 		self.handle = None
 		self.cursor = None
 
@@ -23,7 +46,7 @@ class _SQLite (object):
 		the last row id, 0 on failure.
 		"""
 		if not sql or len(sql) < 1:
-			raise Exception('no SQL to execute')
+			raise Exception('No SQL to execute')
 		if not self.cursor:
 			self.connect()
 		
@@ -68,18 +91,20 @@ class _SQLite (object):
 	def connect(self):
 		if self.cursor is not None:
 			return
-		self.handle = sqlite3.connect('storage.db')
+		
+		self.handle = sqlite3.connect(self.database)
 		self.cursor = self.handle.cursor()
 
 
 	def close(self):
 		if self.cursor is None:
 			return
+		
 		self.handle.close()
 		self.cursor = None
 		self.handle = None
 
 
 # singleton init whack-a-hack
-SQLite = _SQLite()
-del _SQLite
+#SQLite = _SQLite()
+#del _SQLite
