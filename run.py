@@ -69,10 +69,29 @@ if __name__ == "__main__":
 		table { border-collapse: collapse; }
 		table tbody tr td { vertical-align: top; padding: 0.15em 0.5em; }
 		</style>
+		<script>
+		function toggle(td) {
+			var div = td.getElementsByTagName('div')[0];
+			if ('none' == div.style.display) {
+				div.style.display = 'block';
+			}
+			else {
+				div.style.display = 'none';
+			}
+		}
+		</script>
 	</head>
 	<body>
 	<h1>Report for all recruiting "%s" studies</h1>
 	<table>
+		<colgroup>
+			<col />
+			<col />
+			<col width="40%%" />
+			<col />
+			<col />
+			<col />
+		</colgroup>
 		<thead>
 			<th>NCT</th>
 			<th>desc</th>

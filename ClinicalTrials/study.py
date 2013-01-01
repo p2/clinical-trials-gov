@@ -140,7 +140,7 @@ class Study (object):
 		<td rowspan="%d">
 			<a href="http://clinicaltrials.gov/ct2/show/%s" target="_blank">%s</a>
 		</td>
-		<td rowspan="%d">
+		<td rowspan="%d" onclick="toggle(this)">
 			<div style="display:none;">%s</div>
 		</td>
 		%s</tr>""" % (len(rows), self.nct, self.nct, len(rows), self.eligibility_formatted, rows[0])
