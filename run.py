@@ -6,6 +6,7 @@
 
 import sys
 from subprocess import call
+import codecs
 
 from ClinicalTrials.lillycoi import LillyCOI
 from ClinicalTrials.sqlite import SQLite
@@ -27,13 +28,15 @@ if __name__ == "__main__":
 	UMLS.setup_umls(UMLS_FILE)
 	UMLS.setup_tables()
 	
-	# get the condition
+	# ask for a condition
 	condition = raw_input("Condition: ")
+	if condition is None or len(condition) < 1:
+		condition = 'spondylitis'
 	
 	# search for studies
-	print "Fetching..."
+	print "Fetching %s studies..." % condition
 	lilly = LillyCOI()
-	results = lilly.search_for(condition if condition else 'spondylitis')
+	results = lilly.search_for(condition)
 	
 	# process all studies
 	run_ctakes = False
@@ -42,11 +45,9 @@ if __name__ == "__main__":
 		study.sync_with_db()
 		study.process_eligibility_from_text()
 		study.codify_eligibility()
-		#print "%s\n-----\n%s\n^^^^^" % (study.nct, study.eligibility_formatted)
 		if study.waiting_for_ctakes():
 			run_ctakes = True
 	
-	# commit to storage
 	Study.sqlite_commit_if_needed()
 	
 	# run cTakes
@@ -57,4 +58,41 @@ if __name__ == "__main__":
 		# make sure we got all criteria
 		for study in results:
 			study.codify_eligibility()
+	
+	# generate HTML report
+	print 'Generating report...'
+	html = """<html>
+	<head>
+		<title>Report: %s</title>
+		<style>
+		body { font-size: small; font-family: 'Helvetica-Neue', Helvetica, sans-serif; }
+		table { border-collapse: collapse; }
+		table tbody tr td { vertical-align: top; padding: 0.15em 0.5em; }
+		</style>
+	</head>
+	<body>
+	<h1>Report for all recruiting "%s" studies</h1>
+	<table>
+		<thead>
+			<th>NCT</th>
+			<th>desc</th>
+			<th>text</th>
+			<th></th>
+			<th>SNOMED</th>
+			<th></th>
+		</thead>
+		<tbody>
+	""" % (condition, condition)
+	
+	for study in results:
+		html += study.report_row()
+	
+	html += """		</tbody>
+	</table>
+	</body>
+	</html>"""
+	
+	handle = codecs.open('report.html', 'w', 'utf-8')
+	handle.write(html)
+	handle.close()
 

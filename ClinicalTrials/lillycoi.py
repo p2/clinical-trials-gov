@@ -35,6 +35,9 @@ class LillyCOI (object):
 
 	# searching for trials
 	def search_for(self, condition, recruiting=True):
+		if condition is None or len(condition) < 1:
+			raise Exception('You must provide a condition to search for')
+		
 		cond = condition.replace(' ', '-')
 		recr = 'open' if recruiting is True else 'closed'
 		params = 'fields=id,eligibility&limit=50&query=recr:%s,cond:%s' % (recr, cond)

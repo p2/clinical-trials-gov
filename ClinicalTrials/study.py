@@ -13,6 +13,7 @@ from xml.dom.minidom import parse
 
 from sqlite import SQLite
 from nlp import split_inclusion_exclusion
+from umls import UMLS
 
 
 class Study (object):
@@ -107,6 +108,48 @@ class Study (object):
 			'Yes' if self.healthy_volunteers else 'No',
 			main
 		)
+	
+	
+	def report_row(self):
+		""" Generates an HTML row for the report_row document.
+		"""
+		if self.criteria is None or len(self.criteria) < 1:
+			return ''
+		
+		# collect criteria
+		rows = []
+		for crit in self.criteria:
+			
+			# this criterium has been codified
+			if len(crit.snomed) > 0:
+				c_html = '<td rowspan="%d">%s</td><td rowspan="%d">%s</td>' % (len(crit.snomed), crit.text, len(crit.snomed), 'in' if crit.is_inclusion else 'ex')
+				for sno in crit.snomed:
+					rows.append(c_html + '<td>%s</td><td>%s</td>' % (sno, UMLS.lookup_snomed(sno)))
+					if len(c_html) > 0:
+						c_html = ''
+			
+			# no codes for this criterium
+			else:
+				rows.append('<td>%s</td><td>%s</td><td></td>' % (crit.text, 'in' if crit.is_inclusion else 'ex'))
+		
+		if len(rows) < 1:
+			return ''
+		
+		# compose HTML
+		html = """<tr>
+		<td rowspan="%d">
+			<a href="http://clinicaltrials.gov/ct2/show/%s" target="_blank">%s</a>
+		</td>
+		<td rowspan="%d">
+			<div style="display:none;">%s</div>
+		</td>
+		%s</tr>""" % (len(rows), self.nct, self.nct, len(rows), self.eligibility_formatted, rows[0])
+		
+		rows.pop(0)
+		for row in rows:
+			html += "<tr>%s</tr>" % row
+		
+		return html
 	
 	
 	# extract single criteria from plain text eligibility criteria
@@ -366,8 +409,8 @@ class StudyEligibility (object):
 						if 'cui' in node.attributes.keys():
 							cuis.append(node.attributes['cui'].value)
 					
-					self.snomed = snomeds
-					self.cui = cuis
+					self.snomed = list(Set(snomeds))
+					self.cui = list(Set(cuis))
 					
 				# mark as processed, store to SQLite and remove the files
 				self.did_process = True

@@ -22,6 +22,21 @@ class UMLS (object):
 	
 	
 	@classmethod
+	def lookup_snomed(cls, snomed_id):
+		""" Returns the term for the given SNOMED code.
+		"""
+		if not snomed_id:
+			raise Exception('No SNOMED code provided')
+		
+		sql = 'SELECT term FROM snomed WHERE concept_id = ?'
+		res = cls.sqlite_handle.executeOne(sql, (snomed_id,))
+		if res:
+			return res[0]
+		
+		return ''
+	
+	
+	@classmethod
 	def import_snomed_from_csv(cls):
 		""" Read SNOMED CT from tab-separated file and create an SQLite database
 		from it.
@@ -53,7 +68,7 @@ class UMLS (object):
 							(concept_id, lang, term)
 							VALUES
 							(?, ?, ?)'''
-						params = (int(row[0]), row[5], row[7])
+						params = (int(row[4]), row[5], row[7])
 						try:
 							cls.sqlite_handle.execute(sql, params)
 						except Exception as e:
@@ -66,7 +81,7 @@ class UMLS (object):
 			except csv.Error as e:
 				sys.exit('CSV error on line %d: %s' % (reader.line_num, e))
 
-		print '%d concepts parsed' % i-1
+		print '%d concepts parsed' % (i-1)
 
 
 	@classmethod

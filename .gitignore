@@ -5,12 +5,15 @@
 storage.db
 umls.db
 
+# ignore generated report
+report.html
+
 # ignore ctakes
 ctakes
 ctakes_input
 ctakes_output
 
-# ignore our UMLS username/password file
+# ignore UMLS files
 umls.sh
 SnomedCT_Release_INT_*
 
