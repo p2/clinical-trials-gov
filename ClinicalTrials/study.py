@@ -409,8 +409,8 @@ class StudyEligibility (object):
 						if 'cui' in node.attributes.keys():
 							cuis.append(node.attributes['cui'].value)
 					
-					self.snomed = list(Set(snomeds))
-					self.cui = list(Set(cuis))
+					self.snomed = list(set(snomeds))
+					self.cui = list(set(cuis))
 					
 				# mark as processed, store to SQLite and remove the files
 				self.did_process = True

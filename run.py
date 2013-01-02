@@ -40,8 +40,10 @@ if __name__ == "__main__":
 	
 	# process all studies
 	run_ctakes = False
-	print 'Processing %d results (%d)...' % (len(results), lilly.totalCount)
+	i = 0
 	for study in results:
+		i += 1
+		print 'Processing %d of %d...' % (i, len(results))
 		study.sync_with_db()
 		study.process_eligibility_from_text()
 		study.codify_eligibility()
@@ -94,7 +96,7 @@ if __name__ == "__main__":
 		</colgroup>
 		<thead>
 			<th>NCT</th>
-			<th>desc</th>
+			<th>raw</th>
 			<th>text</th>
 			<th></th>
 			<th>SNOMED</th>

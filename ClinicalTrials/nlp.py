@@ -9,8 +9,7 @@ import re
 
 
 def split_inclusion_exclusion(string):
-	""" Returns a tuple of a string describing inclusion and a string describing
-	exclusion criteria.
+	""" Returns a tuple of lists describing inclusion and exclusion criteria.
 	"""
 	
 	if not string or len(string) < 1:
@@ -50,6 +49,11 @@ def split_inclusion_exclusion(string):
 	
 	if len(inc) < 1 or len(exc) < 1:
 		print "No inclusion or exclusion criteria found in:\n-----\n%s\n-----\n" % string
+	
+	# -- TEST: join back into sentences
+	inc = ['. '.join(inc)] if len(inc) > 0 else []
+	exc = ['. '.join(exc)] if len(exc) > 0 else []
+	# --
 	
 	return (inc, exc)
 
