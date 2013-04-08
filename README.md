@@ -35,6 +35,13 @@ We checkout cTakes and add the pgpop module. Assuming we are in the main directo
 
 There is a SNOMED database at _ctakes/ctakes-dictionary-lookup/target/classes/org/apache/ctakes/dictionary/lookup/umls2011ab_ after checking out cTakes, but it's in HSQLDB format which is not easily usable from Python, so we download and use our own copy:
 
-- download [SNOMED CT](http://download.nlm.nih.gov/umls/kss/IHTSDO20120731/SnomedCT_Release_INT_20120731.zip)
+- download [SNOMED CT][snomed]
+- from the directory `RF2Release/Full/Terminology` place the following files under the given name into the `databases` directory:
+    
+    - `sct2_Description_Full-en_INT_xxxxxxx.txt`: `snomed_desc.csv`
+    - `sct2_Relationship_Full_INT_xxxxxxxx.txt`: `snomed_rel.csv`
+    
+    When these files are present, the app will automatically import all SNOMED codes into a local SQLite database, if this has not already been done.
 
-Descriptions are in _SnomedCT_Release_INT_20120731/RF2Release/Full/Terminology/sct2_Description_Full-en_INT_20120731.txt_. Those will automatically be imported into a local SQLite database. If you download a different release, update the path in `run.py` to point to the correct file.
+
+[snomed]: http://www.nlm.nih.gov/research/umls/licensedcontent/snomedctfiles.html

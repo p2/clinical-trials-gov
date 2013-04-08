@@ -1,9 +1,8 @@
 .DS_Store
 *.pyc
 
-# ignore SQLite databases
-storage.db
-umls.db
+# ignore databases
+databases/*
 
 # ignore generated report
 report.html
@@ -13,7 +12,6 @@ ctakes
 ctakes_input
 ctakes_output
 
-# ignore UMLS files
-umls.sh
-SnomedCT_Release_INT_*
+# ignore editor files
+*.sublime-*
 

@@ -292,7 +292,7 @@ class Study (object):
 	@classmethod
 	def setup_tables(cls):
 		if cls.sqlite_handle is None:
-			cls.sqlite_handle = SQLite.get('storage.db')
+			cls.sqlite_handle = SQLite.get('databases/storage.db')
 		
 		cls.sqlite_handle.create('studies', '''(
 			nct UNIQUE,

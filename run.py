@@ -7,26 +7,24 @@
 import sys
 from subprocess import call
 import codecs
+import logging
 
 from ClinicalTrials.lillycoi import LillyCOI
 from ClinicalTrials.sqlite import SQLite
 from ClinicalTrials.study import Study
 from ClinicalTrials.umls import UMLS
 
-
-CTAKES = {
-	'INPUT': './ctakes_input',
-	'OUTPUT': './ctakes_output'
-}
-UMLS_FILE = 'SnomedCT_Release_INT_20120731/RF2Release/Full/Terminology/sct2_Description_Full-en_INT_20120731.txt'
+from settings import CTAKES
 
 
 # main
 if __name__ == "__main__":
+	logging.basicConfig(level=logging.DEBUG)
+	
+	# make sure we have our databases setup
 	Study.setup_ctakes(CTAKES)
 	Study.setup_tables()
-	UMLS.setup_umls(UMLS_FILE)
-	UMLS.setup_tables()
+	UMLS.import_snomed_if_necessary()
 	
 	# ask for a condition
 	condition = raw_input("Condition: ")
