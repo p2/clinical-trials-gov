@@ -155,6 +155,23 @@ class UMLS(object):
 					''')
 
 
+class SNOMED(object):
+	""" SNOMED lookup """
+	
+	def __init__(self):
+		self.sqlite = SQLite.get('databases/snomed.db')
+	
+	def lookup_code_meaning(self, snomed_id):
+		if not snomed_id:
+			raise Exception('No SNOMED code provided')
+		
+		sql = 'SELECT term FROM descriptions WHERE concept_id = ?'
+		res = self.sqlite.executeOne(sql, (snomed_id,))
+		if res:
+			return res[0]
+		return ''
+
+
 # the standard Python CSV reader can't do unicode, here's the workaround
 def unicode_csv_reader(utf8_data, dialect=csv.excel, **kwargs):
 	csv_reader = csv.reader(utf8_data, dialect=dialect, **kwargs)

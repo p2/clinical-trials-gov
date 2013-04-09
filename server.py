@@ -9,7 +9,7 @@ import logging
 from ClinicalTrials.study import Study
 from ClinicalTrials.umls import UMLS
 
-from settings import UMLS_FILE, CTAKES
+from settings import CTAKES
 
 
 # setup

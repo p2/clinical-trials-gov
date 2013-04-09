@@ -8,12 +8,13 @@
 import datetime
 import dateutil.parser
 import os
+import logging
 import codecs
 from xml.dom.minidom import parse
 
 from sqlite import SQLite
 from nlp import split_inclusion_exclusion
-from umls import UMLS
+from umls import UMLS, SNOMED
 
 
 class Study (object):
@@ -118,13 +119,14 @@ class Study (object):
 		
 		# collect criteria
 		rows = []
+		snomed = SNOMED()
 		for crit in self.criteria:
 			
 			# this criterium has been codified
 			if len(crit.snomed) > 0:
 				c_html = '<td rowspan="%d">%s</td><td rowspan="%d">%s</td>' % (len(crit.snomed), crit.text, len(crit.snomed), 'in' if crit.is_inclusion else 'ex')
 				for sno in crit.snomed:
-					rows.append(c_html + '<td>%s</td><td>%s</td>' % (sno, UMLS.lookup_snomed(sno)))
+					rows.append(c_html + '<td>%s</td><td>%s</td>' % (sno, snomed.lookup_code_meaning(sno)))
 					if len(c_html) > 0:
 						c_html = ''
 			
@@ -431,6 +433,17 @@ class StudyEligibility (object):
 				handle.write(self.text)
 				handle.close()
 			self.waiting_for_ctakes = True
+			return
+		
+		# still here - not properly set up
+		if 'INPUT' not in ct:
+			logging.error("The input directory for cTAKES has not been configured")
+		elif not os.path.exists(ct['INPUT']):
+			logging.error("The input directory for cTAKES at %s does not exist" % ct['INPUT'])
+		elif 'OUTPUT' not in ct:
+			logging.error("The output directory for cTAKES has not been configured")
+		elif not os.path.exists(ct['INPUT']):
+			logging.error("The output directory for cTAKES at %s does not exist" % ct['OUTPUT'])
 	
 	
 	def store(self):
