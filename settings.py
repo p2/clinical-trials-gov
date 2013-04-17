@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 CTAKES = {
-	'INPUT': './ctakes_input',
-	'OUTPUT': './ctakes_output'
+	'input': './ctakes_input',
+	'output': './ctakes_output',
+	'cleanup': False						# change to True to remove the ctakes text files
 }

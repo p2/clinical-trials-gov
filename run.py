@@ -50,7 +50,7 @@ if __name__ == "__main__":
 	
 	Study.sqlite_commit_if_needed()
 	
-	# run cTakes
+	# run cTakes if needed
 	if run_ctakes:
 		print 'Running cTakes...'
 		call('run_ctakes.sh')
@@ -58,6 +58,8 @@ if __name__ == "__main__":
 		# make sure we got all criteria
 		for study in results:
 			study.codify_eligibility()
+	
+	Study.sqlite_commit_if_needed()
 	
 	# generate HTML report
 	print 'Generating report...'
