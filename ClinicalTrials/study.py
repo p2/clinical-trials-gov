@@ -10,7 +10,13 @@ import dateutil.parser
 import os
 import logging
 import codecs
-from xml.dom.minidom import parse
+from xml.dom.minidom import parse, parseString
+
+import requests
+requests_log = logging.getLogger("requests.packages.urllib3")
+requests_log.setLevel(logging.WARNING)
+from urllib2 import urlopen
+import shutil
 
 from sqlite import SQLite
 from nlp import split_inclusion_exclusion
@@ -27,6 +33,7 @@ class Study (object):
 	
 	def __init__(self, nct=0):
 		self.nct = nct
+		self.pmc_ids = None
 		self.hydrated = False
 		self.updated = None
 		self.gender = 0
@@ -205,6 +212,106 @@ class Study (object):
 		return False
 	
 	
+	# -------------------------------------------------------------------------- PubMed
+	def find_pmc_packages(self):
+		""" Determine whether there was a PMC-indexed publication for the trial.
+		"""
+		if self.pmc_ids is not None and len(self.pmc_ids) > 0:
+			return
+		
+		if self.nct is None:
+			logging.warning("Need an NCT before trying to find publications")
+			return
+		
+		# use eutils to find PMIDs
+		url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=(%s%%5BTitle%%2FAbstract%%5D)" % self.nct
+		res = requests.get(url)
+		if not res.ok:
+			logging.warning("%d -- failed to get %s: %s" % (res.status_code, url, res.error))
+		else:
+			pmids = []
+			pmcids = []
+						
+			# we are looking for: <IdList><Id>22563743</Id></IdList>
+			root = parseString(res.content).documentElement
+			id_list = root.getElementsByTagName('IdList')
+			if id_list is not None and len(id_list) > 0:
+				id_nodes = id_list[0].getElementsByTagName('Id')
+			
+				# find pmids in <Id/> nodes
+				if len(id_nodes) > 0:
+					for node in id_nodes:
+						if node.firstChild:
+							pmids.append(node.firstChild.data)
+				
+			# fetch info about individual studies, fetched by PMID
+			for pmid in pmids:
+				url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml" % pmid
+				res = requests.get(url)
+				if not res.ok:
+					logging.warning("%d -- failed to get %s: %s" % (res.status_code, url, res.error))
+				else:
+					root = parseString(res.content).documentElement
+					try:
+						# try to find the <OtherId> node and extract its data if the source is NLM
+						article = root.getElementsByTagName('PubmedArticle')[0]
+						citation = article.getElementsByTagName('MedlineCitation')[0]
+						others = citation.getElementsByTagName('OtherID')
+						for other in others:
+							if 'NLM' == other.getAttribute('Source'):
+								pmcids.append(other.firstChild.data)
+					except Exception, e:
+						pass
+			
+			# store ids
+			if len(pmcids) > 0:
+				self.pmc_ids = pmcids
+			elif len(pmids) > 0:
+				logging.debug("No PMCID found for %s despite PMIDS: %s", self.nct, pmids)
+	
+	
+	def download_pmc_packages(self, run_dir):
+		""" Downloads the PubMed Central package if there is one """
+		self.find_pmc_packages()
+		if self.pmc_ids is not None and len(self.pmc_ids) > 0:
+			for pmc_id in self.pmc_ids:
+				filename = "%s.tgz" % pmc_id
+				filepath = os.path.join(run_dir, filename)
+				
+				# we don't yet have it, download the XML to get to the links
+				if not os.path.exists(filepath):
+					links = []
+					url = "http://www.pubmedcentral.nih.gov/utils/oa/oa.fcgi?id=%s" % pmc_id
+					res = requests.get(url)
+					if not res.ok:
+						logging.warning("%d -- failed to get %s: %s" % (res.status_code, url, res.error))
+					else:
+						root = parseString(res.content).documentElement
+						try:
+							# find the link to the package
+							records_parent = root.getElementsByTagName('records')[0]
+							records = records_parent.getElementsByTagName('record')
+							for record in records:
+								n_links = record.getElementsByTagName('link')
+								for link in n_links:
+									if 'tgz' == link.getAttribute('format'):
+										links.append(link.getAttribute('href'))
+						except Exception, e:
+							print e
+					
+					if len(links) > 1:
+						logging.warning("We got more than 1 link, need to handle this")
+					
+					# download package
+					for link in links:
+						req = urlopen(link)
+						with open(filepath, 'wb') as handle:
+							shutil.copyfileobj(req, handle)
+	
+	
+	
+	# -------------------------------------------------------------------------- Database Storage
+	
 	# loads and stores
 	def sync_with_db(self):
 		""" Loads from SQLite and stores again.
@@ -225,11 +332,12 @@ class Study (object):
 		
 		# store our direct properties
 		sql = '''REPLACE INTO studies
-			(nct, updated, elig_gender, elig_min_age, elig_max_age, elig_population, elig_sampling, elig_accept_healthy, elig_criteria)
+			(nct, pmc_ids, updated, elig_gender, elig_min_age, elig_max_age, elig_population, elig_sampling, elig_accept_healthy, elig_criteria)
 			VALUES
-			(?, datetime(), ?, ?, ?, ?, ?, ?, ?)'''
+			(?, ?, datetime(), ?, ?, ?, ?, ?, ?, ?)'''
 		params = (
 			self.nct,
+			"|".join(self.pmc_ids) if self.pmc_ids is not None else None,
 			self.gender,
 			self.min_age,
 			self.max_age,
@@ -269,20 +377,23 @@ class Study (object):
 		
 		# populate ivars
 		if data is not None:
-			self.updated = dateutil.parser.parse(data[1])
-			self.gender = data[2]
-			self.min_age = data[3]
-			self.max_age = data[4]
-			self.population = data[5]
-			self.sampling_method = data[6]
-			self.healthy_volunteers = data[7]
-			self.criteria_text = data[8]
+			self.pmc_ids = data[1].split("|") if data[1] else None
+			self.updated = dateutil.parser.parse(data[2])
+			self.gender = data[3]
+			self.min_age = data[4]
+			self.max_age = data[5]
+			self.population = data[6]
+			self.sampling_method = data[7]
+			self.healthy_volunteers = data[8]
+			self.criteria_text = data[9]
 			
 			self.hydrated = True
 			
 			# populate parsed eligibility criteria
 			self.criteria = StudyEligibility.load_for_study(self)
 	
+	
+	# -------------------------------------------------------------------------- Class Methods
 	
 	@classmethod
 	def sqlite_commit_if_needed(cls):
@@ -298,6 +409,7 @@ class Study (object):
 		
 		cls.sqlite_handle.create('studies', '''(
 			nct UNIQUE,
+			pmc_ids TEXT,
 			updated TIMESTAMP,
 			elig_gender INTEGER,
 			elig_min_age INTEGER,

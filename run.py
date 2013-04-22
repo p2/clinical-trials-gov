@@ -3,11 +3,12 @@
 #	2012-12-12	Created by Pascal Pfiffner
 #
 
-
+import os
 import sys
 from subprocess import call
 import codecs
 import logging
+from datetime import datetime
 
 from ClinicalTrials.lillycoi import LillyCOI
 from ClinicalTrials.sqlite import SQLite
@@ -26,7 +27,12 @@ if __name__ == "__main__":
 	Study.setup_tables()
 	UMLS.import_snomed_if_necessary()
 	
+	now = datetime.now()
+	run_dir = "run-%s" % now.isoformat()[:-7]
+	os.mkdir(run_dir)		# will raise if dir exists!
+	
 	# ask for a condition
+	recruiting = False
 	condition = raw_input("Condition: ")
 	if condition is None or len(condition) < 1:
 		condition = 'spondylitis'
@@ -34,7 +40,7 @@ if __name__ == "__main__":
 	# search for studies
 	print "Fetching %s studies..." % condition
 	lilly = LillyCOI()
-	results = lilly.search_for(condition)
+	results = lilly.search_for(condition, recruiting)
 	
 	# process all studies
 	run_ctakes = False
@@ -44,9 +50,10 @@ if __name__ == "__main__":
 		print 'Processing %d of %d...' % (i, len(results))
 		study.sync_with_db()
 		study.process_eligibility_from_text()
-		study.codify_eligibility()
-		if study.waiting_for_ctakes():
-			run_ctakes = True
+		study.download_pmc_packages(run_dir)
+	#	study.codify_eligibility()
+	#	if study.waiting_for_ctakes():
+	#		run_ctakes = True
 	
 	Study.sqlite_commit_if_needed()
 	
@@ -62,58 +69,59 @@ if __name__ == "__main__":
 	Study.sqlite_commit_if_needed()
 	
 	# generate HTML report
-	print 'Generating report...'
-	html = """<html>
-	<head>
-		<title>Report: %s</title>
-		<style>
-		body { font-size: small; font-family: 'Helvetica-Neue', Helvetica, sans-serif; }
-		table { border-collapse: collapse; }
-		table tbody tr td { vertical-align: top; padding: 0.15em 0.5em; }
-		</style>
-		<script>
-		function toggle(td) {
-			var div = td.getElementsByTagName('div')[0];
-			if ('none' == div.style.display) {
-				div.style.display = 'block';
+	if False:
+		print 'Generating report...'
+		html = """<html>
+		<head>
+			<title>Report: %s</title>
+			<style>
+			body { font-size: small; font-family: 'Helvetica-Neue', Helvetica, sans-serif; }
+			table { border-collapse: collapse; }
+			table tbody tr td { vertical-align: top; padding: 0.15em 0.5em; }
+			</style>
+			<script>
+			function toggle(td) {
+				var div = td.getElementsByTagName('div')[0];
+				if ('none' == div.style.display) {
+					div.style.display = 'block';
+				}
+				else {
+					div.style.display = 'none';
+				}
 			}
-			else {
-				div.style.display = 'none';
-			}
-		}
-		</script>
-	</head>
-	<body>
-	<h1>Report for all recruiting "%s" studies</h1>
-	<table>
-		<colgroup>
-			<col />
-			<col />
-			<col width="40%%" />
-			<col />
-			<col />
-			<col />
-		</colgroup>
-		<thead>
-			<th>NCT</th>
-			<th>raw</th>
-			<th>text</th>
-			<th></th>
-			<th>SNOMED</th>
-			<th></th>
-		</thead>
-		<tbody>
-	""" % (condition, condition)
-	
-	for study in results:
-		html += study.report_row()
-	
-	html += """		</tbody>
-	</table>
-	</body>
-	</html>"""
-	
-	handle = codecs.open('report.html', 'w', 'utf-8')
-	handle.write(html)
-	handle.close()
+			</script>
+		</head>
+		<body>
+		<h1>Report for all recruiting "%s" studies</h1>
+		<table>
+			<colgroup>
+				<col />
+				<col />
+				<col width="40%%" />
+				<col />
+				<col />
+				<col />
+			</colgroup>
+			<thead>
+				<th>NCT</th>
+				<th>raw</th>
+				<th>text</th>
+				<th></th>
+				<th>SNOMED</th>
+				<th></th>
+			</thead>
+			<tbody>
+		""" % (condition, condition)
+		
+		for study in results:
+			html += study.report_row()
+		
+		html += """		</tbody>
+		</table>
+		</body>
+		</html>"""
+		
+		handle = codecs.open('report.html', 'w', 'utf-8')
+		handle.write(html)
+		handle.close()
 

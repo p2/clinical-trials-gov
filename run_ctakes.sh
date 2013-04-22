@@ -24,6 +24,5 @@ export MAVEN_OPTS="-Xmx1024M -Dctakes.umlsuser=$UMLS_USERNAME -Dctakes.umlspw=$U
 #-Dexec.mainClass="org.chboston.cnlp.i2b2.features.CuiFeatureExtractor" \
 #-Dexec.args="--input-dir ../grabbed --label-file ../testLblfile.txt --output-dir ../output"
 
-mvn compile -PrunPGPOP \
--Dexec.args="--textRoot ../ctakes_input --labelFile ../labelFile.txt --outputRoot ../ctakes_output"
+mvn compile -PrunPGPOP -Dexec.args="--textRoot ../ctakes_input --labelFile ../labelFile.txt --outputRoot ../ctakes_output"
 
