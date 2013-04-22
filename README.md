@@ -1,7 +1,7 @@
 ClinicalTrials.gov Eligibility
 ==============================
 
-Extracting and codifying study eligibility criteria from [ClinicalTrials.gov](http://www.clinicaltrials.gov) using [cTakes](http://incubator.apache.org/ctakes/).
+Extracting and codifying study eligibility criteria from [ClinicalTrials.gov][ct] using [cTakes][].
 
 
 Setup
@@ -15,7 +15,7 @@ Setup
 
 We checkout cTakes and add the pgpop module. Assuming we are in the main directory:
 
-- Install Maven (This is for OS X, requires [Homebrew](http://mxcl.github.com/homebrew/), adapt accordingly)
+- Install Maven (This is for OS X, requires [Homebrew][], adapt accordingly)
   `brew install maven`
 - Checkout cTakes from the repo
   `svn co https://svn.apache.org/repos/asf/incubator/ctakes/trunk ctakes`
@@ -44,4 +44,7 @@ There is a SNOMED database at _ctakes/ctakes-dictionary-lookup/target/classes/or
     When these files are present, the app will automatically import all SNOMED codes into a local SQLite database, if this has not already been done.
 
 
+[ct]: http://www.clinicaltrials.gov
+[ctakes]: http://ctakes.apache.org
+[homebrew]: http://mxcl.github.com/homebrew/
 [snomed]: http://www.nlm.nih.gov/research/umls/licensedcontent/snomedctfiles.html
