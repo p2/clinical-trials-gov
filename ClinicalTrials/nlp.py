@@ -50,7 +50,7 @@ def split_inclusion_exclusion(string):
 	
 	# if there was no inclusion/exclusion split, we assume the text describes inclusion criteria
 	if len(inc) < 1 or len(exc) < 1:
-		logging.info("No specification of inclusion/exclusion criteria, assuming the text to describe inclusion criteria")
+		logging.info("No explicit separation of inclusion/exclusion criteria found, assuming this text to describe inclusion criteria:")
 		logging.info(string)
 		inc.append(string)
 	

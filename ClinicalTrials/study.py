@@ -34,7 +34,8 @@ class Study (object):
 	
 	def __init__(self, nct=0):
 		self.nct = nct
-		self.pmc_ids = None
+		self.pmids = None
+		self.pmcids = None
 		self.hydrated = False
 		self.updated = None
 		self.gender = 0
@@ -225,7 +226,7 @@ class Study (object):
 	def find_pmc_packages(self):
 		""" Determine whether there was a PMC-indexed publication for the trial.
 		"""
-		if self.pmc_ids is not None and len(self.pmc_ids) > 0:
+		if self.pmcids is not None and len(self.pmcids) > 0:
 			return
 		
 		if self.nct is None:
@@ -270,19 +271,20 @@ class Study (object):
 							if 'NLM' == other.getAttribute('Source'):
 								pmcids.append(other.firstChild.data)
 					except Exception, e:
-						logging.debug("Error when parsing eutils XML: %s" % e)
+						logging.warning("Error when parsing eutils XML %s: %s" % (url, e))
 			
 			# store ids
+			self.pmids = pmids
 			if len(pmcids) > 0:
-				self.pmc_ids = pmcids
+				self.pmcids = pmcids
 			elif len(pmids) > 0:
 				logging.info("No PMCID found for %s despite PMIDS: %s", self.nct, pmids)
 	
 	
 	def download_pmc_packages(self, run_dir):
 		""" Downloads the PubMed Central package if there is one """
-		if self.pmc_ids is not None and len(self.pmc_ids) > 0:
-			for pmc_id in self.pmc_ids:
+		if self.pmcids is not None and len(self.pmcids) > 0:
+			for pmc_id in self.pmcids:
 				filename = "%s.tgz" % pmc_id
 				filepath = os.path.join(run_dir, filename)
 				
@@ -305,7 +307,7 @@ class Study (object):
 									if 'tgz' == link.getAttribute('format'):
 										links.append(link.getAttribute('href'))
 						except Exception, e:
-							logging.debug("Error when parsing PubMed Central XML: %s" % e)
+							logging.warning("Error when parsing %s [PMIDs %s]: %s" % (url, ", ".join(self.pmids), e))
 					
 					if len(links) > 1:
 						logging.warning("xxx>  We got more than 1 link, can not currently handle this, help!")
@@ -321,7 +323,7 @@ class Study (object):
 		""" Looks for downloaded packages in the given run directory and
 		extracts the paper text from the XML in the .nxml file.
 		"""
-		if self.pmc_ids is None:
+		if self.pmcids is None:
 			return
 		
 		if not os.path.exists(run_dir):
@@ -330,7 +332,7 @@ class Study (object):
 		
 		# find our archive
 		for arname in os.listdir(run_dir):
-			if '.tgz' == arname[-4:] and arname[:-4] in self.pmc_ids:
+			if '.tgz' == arname[-4:] and arname[:-4] in self.pmcids:
 				arpath = os.path.join(run_dir, arname)
 				
 				# do we already have these methods?
@@ -395,12 +397,13 @@ class Study (object):
 		
 		# store our direct properties
 		sql = '''REPLACE INTO studies
-			(nct, pmc_ids, updated, elig_gender, elig_min_age, elig_max_age, elig_population, elig_sampling, elig_accept_healthy, elig_criteria)
+			(nct, pmids, pmcids, updated, elig_gender, elig_min_age, elig_max_age, elig_population, elig_sampling, elig_accept_healthy, elig_criteria)
 			VALUES
-			(?, ?, datetime(), ?, ?, ?, ?, ?, ?, ?)'''
+			(?, ?, ?, datetime(), ?, ?, ?, ?, ?, ?, ?)'''
 		params = (
 			self.nct,
-			"|".join(self.pmc_ids) if self.pmc_ids is not None else None,
+			"|".join(self.pmids) if self.pmids is not None else None,
+			"|".join(self.pmcids) if self.pmcids is not None else None,
 			self.gender,
 			self.min_age,
 			self.max_age,
@@ -440,15 +443,16 @@ class Study (object):
 		
 		# populate ivars
 		if data is not None:
-			self.pmc_ids = data[1].split("|") if data[1] else None
-			self.updated = dateutil.parser.parse(data[2])
-			self.gender = data[3]
-			self.min_age = data[4]
-			self.max_age = data[5]
-			self.population = data[6]
-			self.sampling_method = data[7]
-			self.healthy_volunteers = data[8]
-			self.criteria_text = data[9]
+			self.pmids = data[1].split("|") if data[1] else None
+			self.pmcids = data[2].split("|") if data[2] else None
+			self.updated = dateutil.parser.parse(data[3])
+			self.gender = data[4]
+			self.min_age = data[5]
+			self.max_age = data[6]
+			self.population = data[7]
+			self.sampling_method = data[8]
+			self.healthy_volunteers = data[9]
+			self.criteria_text = data[10]
 			
 			self.hydrated = True
 			
@@ -472,7 +476,8 @@ class Study (object):
 		
 		cls.sqlite_handle.create('studies', '''(
 			nct UNIQUE,
-			pmc_ids TEXT,
+			pmids TEXT,
+			pmcids TEXT,
 			updated TIMESTAMP,
 			elig_gender INTEGER,
 			elig_min_age INTEGER,

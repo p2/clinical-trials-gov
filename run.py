@@ -4,11 +4,12 @@
 #
 
 import os
+import re
 import sys
 from subprocess import call
 import codecs
 import logging
-from datetime import datetime
+from datetime import date
 
 from ClinicalTrials.lillycoi import LillyCOI
 from ClinicalTrials.sqlite import SQLite
@@ -27,16 +28,17 @@ if __name__ == "__main__":
 	Study.setup_tables()
 	UMLS.import_snomed_if_necessary()
 	
-	now = datetime.now()
-	run_dir = "run-%s" % now.isoformat()[:-7]
-	if not os.path.exists(run_dir):
-		os.mkdir(run_dir)
-	
 	# ask for a condition
 	recruiting = False
 	condition = raw_input("Condition: ")
 	if condition is None or len(condition) < 1:
 		condition = 'spondylitis'
+	
+	# prepare a run directory
+	now = date.today()
+	run_dir = "run-%s-%s" % (re.sub(r'[^\w\d\-]+', '_', condition), now.isoformat())
+	if not os.path.exists(run_dir):
+		os.mkdir(run_dir)
 	
 	# search for studies
 	print "Fetching %s studies..." % condition
