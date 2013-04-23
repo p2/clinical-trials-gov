@@ -17,6 +17,7 @@ requests_log = logging.getLogger("requests.packages.urllib3")
 requests_log.setLevel(logging.WARNING)
 from urllib2 import urlopen
 import shutil
+import tarfile
 
 from sqlite import SQLite
 from nlp import split_inclusion_exclusion
@@ -213,6 +214,14 @@ class Study (object):
 	
 	
 	# -------------------------------------------------------------------------- PubMed
+	def run_pmc(self, run_dir):
+		""" Finds, downloads, extracts and parses PMC-indexed publications for
+		the trial. """
+		self.find_pmc_packages()
+		self.download_pmc_packages(run_dir)
+		self.parse_pmc_packages(run_dir)
+	
+	
 	def find_pmc_packages(self):
 		""" Determine whether there was a PMC-indexed publication for the trial.
 		"""
@@ -237,13 +246,13 @@ class Study (object):
 			id_list = root.getElementsByTagName('IdList')
 			if id_list is not None and len(id_list) > 0:
 				id_nodes = id_list[0].getElementsByTagName('Id')
-			
+				
 				# find pmids in <Id/> nodes
 				if len(id_nodes) > 0:
 					for node in id_nodes:
 						if node.firstChild:
 							pmids.append(node.firstChild.data)
-				
+			
 			# fetch info about individual studies, fetched by PMID
 			for pmid in pmids:
 				url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml" % pmid
@@ -261,18 +270,17 @@ class Study (object):
 							if 'NLM' == other.getAttribute('Source'):
 								pmcids.append(other.firstChild.data)
 					except Exception, e:
-						pass
+						logging.debug("Error when parsing eutils XML: %s" % e)
 			
 			# store ids
 			if len(pmcids) > 0:
 				self.pmc_ids = pmcids
 			elif len(pmids) > 0:
-				logging.debug("No PMCID found for %s despite PMIDS: %s", self.nct, pmids)
+				logging.info("No PMCID found for %s despite PMIDS: %s", self.nct, pmids)
 	
 	
 	def download_pmc_packages(self, run_dir):
 		""" Downloads the PubMed Central package if there is one """
-		self.find_pmc_packages()
 		if self.pmc_ids is not None and len(self.pmc_ids) > 0:
 			for pmc_id in self.pmc_ids:
 				filename = "%s.tgz" % pmc_id
@@ -297,10 +305,10 @@ class Study (object):
 									if 'tgz' == link.getAttribute('format'):
 										links.append(link.getAttribute('href'))
 						except Exception, e:
-							print e
+							logging.debug("Error when parsing PubMed Central XML: %s" % e)
 					
 					if len(links) > 1:
-						logging.warning("We got more than 1 link, need to handle this")
+						logging.warning("xxx>  We got more than 1 link, can not currently handle this, help!")
 					
 					# download package
 					for link in links:
@@ -309,18 +317,73 @@ class Study (object):
 							shutil.copyfileobj(req, handle)
 	
 	
+	def parse_pmc_packages(self, run_dir):
+		""" Looks for downloaded packages in the given run directory and
+		extracts the paper text from the XML in the .nxml file.
+		"""
+		if self.pmc_ids is None:
+			return
+		
+		if not os.path.exists(run_dir):
+			logging.warning("The run directory %s doesn't exist" % run_dir)
+			return
+		
+		# find our archive
+		for arname in os.listdir(run_dir):
+			if '.tgz' == arname[-4:] and arname[:-4] in self.pmc_ids:
+				arpath = os.path.join(run_dir, arname)
+				
+				# do we already have these methods?
+				methodsname = "%s.xml" % arname[:-4]
+				methodspath = os.path.join(run_dir, methodsname)
+				if os.path.exists(methodspath):
+					continue
+				
+				# unziptar (if necessary)
+				tar = tarfile.open(arpath)
+				names = tar.getnames()
+				dirname = names[0] if len(names) > 0 else None
+				if dirname is None:
+					logging.warning("The archive %s is not readable" % arpath)
+					return
+				
+				dirpath = os.path.join(run_dir, dirname)
+				if not os.path.exists(dirpath):
+					tar.extractall(path=run_dir)
+				tar.close()
+				
+				if not os.path.exists(dirpath):
+					logging.warning("Apparently failed to extract %s" % arpath)
+					return
+				
+				methods = []
+				
+				# get .nxml from the extracted directory
+				for filename in os.listdir(dirpath):
+					if len(os.path.basename(filename)) > 4 and ".nxml" == os.path.basename(filename)[-5:]:
+						
+						# parse .nxml
+						root = parse(os.path.join(dirpath, filename)).documentElement
+						try:
+							body = root.getElementsByTagName('body')[0]
+							sections = body.getElementsByTagName('sec')
+							for section in sections:
+								if 'methods' in section.getAttribute('sec-type'):
+									methods.append(section.toxml())
+						except Exception, e:
+							logging.debug("Error when parsing .nxml named %s in %s" % (filename, dirpath))
+				
+				# so we got methods
+				if len(methods) < 1:
+					logging.info("No methods found in package %s" % dirpath)
+				else:
+					with codecs.open(methodspath, 'w', 'utf-8') as handle:
+						handle.write("\n".join(methods))
+	
+	
 	
 	# -------------------------------------------------------------------------- Database Storage
 	
-	# loads and stores
-	def sync_with_db(self):
-		""" Loads from SQLite and stores again.
-		Don't forget to MANUALLY COMMIT at one point!
-		"""
-		self.load()
-		self.store()
-	
-			
 	# store properties to SQLite
 	def store(self):
 		""" Stores the receiver's properties, including all StudyEligibility

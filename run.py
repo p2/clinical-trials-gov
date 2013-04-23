@@ -29,7 +29,8 @@ if __name__ == "__main__":
 	
 	now = datetime.now()
 	run_dir = "run-%s" % now.isoformat()[:-7]
-	os.mkdir(run_dir)		# will raise if dir exists!
+	if not os.path.exists(run_dir):
+		os.mkdir(run_dir)
 	
 	# ask for a condition
 	recruiting = False
@@ -48,12 +49,13 @@ if __name__ == "__main__":
 	for study in results:
 		i += 1
 		print 'Processing %d of %d...' % (i, len(results))
-		study.sync_with_db()
+		study.load()
 		study.process_eligibility_from_text()
-		study.download_pmc_packages(run_dir)
+		study.run_pmc(run_dir)
 	#	study.codify_eligibility()
 	#	if study.waiting_for_ctakes():
 	#		run_ctakes = True
+		study.store()
 	
 	Study.sqlite_commit_if_needed()
 	

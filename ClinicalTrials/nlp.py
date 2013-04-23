@@ -6,6 +6,7 @@
 #
 
 import re
+import logging
 
 
 def split_inclusion_exclusion(string):
@@ -47,13 +48,15 @@ def split_inclusion_exclusion(string):
 		elif at_exc:
 			exc.append(string)
 	
+	# if there was no inclusion/exclusion split, we assume the text describes inclusion criteria
 	if len(inc) < 1 or len(exc) < 1:
-		print "No inclusion or exclusion criteria found in:\n-----\n%s\n-----\n" % string
+		logging.info("No specification of inclusion/exclusion criteria, assuming the text to describe inclusion criteria")
+		logging.info(string)
+		inc.append(string)
 	
-	# -- TEST: join back into sentences
+	# join back into sentences (seems to be better for cTAKES)
 	inc = ['. '.join(inc)] if len(inc) > 0 else []
 	exc = ['. '.join(exc)] if len(exc) > 0 else []
-	# --
 	
 	return (inc, exc)
 

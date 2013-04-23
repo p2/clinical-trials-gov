@@ -4,6 +4,12 @@
 # ignore databases
 databases/*
 
+# ignore UMLS settings
+umls.sh
+
+# ignore the run-directories
+run-*/
+
 # ignore generated report
 report.html
 

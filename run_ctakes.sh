@@ -17,7 +17,7 @@ fi
 
 cd ctakes
 
-export MAVEN_OPTS="-Xmx1024M -Dctakes.umlsuser=$UMLS_USERNAME -Dctakes.umlspw=$UMLS_PASSWORD"
+export MAVEN_OPTS="-Xmx2048M -Dctakes.umlsuser=$UMLS_USERNAME -Dctakes.umlspw=$UMLS_PASSWORD"
 
 # execute!
 #mvn exec:java -X \
