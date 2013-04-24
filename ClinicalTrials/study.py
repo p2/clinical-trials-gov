@@ -28,6 +28,7 @@ class Study (object):
 	""" Describes a study found on ClinicalTrials.gov.
 	"""
 	
+	ctakes = {}
 	sqlite_handle = None
 	sqlite_must_commit = False
 	
@@ -108,8 +109,8 @@ class Study (object):
 				else:
 					exc.append(crit.text)
 			
-			t_inc = "\n\t- ".join(inc)
-			t_exc = "\n\t- ".join(exc)
+			t_inc = "\n\t".join(inc)
+			t_exc = "\n\t".join(exc)
 			main = "%s\n\n%s" % (t_inc, t_exc)
 		
 		# additional bits
@@ -330,14 +331,16 @@ class Study (object):
 			logging.warning("The run directory %s doesn't exist" % run_dir)
 			return
 		
+		ct_in_dir = os.path.join(Study.ctakes.get('root', run_dir), 'ctakes_input')
+		
 		# find our archive
 		for arname in os.listdir(run_dir):
 			if '.tgz' == arname[-4:] and arname[:-4] in self.pmcids:
 				arpath = os.path.join(run_dir, arname)
 				
 				# do we already have these methods?
-				methodsname = "%s.xml" % arname[:-4]
-				methodspath = os.path.join(run_dir, methodsname)
+				methodsname = "%s-%s.xml" % (self.nct, arname[:-4])
+				methodspath = os.path.join(ct_in_dir, methodsname)
 				if os.path.exists(methodspath):
 					continue
 				
@@ -376,11 +379,16 @@ class Study (object):
 							logging.debug("Error when parsing .nxml named %s in %s" % (filename, dirpath))
 				
 				# so we got methods
-				if len(methods) < 1:
-					logging.info("No methods found in package %s" % dirpath)
-				else:
+				if len(methods) > 0:
 					with codecs.open(methodspath, 'w', 'utf-8') as handle:
 						handle.write("\n".join(methods))
+					
+					# also dump CT criteria
+					plaintextpath = os.path.join(ct_in_dir, "%s-CT.txt" % self.nct)
+					with codecs.open(plaintextpath, 'w', 'utf-8') as handle:
+						handle.write(self.eligibility_formatted)
+				else:
+					logging.info("No methods found in package %s" % dirpath)
 	
 	
 	
@@ -493,7 +501,7 @@ class Study (object):
 	
 	@classmethod
 	def setup_ctakes(cls, setting):
-		StudyEligibility.ctakes = setting
+		cls.ctakes = setting
 
 
 
@@ -503,9 +511,6 @@ class StudyEligibility (object):
 	""" Holds one part of a study's eligibility criteria.
 	Studies can have a lot of them.
 	"""
-	
-	ctakes = {}
-	
 	
 	def __init__(self, study):
 		self.id = None
@@ -567,10 +572,13 @@ class StudyEligibility (object):
 			raise Exception('must hydrate first (not yet implemented)')
 		
 		# 2. not there, look in cTakes output directory
-		ct = StudyEligibility.ctakes
-		if 'output' in ct and os.path.exists(ct['output']):
+		ct = Study.ctakes
+		ct_in = os.path.join(ct.get('root', '.'), 'ctakes_input')
+		ct_out = os.path.join(ct.get('root', '.'), 'ctakes_output')
+		
+		if os.path.exists(ct_out):
 			cleanup = ct['cleanup'] if 'cleanup' in ct else False
-			outfile = os.path.join(ct['output'], '%d.txt.xmi' % self.id)
+			outfile = os.path.join(ct_out, '%d.txt.xmi' % self.id)
 			if os.path.exists(outfile):
 				root = parse(outfile).documentElement
 				code_nodes = root.getElementsByTagName('refsem:UmlsConcept')
@@ -599,7 +607,7 @@ class StudyEligibility (object):
 				self.did_process = True
 				if self.store() and cleanup:
 					os.remove(outfile)
-					infile = os.path.join(ct['input'], '%d.txt' % self.id)
+					infile = os.path.join(ct_in, '%d.txt' % self.id)
 					if os.path.exists(infile):
 						os.remove(infile)
 				
@@ -607,8 +615,8 @@ class StudyEligibility (object):
 				return
 		
 		# 3. not yet processed, put it there and wait for cTakes to process it
-		if ct['input'] and os.path.exists(ct['input']):
-			infile = os.path.join(ct['input'], '%d.txt' % self.id)
+		if ct_in and os.path.exists(ct_in):
+			infile = os.path.join(ct_in, '%d.txt' % self.id)
 			if not os.path.exists(infile):
 				handle = codecs.open(infile, 'w', 'utf-8')
 				handle.write(self.text)
@@ -619,12 +627,12 @@ class StudyEligibility (object):
 		# still here - not properly set up
 		if 'input' not in ct:
 			logging.error("The input directory for cTAKES has not been configured")
-		elif not os.path.exists(ct['input']):
-			logging.error("The input directory for cTAKES at %s does not exist" % ct['input'])
+		elif not os.path.exists(ct_in):
+			logging.error("The input directory for cTAKES at %s does not exist" % ct_in)
 		elif 'output' not in ct:
 			logging.error("The output directory for cTAKES has not been configured")
-		elif not os.path.exists(ct['output']):
-			logging.error("The output directory for cTAKES at %s does not exist" % ct['output'])
+		elif not os.path.exists(ct_out):
+			logging.error("The output directory for cTAKES at %s does not exist" % ct_out)
 	
 	
 	def store(self):

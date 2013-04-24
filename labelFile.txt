@@ -1,2 +1,0 @@
-<file name1>,<some string>
-<file name2>,<some string>

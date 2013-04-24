@@ -16,15 +16,12 @@ from ClinicalTrials.sqlite import SQLite
 from ClinicalTrials.study import Study
 from ClinicalTrials.umls import UMLS
 
-from settings import CTAKES
-
 
 # main
 if __name__ == "__main__":
 	logging.basicConfig(level=logging.DEBUG)
 	
 	# make sure we have our databases setup
-	Study.setup_ctakes(CTAKES)
 	Study.setup_tables()
 	UMLS.import_snomed_if_necessary()
 	
@@ -39,6 +36,10 @@ if __name__ == "__main__":
 	run_dir = "run-%s-%s" % (re.sub(r'[^\w\d\-]+', '_', condition), now.isoformat())
 	if not os.path.exists(run_dir):
 		os.mkdir(run_dir)
+		os.mkdir(os.path.join(run_dir, 'ctakes_input'))
+		os.mkdir(os.path.join(run_dir, 'ctakes_output'))
+	
+	Study.setup_ctakes({'root': run_dir, 'cleanup': False})
 	
 	# search for studies
 	print "Fetching %s studies..." % condition
@@ -64,7 +65,7 @@ if __name__ == "__main__":
 	# run cTakes if needed
 	if run_ctakes:
 		print 'Running cTakes...'
-		call('run_ctakes.sh')
+		call('run_ctakes.sh "%s"' % run_dir)
 		
 		# make sure we got all criteria
 		for study in results:

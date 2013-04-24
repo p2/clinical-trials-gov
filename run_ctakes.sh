@@ -20,9 +20,14 @@ cd ctakes
 export MAVEN_OPTS="-Xmx2048M -Dctakes.umlsuser=$UMLS_USERNAME -Dctakes.umlspw=$UMLS_PASSWORD"
 
 # execute!
+RUN='.'
+if [ -d $1 ]; then
+	RUN=$1
+fi
+
 #mvn exec:java -X \
 #-Dexec.mainClass="org.chboston.cnlp.i2b2.features.CuiFeatureExtractor" \
 #-Dexec.args="--input-dir ../grabbed --label-file ../testLblfile.txt --output-dir ../output"
 
-mvn compile -PrunPGPOP -Dexec.args="--textRoot ../ctakes_input --labelFile ../labelFile.txt --outputRoot ../ctakes_output"
+mvn compile -PpgpopPreprocessAndSerialize -Dexec.args="-t ../$RUN/ctakes_input -l ../ctakes_label.txt -o ../$RUN/ctakes_output"
 
