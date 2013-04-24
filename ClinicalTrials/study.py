@@ -10,18 +10,16 @@ import dateutil.parser
 import os
 import logging
 import codecs
-from xml.dom.minidom import parse, parseString
+from xml.dom.minidom import parse
 
 import requests
 requests_log = logging.getLogger("requests.packages.urllib3")
 requests_log.setLevel(logging.WARNING)
-from urllib2 import urlopen
-import shutil
-import tarfile
 
 from sqlite import SQLite
 from nlp import split_inclusion_exclusion
 from umls import UMLS, SNOMED
+from paper import Paper
 
 
 class Study (object):
@@ -37,6 +35,7 @@ class Study (object):
 		self.nct = nct
 		self.pmids = None
 		self.pmcids = None
+		self.papers = None
 		self.hydrated = False
 		self.updated = None
 		self.gender = 0
@@ -227,168 +226,57 @@ class Study (object):
 	def find_pmc_packages(self):
 		""" Determine whether there was a PMC-indexed publication for the trial.
 		"""
-		if self.pmcids is not None and len(self.pmcids) > 0:
-			return
+		# if self.pmcids is not None and len(self.pmcids) > 0:
+		# 	return
 		
 		if self.nct is None:
 			logging.warning("Need an NCT before trying to find publications")
 			return
 		
-		# use eutils to find PMIDs
-		url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=(%s%%5BTitle%%2FAbstract%%5D)" % self.nct
-		res = requests.get(url)
-		if not res.ok:
-			logging.warning("%d -- failed to get %s: %s" % (res.status_code, url, res.error))
-		else:
+		# find papers
+		pmcids = []
+		self.papers = Paper.find_by_nct(self.nct)
+		for paper in self.papers:
+			paper.fetch_details()
+			pmcids.extend(paper.pmcids)
+		
+		# store ids
+		if len(pmcids) > 0:
+			self.pmcids = pmcids
+		elif len(self.papers) > 0:
 			pmids = []
-			pmcids = []
-						
-			# we are looking for: <IdList><Id>22563743</Id></IdList>
-			root = parseString(res.content).documentElement
-			id_list = root.getElementsByTagName('IdList')
-			if id_list is not None and len(id_list) > 0:
-				id_nodes = id_list[0].getElementsByTagName('Id')
-				
-				# find pmids in <Id/> nodes
-				if len(id_nodes) > 0:
-					for node in id_nodes:
-						if node.firstChild:
-							pmids.append(node.firstChild.data)
-			
-			# fetch info about individual studies, fetched by PMID
-			for pmid in pmids:
-				url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml" % pmid
-				res = requests.get(url)
-				if not res.ok:
-					logging.warning("%d -- failed to get %s: %s" % (res.status_code, url, res.error))
-				else:
-					root = parseString(res.content).documentElement
-					try:
-						# try to find the <OtherId> node and extract its data if the source is NLM
-						article = root.getElementsByTagName('PubmedArticle')[0]
-						citation = article.getElementsByTagName('MedlineCitation')[0]
-						others = citation.getElementsByTagName('OtherID')
-						for other in others:
-							if 'NLM' == other.getAttribute('Source'):
-								pmcids.append(other.firstChild.data)
-					except Exception, e:
-						logging.warning("Error when parsing eutils XML %s: %s" % (url, e))
-			
-			# store ids
-			self.pmids = pmids
-			if len(pmcids) > 0:
-				self.pmcids = pmcids
-			elif len(pmids) > 0:
-				logging.info("No PMCID found for %s despite PMIDS: %s", self.nct, pmids)
+			for paper in self.papers:
+				pmids.append(paper.pmid)
+			logging.info("No PMCID found for %s despite PMIDS: %s", self.nct, ", ".join(pmids))
 	
 	
 	def download_pmc_packages(self, run_dir):
-		""" Downloads the PubMed Central package if there is one """
-		if self.pmcids is not None and len(self.pmcids) > 0:
-			for pmc_id in self.pmcids:
-				filename = "%s.tgz" % pmc_id
-				filepath = os.path.join(run_dir, filename)
-				
-				# we don't yet have it, download the XML to get to the links
-				if not os.path.exists(filepath):
-					links = []
-					url = "http://www.pubmedcentral.nih.gov/utils/oa/oa.fcgi?id=%s" % pmc_id
-					res = requests.get(url)
-					if not res.ok:
-						logging.warning("%d -- failed to get %s: %s" % (res.status_code, url, res.error))
-					else:
-						root = parseString(res.content).documentElement
-						try:
-							# find the link to the package
-							records_parent = root.getElementsByTagName('records')[0]
-							records = records_parent.getElementsByTagName('record')
-							for record in records:
-								n_links = record.getElementsByTagName('link')
-								for link in n_links:
-									if 'tgz' == link.getAttribute('format'):
-										links.append(link.getAttribute('href'))
-						except Exception, e:
-							logging.warning("Error when parsing %s [PMIDs %s]: %s" % (url, ", ".join(self.pmids), e))
-					
-					if len(links) > 1:
-						logging.warning("xxx>  We got more than 1 link, can not currently handle this, help!")
-					
-					# download package
-					for link in links:
-						req = urlopen(link)
-						with open(filepath, 'wb') as handle:
-							shutil.copyfileobj(req, handle)
+		""" Downloads the PubMed Central packages for our papers. """
+		
+		if self.papers is not None:
+			for paper in self.papers:
+				paper.download_pmc_packages(run_dir)
 	
 	
 	def parse_pmc_packages(self, run_dir):
 		""" Looks for downloaded packages in the given run directory and
 		extracts the paper text from the XML in the .nxml file.
 		"""
-		if self.pmcids is None:
+		if self.papers is None:
 			return
 		
 		if not os.path.exists(run_dir):
-			logging.warning("The run directory %s doesn't exist" % run_dir)
-			return
+			raise Exception("The run directory %s doesn't exist" % run_dir)
 		
 		ct_in_dir = os.path.join(Study.ctakes.get('root', run_dir), 'ctakes_input')
-		
-		# find our archive
-		for arname in os.listdir(run_dir):
-			if '.tgz' == arname[-4:] and arname[:-4] in self.pmcids:
-				arpath = os.path.join(run_dir, arname)
-				
-				# do we already have these methods?
-				methodsname = "%s-%s.xml" % (self.nct, arname[:-4])
-				methodspath = os.path.join(ct_in_dir, methodsname)
-				if os.path.exists(methodspath):
-					continue
-				
-				# unziptar (if necessary)
-				tar = tarfile.open(arpath)
-				names = tar.getnames()
-				dirname = names[0] if len(names) > 0 else None
-				if dirname is None:
-					logging.warning("The archive %s is not readable" % arpath)
-					return
-				
-				dirpath = os.path.join(run_dir, dirname)
-				if not os.path.exists(dirpath):
-					tar.extractall(path=run_dir)
-				tar.close()
-				
-				if not os.path.exists(dirpath):
-					logging.warning("Apparently failed to extract %s" % arpath)
-					return
-				
-				methods = []
-				
-				# get .nxml from the extracted directory
-				for filename in os.listdir(dirpath):
-					if len(os.path.basename(filename)) > 4 and ".nxml" == os.path.basename(filename)[-5:]:
-						
-						# parse .nxml
-						root = parse(os.path.join(dirpath, filename)).documentElement
-						try:
-							body = root.getElementsByTagName('body')[0]
-							sections = body.getElementsByTagName('sec')
-							for section in sections:
-								if 'methods' in section.getAttribute('sec-type'):
-									methods.append(section.toxml())
-						except Exception, e:
-							logging.debug("Error when parsing .nxml named %s in %s" % (filename, dirpath))
-				
-				# so we got methods
-				if len(methods) > 0:
-					with codecs.open(methodspath, 'w', 'utf-8') as handle:
-						handle.write("\n".join(methods))
-					
-					# also dump CT criteria
-					plaintextpath = os.path.join(ct_in_dir, "%s-CT.txt" % self.nct)
-					with codecs.open(plaintextpath, 'w', 'utf-8') as handle:
-						handle.write(self.eligibility_formatted)
-				else:
-					logging.info("No methods found in package %s" % dirpath)
+		for paper in self.papers:
+			paper.parse_pmc_packages(run_dir, ct_in_dir)
+			
+			# also dump CT criteria if the paper has methods
+			if paper.has_methods:
+				plaintextpath = os.path.join(ct_in_dir, "%s-%s-CT.txt" % (self.nct, paper.pmid))
+				with codecs.open(plaintextpath, 'w', 'utf-8') as handle:
+					handle.write(self.eligibility_formatted)
 	
 	
 	
