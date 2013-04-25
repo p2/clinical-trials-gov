@@ -33,11 +33,10 @@ class Study (object):
 	
 	def __init__(self, nct=0):
 		self.nct = nct
-		self.pmids = None
-		self.pmcids = None
 		self.papers = None
 		self.hydrated = False
 		self.updated = None
+		
 		self.gender = 0
 		self.min_age = 0
 		self.max_age = 200
@@ -46,6 +45,8 @@ class Study (object):
 		self.sampling_method = None
 		self.criteria_text = None
 		self.criteria = []
+		
+		self.waiting_for_ctakes_pmc = False
 	
 	
 	def from_dict(self, d):
@@ -206,6 +207,9 @@ class Study (object):
 	def waiting_for_ctakes(self):
 		""" Returns True if any of our criteria needs to run through cTakes.
 		"""
+		if self.waiting_for_ctakes_pmc:
+			return True
+		
 		if self.criteria and len(self.criteria) > 0:
 			for criterium in self.criteria:
 				if criterium.waiting_for_ctakes:
@@ -226,28 +230,14 @@ class Study (object):
 	def find_pmc_packages(self):
 		""" Determine whether there was a PMC-indexed publication for the trial.
 		"""
-		# if self.pmcids is not None and len(self.pmcids) > 0:
-		# 	return
-		
 		if self.nct is None:
 			logging.warning("Need an NCT before trying to find publications")
 			return
 		
-		# find papers
-		pmcids = []
+		# find paper details
 		self.papers = Paper.find_by_nct(self.nct)
 		for paper in self.papers:
 			paper.fetch_details()
-			pmcids.extend(paper.pmcids)
-		
-		# store ids
-		if len(pmcids) > 0:
-			self.pmcids = pmcids
-		elif len(self.papers) > 0:
-			pmids = []
-			for paper in self.papers:
-				pmids.append(paper.pmid)
-			logging.info("No PMCID found for %s despite PMIDS: %s", self.nct, ", ".join(pmids))
 	
 	
 	def download_pmc_packages(self, run_dir):
@@ -277,6 +267,8 @@ class Study (object):
 				plaintextpath = os.path.join(ct_in_dir, "%s-%s-CT.txt" % (self.nct, paper.pmid))
 				with codecs.open(plaintextpath, 'w', 'utf-8') as handle:
 					handle.write(self.eligibility_formatted)
+				
+				self.waiting_for_ctakes_pmc = True
 	
 	
 	
@@ -293,13 +285,11 @@ class Study (object):
 		
 		# store our direct properties
 		sql = '''REPLACE INTO studies
-			(nct, pmids, pmcids, updated, elig_gender, elig_min_age, elig_max_age, elig_population, elig_sampling, elig_accept_healthy, elig_criteria)
+			(nct, updated, elig_gender, elig_min_age, elig_max_age, elig_population, elig_sampling, elig_accept_healthy, elig_criteria)
 			VALUES
-			(?, ?, ?, datetime(), ?, ?, ?, ?, ?, ?, ?)'''
+			(?, datetime(), ?, ?, ?, ?, ?, ?, ?)'''
 		params = (
 			self.nct,
-			"|".join(self.pmids) if self.pmids is not None else None,
-			"|".join(self.pmcids) if self.pmcids is not None else None,
 			self.gender,
 			self.min_age,
 			self.max_age,
@@ -339,16 +329,14 @@ class Study (object):
 		
 		# populate ivars
 		if data is not None:
-			self.pmids = data[1].split("|") if data[1] else None
-			self.pmcids = data[2].split("|") if data[2] else None
-			self.updated = dateutil.parser.parse(data[3])
-			self.gender = data[4]
-			self.min_age = data[5]
-			self.max_age = data[6]
-			self.population = data[7]
-			self.sampling_method = data[8]
-			self.healthy_volunteers = data[9]
-			self.criteria_text = data[10]
+			self.updated = dateutil.parser.parse(data[1])
+			self.gender = data[2]
+			self.min_age = data[3]
+			self.max_age = data[4]
+			self.population = data[5]
+			self.sampling_method = data[6]
+			self.healthy_volunteers = data[7]
+			self.criteria_text = data[8]
 			
 			self.hydrated = True
 			
@@ -372,8 +360,6 @@ class Study (object):
 		
 		cls.sqlite_handle.create('studies', '''(
 			nct UNIQUE,
-			pmids TEXT,
-			pmcids TEXT,
 			updated TIMESTAMP,
 			elig_gender INTEGER,
 			elig_min_age INTEGER,
@@ -450,7 +436,8 @@ class StudyEligibility (object):
 		      1. Reads the codes from SQLite, if they are there
 		      2. Reads and stores the codes from the cTakes output dir, if they
 		         are there
-		      3. Writes the criteria to the cTakes input directory
+		      3. Writes the criteria to the cTakes input directory and sets the
+		         "waiting_for_ctakes" flag
 		"""
 		if self.did_process:
 			return
@@ -506,10 +493,10 @@ class StudyEligibility (object):
 		if ct_in and os.path.exists(ct_in):
 			infile = os.path.join(ct_in, '%d.txt' % self.id)
 			if not os.path.exists(infile):
-				handle = codecs.open(infile, 'w', 'utf-8')
-				handle.write(self.text)
-				handle.close()
-			self.waiting_for_ctakes = True
+				with codecs.open(infile, 'w', 'utf-8') as handle:
+					handle.write(self.text)
+				
+				self.waiting_for_ctakes = True
 			return
 		
 		# still here - not properly set up

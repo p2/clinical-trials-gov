@@ -77,6 +77,11 @@ class Paper(object):
 				logging.warning("Error when parsing eutils XML %s: %s" % (url, e))
 		
 		self.pmcids = pmcids
+		
+		# warn if we have a PMID but no PMC-id
+		if self.pmid is not None and len(pmcids) < 1:
+			logging.info("No PMCID found for %s despite PMID: %s", self.nct, self.pmid)
+	
 	
 	def download_pmc_packages(self, run_dir):
 		""" Downloads the PubMed Central package if there is one.

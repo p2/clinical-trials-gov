@@ -55,17 +55,17 @@ if __name__ == "__main__":
 		study.load()
 		study.process_eligibility_from_text()
 		study.run_pmc(run_dir)
-	#	study.codify_eligibility()
-	#	if study.waiting_for_ctakes():
-	#		run_ctakes = True
-		study.store()
+		study.codify_eligibility()
+		if study.waiting_for_ctakes():
+			run_ctakes = True
+		#study.store()
 	
 	Study.sqlite_commit_if_needed()
 	
 	# run cTakes if needed
 	if run_ctakes:
 		print 'Running cTakes...'
-		call('run_ctakes.sh "%s"' % run_dir)
+		call(['run_ctakes.sh', run_dir])
 		
 		# make sure we got all criteria
 		for study in results:
