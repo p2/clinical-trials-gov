@@ -27,5 +27,5 @@ cd ctakes
 export MAVEN_OPTS="-Xmx2048M -Dctakes.umlsuser=$UMLS_USERNAME -Dctakes.umlspw=$UMLS_PASSWORD"
 
 # execute!
-mvn compile -X -PpgpopPreprocessAndSerialize -Dexec.args="-t ../$RUN/ctakes_input -l ../ctakes_label.txt -o ../$RUN/ctakes_output"
+mvn compile -PpgpopPreprocessAndSerialize -Dexec.args="-t ../$RUN/ctakes_input -l ../ctakes_label.txt -o ../$RUN/ctakes_output"
 
