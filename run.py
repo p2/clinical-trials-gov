@@ -58,7 +58,7 @@ if __name__ == "__main__":
 		study.codify_eligibility()
 		if study.waiting_for_ctakes():
 			run_ctakes = True
-		#study.store()
+		study.store()
 	
 	Study.sqlite_commit_if_needed()
 	

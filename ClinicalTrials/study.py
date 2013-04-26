@@ -16,22 +16,20 @@ import requests
 requests_log = logging.getLogger("requests.packages.urllib3")
 requests_log.setLevel(logging.WARNING)
 
-from sqlite import SQLite
+from dbobject import DBObject
 from nlp import split_inclusion_exclusion
 from umls import UMLS, SNOMED
 from paper import Paper
 
 
-class Study (object):
+class Study (DBObject):
 	""" Describes a study found on ClinicalTrials.gov.
 	"""
 	
 	ctakes = {}
-	sqlite_handle = None
-	sqlite_must_commit = False
-	
 	
 	def __init__(self, nct=0):
+		super(Study, self).__init__()
 		self.nct = nct
 		self.papers = None
 		self.hydrated = False
@@ -274,16 +272,18 @@ class Study (object):
 	
 	# -------------------------------------------------------------------------- Database Storage
 	
-	# store properties to SQLite
-	def store(self):
-		""" Stores the receiver's properties, including all StudyEligibility
-		objects, to SQLite.
-		You need to MANUALLY COMMIT when you think it's appropriate!
-		"""
+	def should_insert(self):
+		""" We use REPLACE INTO, so we always update. """
+		return True
+	
+	def should_update(self):
+		return False
+	
+	def will_insert(self):
 		if self.nct is None:
 			raise Exception('NCT is not set')
-		
-		# store our direct properties
+	
+	def insert_tuple(self):
 		sql = '''REPLACE INTO studies
 			(nct, updated, elig_gender, elig_min_age, elig_max_age, elig_population, elig_sampling, elig_accept_healthy, elig_criteria)
 			VALUES
@@ -299,12 +299,7 @@ class Study (object):
 			self.criteria_text
 		)
 		
-		if Study.sqlite_handle.execute(sql, params):
-			Study.sqlite_must_commit = True
-			self.hydrated = True
-			return True
-		
-		return False
+		return sql, params
 	
 	
 	def store_criteria(self):
@@ -325,7 +320,7 @@ class Study (object):
 		
 		# get from SQLite
 		sql = 'SELECT * FROM studies WHERE nct = ?'
-		data = Study.sqlite_handle.executeOne(sql, (self.nct,))
+		data = self.sqlite_select_one(sql, (self.nct,))
 		
 		# populate ivars
 		if data is not None:
@@ -345,20 +340,11 @@ class Study (object):
 	
 	
 	# -------------------------------------------------------------------------- Class Methods
+	table_name = 'studies'
 	
 	@classmethod
-	def sqlite_commit_if_needed(cls):
-		if cls.sqlite_must_commit:
-			cls.sqlite_handle.commit()
-			cls.sqlite_must_commit = False
-	
-	
-	@classmethod
-	def setup_tables(cls):
-		if cls.sqlite_handle is None:
-			cls.sqlite_handle = SQLite.get('databases/storage.db')
-		
-		cls.sqlite_handle.create('studies', '''(
+	def table_structure(cls):
+		return '''(
 			nct UNIQUE,
 			updated TIMESTAMP,
 			elig_gender INTEGER,
@@ -368,10 +354,11 @@ class Study (object):
 			elig_sampling TEXT,
 			elig_accept_healthy INTEGER DEFAULT 0,
 			elig_criteria TEXT
-		)''')
-		
-		StudyEligibility.setup_tables()
+		)'''
 	
+	@classmethod
+	def did_setup_tables(cls):
+		StudyEligibility.setup_tables()
 	
 	@classmethod
 	def setup_ctakes(cls, setting):
@@ -381,14 +368,13 @@ class Study (object):
 
 
 # Study eligibility criteria management
-class StudyEligibility (object):
+class StudyEligibility (DBObject):
 	""" Holds one part of a study's eligibility criteria.
 	Studies can have a lot of them.
 	"""
 	
 	def __init__(self, study):
-		self.id = None
-		self.hydrated = False
+		super(StudyEligibility, self).__init__()
 		self.study = study
 		self.updated = None
 		self.is_inclusion = False
@@ -410,7 +396,7 @@ class StudyEligibility (object):
 		
 		# find all
 		sql = 'SELECT * FROM criteria WHERE study = ?'
-		for rslt in Study.sqlite_handle.execute(sql, (study.nct,)):
+		for rslt in self.sqlite_select(sql, (study.nct,)):
 			elig = StudyEligibility(study)
 			elig.from_db(rslt)
 			elig.hydrated = True
@@ -510,24 +496,24 @@ class StudyEligibility (object):
 			logging.error("The output directory for cTAKES at %s does not exist" % ct_out)
 	
 	
-	def store(self):
-		""" Stores the receiver's data to SQLite.
-		You must MANUALLY COMMIT!
-		"""
+	def should_insert(self):
+		return self.id is None
+	
+	def will_insert(self):
 		if self.study is None or self.study.nct is None:
 			raise Exception('Study NCT is not set')
-		
-		# insert if we don't have an id
-		if self.id is None:
-			sql = '''INSERT OR IGNORE INTO criteria
+	
+	def insert_tuple(self):
+		sql = '''INSERT OR IGNORE INTO criteria
 				(criterium_id, study) VALUES (?, ?)'''
-			params = (
-				self.id,
-				self.study.nct
-			)
-			self.id = Study.sqlite_handle.executeInsert(sql, params)
+		params = (
+			self.id,
+			self.study.nct
+		)
 		
-		# update the remaining stuff
+		return sql, params
+	
+	def update_tuple(self):
 		sql = '''UPDATE criteria SET
 			updated = datetime(), is_inclusion = ?, text = ?, snomed = ?, cui = ?, did_process = ?
 			WHERE criterium_id = ?'''
@@ -540,17 +526,15 @@ class StudyEligibility (object):
 			self.id
 		)
 		
-		if Study.sqlite_handle.execute(sql, params):
-			Study.sqlite_must_commit = True
-			self.hydrated = True
-			return True
-		
-		return False
+		return sql, params
 	
+	
+	# -------------------------------------------------------------------------- Class Methods
+	table_name = 'criteria'
 	
 	@classmethod
-	def setup_tables(cls):
-		Study.sqlite_handle.create('criteria', '''(
+	def table_structure(cls):
+		return '''(
 			criterium_id INTEGER PRIMARY KEY AUTOINCREMENT,
 			study TEXT,
 			updated TIMESTAMP,
@@ -559,5 +543,5 @@ class StudyEligibility (object):
 			snomed TEXT,
 			cui TEXT,
 			did_process INTEGER DEFAULT 0
-		)''')
+		)'''
 

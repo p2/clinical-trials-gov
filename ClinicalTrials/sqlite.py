@@ -82,6 +82,7 @@ class SQLite (object):
 		"""
 		create_query = 'CREATE TABLE IF NOT EXISTS %s %s' % (table_name, table_structure)
 		self.execute(create_query)
+		return True
 
 
 	def commit(self):
