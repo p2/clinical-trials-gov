@@ -21,8 +21,7 @@ from ClinicalTrials.umls import UMLS
 if __name__ == "__main__":
 	logging.basicConfig(level=logging.DEBUG)
 	
-	# make sure we have our databases setup
-	Study.setup_tables()
+	# make sure we have SNOMED setup
 	UMLS.import_snomed_if_necessary()
 	
 	# ask for a condition

@@ -75,9 +75,6 @@ class DBObject (object):
 	def update(self):
 		""" Runs the UPDATE query on the receiver. """
 		
-		if not self.should_update():
-			return True
-		
 		sql, params = self.update_tuple()
 		if sql is None or params is None:
 			return False
@@ -100,7 +97,7 @@ class DBObject (object):
 				logging.warning("Failed to INSERT %s" % self)
 		
 		# perform the update
-		if self.update():
+		if not self.should_update() or self.update():
 			return True
 		
 		logging.warning("Failed to UPDATE %s" % self)
@@ -145,7 +142,6 @@ class DBObject (object):
 	
 	
 	# -------------------------------------------------------------------------- Class Methods
-	
 	@classmethod
 	def sqlite_assure_handle(cls):
 		if cls.sqlite_handle is None:
@@ -162,6 +158,7 @@ class DBObject (object):
 			cls.sqlite_must_commit = False
 	
 	
+	# -------------------------------------------------------------------------- Table Setup
 	@classmethod
 	def table_structure(cls):
 		""" Return the table structure here. """
@@ -180,5 +177,8 @@ class DBObject (object):
 	@classmethod
 	def did_setup_tables(cls):
 		pass
+	
+	# you should call the table setup to be sure it was set up
+	#SubClass.setup_tables()
 	
 	

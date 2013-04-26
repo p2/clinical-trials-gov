@@ -16,15 +16,24 @@ import shutil
 import tarfile
 import codecs
 
+from dbobject import DBObject
 
-class Paper(object):
-	""" Representing one paper, per PMID. """
+
+class Paper (DBObject):
+	""" Representing one paper, per PMID.
+	
+	For now a paper can only relate to one trial, should probably improve that
+	at one point.
+	"""
+	
+	table_name = 'papers'
 	
 	
 	def __init__(self, nct, pmid):
 		if pmid is None:
 			logging.error("Instantiating a paper without PMID")
 		
+		super(Paper, self).__init__()
 		self.nct = nct
 		self.pmid = pmid
 		self.pmcids = None
@@ -76,7 +85,9 @@ class Paper(object):
 			except Exception, e:
 				logging.warning("Error when parsing eutils XML %s: %s" % (url, e))
 		
+		# remember the pmcids
 		self.pmcids = pmcids
+		self.store()
 		
 		# warn if we have a PMID but no PMC-id
 		if self.pmid is not None and len(pmcids) < 1:
@@ -229,6 +240,43 @@ class Paper(object):
 		return papers
 	
 	
+	# -------------------------------------------------------------------------- Storage
+	def should_insert(self):
+		return self.id is None
+	
+	def will_insert(self):
+		if self.nct is None:
+			raise Exception('NCT is not set')
+	
+	def insert_tuple(self):
+		sql = '''INSERT INTO papers (nct, pmid) VALUES (?, ?)'''
+		params = (self.nct, self.pmid)
+		
+		return sql, params
+	
+	def update_tuple(self):
+		sql = '''UPDATE papers SET
+			updated = datetime(), pmcids = ?
+			WHERE paper_id = ?'''
+		params = (
+			'|'.join(self.pmcids),
+			self.id
+		)
+		
+		return sql, params
+	
+	
+	@classmethod
+	def table_structure(cls):
+		return '''(
+			paper_id INTEGER PRIMARY KEY AUTOINCREMENT,
+			nct VARCHAR,
+			pmid INT,
+			pmcids TEXT,
+			updated TIMESTAMP
+		)'''
+	
+	
 	# -------------------------------------------------------------------------- Utilities
 	def __unicode__(self):
 		return '<paper.Paper %s>' % (self.pmid)
@@ -238,6 +286,9 @@ class Paper(object):
 	
 	def __repr__(self):
 		return str(self)
-	
+
+# init tables	
+Paper.setup_tables()
+
 	
 

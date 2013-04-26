@@ -356,9 +356,6 @@ class Study (DBObject):
 			elig_criteria TEXT
 		)'''
 	
-	@classmethod
-	def did_setup_tables(cls):
-		StudyEligibility.setup_tables()
 	
 	@classmethod
 	def setup_ctakes(cls, setting):
@@ -586,4 +583,8 @@ class StudyEligibility (DBObject):
 	def __repr__(self):
 		return str(self)
 
+
+# init tables
+Study.setup_tables()
+StudyEligibility.setup_tables()
 
