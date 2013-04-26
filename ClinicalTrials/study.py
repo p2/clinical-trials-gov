@@ -363,7 +363,18 @@ class Study (DBObject):
 	@classmethod
 	def setup_ctakes(cls, setting):
 		cls.ctakes = setting
-
+	
+	
+	# -------------------------------------------------------------------------- Utilities
+	def __unicode__(self):
+		return '<study.Study %s>' % (self.nct)
+	
+	def __str__(self):
+		return unicode(self).encode('utf-8')
+	
+	def __repr__(self):
+		return str(self)
+	
 
 
 
@@ -563,4 +574,16 @@ class StudyEligibility (DBObject):
 			cui TEXT,
 			did_process INTEGER DEFAULT 0
 		)'''
+	
+	
+	# -------------------------------------------------------------------------- Utilities
+	def __unicode__(self):
+		return '<study.StudyEligibility %s (%s)>' % (self.nct, 'inclusion' if self.is_inclusion else 'exclusion')
+	
+	def __str__(self):
+		return unicode(self).encode('utf-8')
+	
+	def __repr__(self):
+		return str(self)
+
 

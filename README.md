@@ -3,6 +3,8 @@ ClinicalTrials.gov Eligibility
 
 Extracting and codifying study eligibility criteria from [ClinicalTrials.gov][ct] using [cTakes][].
 
+> This project relies on a private cTAKES module for the time being.
+
 
 Setup
 -----
@@ -21,10 +23,7 @@ We checkout cTakes and add the pgpop module. Assuming we are in the main directo
   `svn co https://svn.apache.org/repos/asf/incubator/ctakes/trunk ctakes`
 - add this line to `ctakes/pom.xml` (under the `<modules>` node):
   `<module>ctakes-pgpop</module>`
-- `mkdir ctakes_input`
-- `mkdir ctakes_output`
-- Add the pgpop module to ctakes (currently have it in my Dropbox)
-  `cp ~/Dropbox/xy/ctakes-pgpop ctakes/`
+- Add the pgpop module to ctakes as `ctakes-pgpop` (**THIS IS A PRIVATE MODULE**)
 - Create a file named `umls.sh` containing your UMLS username and password:
       
       UMLS_USERNAME='username'

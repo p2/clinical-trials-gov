@@ -12,6 +12,9 @@ from sqlite import SQLite
 
 class DBObject (object):
 	""" A superclass for objects that can dehydrate to and hydrate from SQLite.
+	
+	Very basic for the time being, but still takes away much of the cruft for
+	subclasses.
 	"""
 	
 	sqlite_handle = None

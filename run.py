@@ -74,7 +74,7 @@ if __name__ == "__main__":
 	Study.sqlite_commit_if_needed()
 	
 	# generate HTML report
-	if False:
+	if True:
 		print 'Generating report...'
 		html = """<html>
 		<head>
