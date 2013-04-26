@@ -13,8 +13,8 @@ from sqlite import SQLite
 class DBObject (object):
 	""" A superclass for objects that can dehydrate to and hydrate from SQLite.
 	
-	Very basic for the time being, but still takes away much of the cruft for
-	subclasses.
+	Very crude and basic for the time being, but still takes away much of the
+	cruft for subclasses.
 	"""
 	
 	sqlite_handle = None
@@ -105,9 +105,12 @@ class DBObject (object):
 	
 	
 	# -------------------------------------------------------------------------- Hydration
+	def load(self):
+		""" Hydrate from database. """
+		pass
+	
 	def from_db(self, data):
-		""" Fill from an SQLite-retrieved list.
-		"""
+		""" Fill from an SQLite-retrieved list. """
 		pass
 	
 	
@@ -139,6 +142,17 @@ class DBObject (object):
 		
 		cls.sqlite_assure_handle()
 		return cls.sqlite_handle.executeOne(sql, params)
+	
+	@classmethod
+	def add_index(cls, table_column):
+		""" Adds an index for the given table column if there is none.
+		"""
+		if table_column is None:
+			return
+		
+		cls.sqlite_assure_handle()
+		idx_name = "%s_index" % table_column
+		cls.sqlite_handle.execute("CREATE INDEX IF NOT EXISTS %s ON %s (%s)" % (idx_name, cls.table_name, table_column))
 	
 	
 	# -------------------------------------------------------------------------- Class Methods

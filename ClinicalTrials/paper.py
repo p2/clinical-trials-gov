@@ -54,9 +54,10 @@ class Paper (DBObject):
 		return self.paper_methods is not None and len(self.paper_methods) > 0
 	
 	
-	def fetch_details(self):
+	# -------------------------------------------------------------------------- PubMed Central Ids
+	def fetch_pmc_ids(self):
 		""" Downloads the paper's XML from eutils and parses the interesting
-		parts. """
+		parts to get ahold of the PubMed Central Ids. """
 		
 		if self.pmcids is not None:
 			return
@@ -204,6 +205,7 @@ class Paper (DBObject):
 				else:
 					logging.info("No methods found in package %s" % dirpath)
 	
+	
 	@classmethod
 	def find_by_nct(cls, nct):
 		""" Finds papers published for a given NCT id.
@@ -235,6 +237,7 @@ class Paper (DBObject):
 					for node in id_nodes:
 						if node.firstChild:
 							paper = Paper(nct, node.firstChild.data)
+							paper.load()
 							papers.append(paper)
 		
 		return papers
@@ -266,6 +269,32 @@ class Paper (DBObject):
 		return sql, params
 	
 	
+	def load(self):
+		if self.id is None and self.pmid is None and self.nct is None:
+			return
+		
+		data = None
+		
+		if self.id is not None:
+			sql = '''SELECT * FROM papers WHERE paper_id = ?'''
+			data = Paper.sqlite_select_one(sql, (self.id,))
+		
+		elif self.pmid is not None:
+			sql = '''SELECT * FROM papers WHERE pmid = ?'''
+			data = Paper.sqlite_select_one(sql, (self.pmid,))
+		
+		elif self.nct is not None:
+			sql = '''SELECT * FROM papers WHERE nct = ?'''
+			data = Paper.sqlite_select_one(sql, (self.nct,))
+		
+		# fill ivars
+		if data is not None:
+			self.id = data[0]
+			self.nct = data[1]
+			self.pmid = data[2]
+			self.pmcids = data[3].split('|') if data[3] else []
+	
+	
 	@classmethod
 	def table_structure(cls):
 		return '''(
@@ -275,6 +304,11 @@ class Paper (DBObject):
 			pmcids TEXT,
 			updated TIMESTAMP
 		)'''
+	
+	@classmethod
+	def did_setup_tables(cls):
+		cls.add_index('nct')
+		cls.add_index('pmid')
 	
 	
 	# -------------------------------------------------------------------------- Utilities

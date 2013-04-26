@@ -235,7 +235,7 @@ class Study (DBObject):
 		# find paper details
 		self.papers = Paper.find_by_nct(self.nct)
 		for paper in self.papers:
-			paper.fetch_details()
+			paper.fetch_pmc_ids()
 	
 	
 	def download_pmc_packages(self, run_dir):
