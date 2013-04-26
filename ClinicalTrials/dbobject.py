@@ -124,19 +124,21 @@ class DBObject (object):
 		
 		return False
 	
-	def sqlite_select(self, sql, params):
+	@classmethod
+	def sqlite_select(cls, sql, params):
 		""" Executes the SQL statement and returns the response. You can use
 		this method in an iterator. """
 		
-		DBObject.sqlite_assure_handle()
-		return DBObject.sqlite_handle.execute(sql, params)
+		cls.sqlite_assure_handle()
+		return cls.sqlite_handle.execute(sql, params)
 	
-	def sqlite_select_one(self, sql, params):
+	@classmethod
+	def sqlite_select_one(cls, sql, params):
 		""" Executes the SQL statement and returns the first response row.
 		"""
 		
-		DBObject.sqlite_assure_handle()
-		return DBObject.sqlite_handle.executeOne(sql, params)
+		cls.sqlite_assure_handle()
+		return cls.sqlite_handle.executeOne(sql, params)
 	
 	
 	# -------------------------------------------------------------------------- Class Methods

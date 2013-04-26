@@ -197,7 +197,7 @@ class Study (DBObject):
 		""" Retrieves the codes from SQLite or, if there are none, passes the
 		text criteria to cTakes.
 		"""
-		if self.criteria and len(self.criteria) > 0:
+		if self.criteria is not None:
 			for criterium in self.criteria:
 				criterium.codify()
 	
@@ -320,7 +320,7 @@ class Study (DBObject):
 		
 		# get from SQLite
 		sql = 'SELECT * FROM studies WHERE nct = ?'
-		data = self.sqlite_select_one(sql, (self.nct,))
+		data = DBObject.sqlite_select_one(sql, (self.nct,))
 		
 		# populate ivars
 		if data is not None:
@@ -396,7 +396,7 @@ class StudyEligibility (DBObject):
 		
 		# find all
 		sql = 'SELECT * FROM criteria WHERE study = ?'
-		for rslt in self.sqlite_select(sql, (study.nct,)):
+		for rslt in cls.sqlite_select(sql, (study.nct,)):
 			elig = StudyEligibility(study)
 			elig.from_db(rslt)
 			elig.hydrated = True
@@ -417,6 +417,65 @@ class StudyEligibility (DBObject):
 		self.did_process = (1 == data[7])
 	
 	
+	# -------------------------------------------------------------------------- Codification
+	def read_ctakes_output(self):
+		""" Reads and stores the codes from the cTakes output dir, if they
+		are there. """
+		
+		ct = Study.ctakes
+		if ct is None:
+			return False
+		
+		# is there cTAKES output?
+		ct_out = os.path.join(ct.get('root', '.'), 'ctakes_output')
+		if not os.path.exists(ct_out):
+			logging.error("The output directory for cTAKES at %s does not exist" % ct_out)
+			return False
+		
+		outfile = os.path.join(ct_out, '%d.txt.xmi' % self.id)
+		if not os.path.exists(outfile):
+			return False
+		
+		# parse XMI file
+		root = parse(outfile).documentElement
+		
+		# pluck apart the SNOMED codes
+		code_nodes = root.getElementsByTagName('refsem:UmlsConcept')
+		if len(code_nodes) > 0:
+			cuis = []
+			snomeds = []
+			for node in code_nodes:
+				#print node.toprettyxml()
+				
+				# extract SNOMED code
+				if 'codingScheme' in node.attributes.keys() \
+					and 'code' in node.attributes.keys() \
+					and 'SNOMED' == node.attributes['codingScheme'].value:
+					snomeds.append(node.attributes['code'].value)
+				
+				# extract UMLS CUI
+				if 'cui' in node.attributes.keys():
+					cuis.append(node.attributes['cui'].value)
+			
+			self.snomed = list(set(snomeds))
+			self.cui = list(set(cuis))
+			
+		# mark as processed
+		self.did_process = True
+		
+		# store to SQLite and remove the files if desired
+		cleanup = ct['cleanup'] if 'cleanup' in ct else False
+		if self.store() and cleanup:
+			os.remove(outfile)
+			
+			ct_in = os.path.join(ct.get('root', '.'), 'ctakes_input')
+			infile = os.path.join(ct_in, '%d.txt' % self.id)
+			if os.path.exists(infile):
+				os.remove(infile)
+		
+		self.waiting_for_ctakes = False
+		return True
+	
 	def codify(self):
 		""" Three stages:
 		      1. Reads the codes from SQLite, if they are there
@@ -433,49 +492,11 @@ class StudyEligibility (DBObject):
 			raise Exception('must hydrate first (not yet implemented)')
 		
 		# 2. not there, look in cTakes output directory
-		ct = Study.ctakes
-		ct_in = os.path.join(ct.get('root', '.'), 'ctakes_input')
-		ct_out = os.path.join(ct.get('root', '.'), 'ctakes_output')
-		
-		if os.path.exists(ct_out):
-			cleanup = ct['cleanup'] if 'cleanup' in ct else False
-			outfile = os.path.join(ct_out, '%d.txt.xmi' % self.id)
-			if os.path.exists(outfile):
-				root = parse(outfile).documentElement
-				code_nodes = root.getElementsByTagName('refsem:UmlsConcept')
-				
-				# pluck apart the codes
-				if len(code_nodes) > 0:
-					cuis = []
-					snomeds = []
-					for node in code_nodes:
-						#print node.toxml()
-						
-						# extract SNOMED code
-						if 'codingScheme' in node.attributes.keys() \
-							and 'code' in node.attributes.keys() \
-							and 'SNOMED' == node.attributes['codingScheme'].value:
-							snomeds.append(node.attributes['code'].value)
-						
-						# extract UMLS CUI
-						if 'cui' in node.attributes.keys():
-							cuis.append(node.attributes['cui'].value)
-					
-					self.snomed = list(set(snomeds))
-					self.cui = list(set(cuis))
-					
-				# mark as processed, store to SQLite and remove the files
-				self.did_process = True
-				if self.store() and cleanup:
-					os.remove(outfile)
-					infile = os.path.join(ct_in, '%d.txt' % self.id)
-					if os.path.exists(infile):
-						os.remove(infile)
-				
-				self.waiting_for_ctakes = False
-				return
+		if self.read_ctakes_output():
+			return
 		
 		# 3. not yet processed, put it there and wait for cTakes to process it
+		ct_in = os.path.join(ct.get('root', '.'), 'ctakes_input')
 		if ct_in and os.path.exists(ct_in):
 			infile = os.path.join(ct_in, '%d.txt' % self.id)
 			if not os.path.exists(infile):
@@ -492,8 +513,6 @@ class StudyEligibility (DBObject):
 			logging.error("The input directory for cTAKES at %s does not exist" % ct_in)
 		elif 'output' not in ct:
 			logging.error("The output directory for cTAKES has not been configured")
-		elif not os.path.exists(ct_out):
-			logging.error("The output directory for cTAKES at %s does not exist" % ct_out)
 	
 	
 	def should_insert(self):
