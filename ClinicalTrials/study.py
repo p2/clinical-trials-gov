@@ -504,6 +504,11 @@ class StudyEligibility (DBObject):
 			return
 		
 		# 3. not yet processed, put it there and wait for cTakes to process it
+		ct = Study.ctakes
+		if ct is None:
+			logging.error("cTAKES has not been configured")
+			return
+		
 		ct_in = os.path.join(ct.get('root', '.'), 'ctakes_input')
 		if ct_in and os.path.exists(ct_in):
 			infile = os.path.join(ct_in, '%d.txt' % self.id)
