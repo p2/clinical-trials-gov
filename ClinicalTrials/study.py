@@ -128,25 +128,36 @@ class Study (DBObject):
 		# collect criteria
 		rows = []
 		snomed = SNOMED()
+		is_first = True
 		for crit in self.criteria:
+			css_class = '' if is_first else 'crit_first'
+			in_ex = 'in' if crit.is_inclusion else 'ex'
 			
 			# this criterium has been codified
 			if len(crit.snomed) > 0:
-				c_html = '<td rowspan="%d">%s</td><td rowspan="%d">%s</td>' % (len(crit.snomed), crit.text, len(crit.snomed), 'in' if crit.is_inclusion else 'ex')
+				c_html = """<td class="%s" rowspan="%d">%s</td>
+				<td class="%s" rowspan="%d">%s</td>""" % (css_class, len(crit.snomed), crit.text, css_class, len(crit.snomed), in_ex)
+				
 				for sno in crit.snomed:
-					rows.append(c_html + '<td>%s</td><td>%s</td>' % (sno, snomed.lookup_code_meaning(sno)))
+					rows.append(c_html + """<td class="%s">%s</td>
+						<td class="%s">%s</td>""" % (css_class, sno, css_class, snomed.lookup_code_meaning(sno)))
 					if len(c_html) > 0:
 						c_html = ''
+					css_class = ''
 			
 			# no codes for this criterium
 			else:
-				rows.append('<td>%s</td><td>%s</td><td></td>' % (crit.text, 'in' if crit.is_inclusion else 'ex'))
+				rows.append("""<td class="%s">%s</td>
+					<td class="%s">%s</td>
+					<td class="%s"></td>""" % (css_class, crit.text, css_class, in_ex, css_class))
+			
+			is_first = False
 		
 		if len(rows) < 1:
 			return ''
 		
 		# compose HTML
-		html = """<tr>
+		html = """<tr class="trial_first">
 		<td rowspan="%d">
 			<a href="http://clinicaltrials.gov/ct2/show/%s" target="_blank">%s</a>
 		</td>

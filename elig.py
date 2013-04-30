@@ -16,6 +16,9 @@ from ClinicalTrials.sqlite import SQLite
 from ClinicalTrials.study import Study
 from ClinicalTrials.umls import UMLS
 
+_use_recruiting = False
+_generate_report = True
+
 
 # main
 if __name__ == "__main__":
@@ -24,15 +27,22 @@ if __name__ == "__main__":
 	# make sure we have SNOMED setup
 	UMLS.import_snomed_if_necessary()
 	
-	# ask for a condition
-	recruiting = False
-	condition = raw_input("Condition: ")
-	if condition is None or len(condition) < 1:
-		condition = 'spondylitis'
+	# ask for a condition and recruitment status
+	term = raw_input("Search for: ")
+	if term is None or len(term) < 1:
+		term = 'Diabetic Cardiomyopathy'
+	
+	recruiting = None
+	if _use_recruiting:
+		recruiting = raw_input("Recruiting: [no] ")
+		if recruiting is None or len(recruiting) < 1:
+			recruiting = False
+		else:
+			recruiting = recruiting[:1] is 'y' or recruiting[:1] is 'Y'
 	
 	# prepare a run directory
 	now = date.today()
-	run_dir = "run-%s-%s" % (re.sub(r'[^\w\d\-]+', '_', condition), now.isoformat())
+	run_dir = "run-%s-%s" % (re.sub(r'[^\w\d\-]+', '_', term.lower()), now.isoformat())
 	if not os.path.exists(run_dir):
 		os.mkdir(run_dir)
 		os.mkdir(os.path.join(run_dir, 'ctakes_input'))
@@ -41,9 +51,9 @@ if __name__ == "__main__":
 	Study.setup_ctakes({'root': run_dir, 'cleanup': False})
 	
 	# search for studies
-	print "Fetching %s studies..." % condition
+	print "Fetching %s studies..." % term
 	lilly = LillyCOI()
-	results = lilly.search_for(condition, recruiting)
+	results = lilly.search_for_term(term, recruiting, ['id', 'eligibility'])
 	
 	# process all studies
 	run_ctakes = False
@@ -73,8 +83,12 @@ if __name__ == "__main__":
 	Study.sqlite_commit_if_needed()
 	
 	# generate HTML report
-	if True:
+	if _generate_report:
 		print 'Generating report...'
+		recr_status = ''
+		if _use_recruiting:
+			recr_status = ', recruiting' if recruiting else ', not recruiting'
+		
 		html = """<html>
 		<head>
 			<title>Report: %s</title>
@@ -82,6 +96,8 @@ if __name__ == "__main__":
 			body { font-size: small; font-family: 'Helvetica-Neue', Helvetica, sans-serif; }
 			table { border-collapse: collapse; }
 			table tbody tr td { vertical-align: top; padding: 0.15em 0.5em; }
+			table tbody tr.trial_first td { padding-top: 0.5em; border-top: 1px solid #999; }
+			table tbody tr td.crit_first { border-top: 1px solid #CCC; }
 			</style>
 			<script>
 			function toggle(td) {
@@ -96,7 +112,7 @@ if __name__ == "__main__":
 			</script>
 		</head>
 		<body>
-		<h1>Report for all recruiting "%s" studies</h1>
+		<h1>Report for all "%s" studies %s</h1>
 		<table>
 			<colgroup>
 				<col />
@@ -115,7 +131,7 @@ if __name__ == "__main__":
 				<th></th>
 			</thead>
 			<tbody>
-		""" % (condition, condition)
+		""" % (term, term, recr_status)
 		
 		for study in results:
 			html += study.report_row()
