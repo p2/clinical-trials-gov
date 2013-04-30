@@ -17,6 +17,7 @@ class DBObject (object):
 	cruft for subclasses.
 	"""
 	
+	sqlite_default_db = 'databases/storage.db'
 	sqlite_handle = None
 	sqlite_must_commit = False
 	
@@ -56,9 +57,10 @@ class DBObject (object):
 		if sql is None or params is None:
 			return False
 		
-		DBObject.sqlite_assure_handle()
-		self.id = DBObject.sqlite_handle.executeInsert(sql, params)
-		DBObject.sqlite_must_commit = True
+		cls = self.__class__
+		cls.sqlite_assure_handle()
+		self.id = cls.sqlite_handle.executeInsert(sql, params)
+		cls.sqlite_must_commit = True
 		self.did_insert()
 		
 		return True
@@ -79,9 +81,10 @@ class DBObject (object):
 		if sql is None or params is None:
 			return False
 		
-		DBObject.sqlite_assure_handle()
-		if DBObject.sqlite_handle.execute(sql, params):
-			DBObject.sqlite_must_commit = True
+		cls = self.__class__
+		cls.sqlite_assure_handle()
+		if cls.sqlite_handle.execute(sql, params):
+			cls.sqlite_must_commit = True
 			self.hydrated = True
 			return True
 		
@@ -119,9 +122,10 @@ class DBObject (object):
 		""" Executes the given SQL statement with the given parameters.
 		Returns True on success, False otherwise. """
 		
-		DBObject.sqlite_assure_handle()
-		if DBObject.sqlite_handle.execute(sql, params):
-			DBObject.sqlite_must_commit = True
+		cls = self.__class__
+		cls.sqlite_assure_handle()
+		if cls.sqlite_handle.execute(sql, params):
+			cls.sqlite_must_commit = True
 			self.hydrated = True
 			return True
 		
@@ -159,7 +163,7 @@ class DBObject (object):
 	@classmethod
 	def sqlite_assure_handle(cls):
 		if cls.sqlite_handle is None:
-			cls.sqlite_handle = SQLite.get('databases/storage.db')
+			cls.sqlite_handle = SQLite.get(cls.sqlite_default_db)
 	
 	@classmethod
 	def sqlite_commit_if_needed(cls):
@@ -168,8 +172,8 @@ class DBObject (object):
 			return
 		
 		if cls.sqlite_must_commit:
-			cls.sqlite_handle.commit()
 			cls.sqlite_must_commit = False
+			cls.sqlite_handle.commit()
 	
 	
 	# -------------------------------------------------------------------------- Table Setup
@@ -179,20 +183,23 @@ class DBObject (object):
 		return None
 	
 	@classmethod
-	def setup_tables(cls):
+	def setup_tables(cls, db_path=None):
+		if db_path is not None:
+			cls.sqlite_default_db = db_path
+		
 		struct = cls.table_structure()
 		if struct is None:
 			return False
 		
 		cls.sqlite_assure_handle()
 		if cls.sqlite_handle.create(cls.table_name, struct):
-			cls.did_setup_tables()
+			cls.did_setup_tables(db_path)
 	
 	@classmethod
-	def did_setup_tables(cls):
+	def did_setup_tables(cls, db_path):
 		pass
 	
-	# you should call the table setup to be sure it was set up
-	#SubClass.setup_tables()
+	# call the table setup to be sure it was set up
+	# SubClass.setup_tables()
 	
 	

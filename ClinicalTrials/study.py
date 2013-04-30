@@ -331,7 +331,7 @@ class Study (DBObject):
 		
 		# get from SQLite
 		sql = 'SELECT * FROM studies WHERE nct = ?'
-		data = DBObject.sqlite_select_one(sql, (self.nct,))
+		data = Study.sqlite_select_one(sql, (self.nct,))
 		
 		# populate ivars
 		if data is not None:
@@ -366,6 +366,10 @@ class Study (DBObject):
 			elig_accept_healthy INTEGER DEFAULT 0,
 			elig_criteria TEXT
 		)'''
+	
+	@classmethod
+	def did_setup_tables(cls, db_path):
+		StudyEligibility.setup_tables(db_path)
 	
 	
 	@classmethod
@@ -599,9 +603,4 @@ class StudyEligibility (DBObject):
 	
 	def __repr__(self):
 		return str(self)
-
-
-# init tables
-Study.setup_tables()
-StudyEligibility.setup_tables()
 

@@ -14,6 +14,7 @@ from datetime import date
 from ClinicalTrials.lillycoi import LillyCOI
 from ClinicalTrials.sqlite import SQLite
 from ClinicalTrials.study import Study
+from ClinicalTrials.study import Paper
 from ClinicalTrials.umls import UMLS
 
 _use_recruiting = False
@@ -30,7 +31,7 @@ if __name__ == "__main__":
 	# ask for a condition and recruitment status
 	term = raw_input("Search for: ")
 	if term is None or len(term) < 1:
-		term = 'Diabetic Cardiomyopathy'
+		term = 'diabetic cardiomyopathy'
 	
 	recruiting = None
 	if _use_recruiting:
@@ -49,6 +50,11 @@ if __name__ == "__main__":
 		os.mkdir(os.path.join(run_dir, 'ctakes_output'))
 	
 	Study.setup_ctakes({'root': run_dir, 'cleanup': False})
+	
+	# init tables
+	db_path = os.path.join(run_dir, 'storage.db')
+	Study.setup_tables(db_path)
+	Paper.setup_tables(db_path)
 	
 	# search for studies
 	print "Fetching %s studies..." % term

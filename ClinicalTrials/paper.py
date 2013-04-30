@@ -306,7 +306,7 @@ class Paper (DBObject):
 		)'''
 	
 	@classmethod
-	def did_setup_tables(cls):
+	def did_setup_tables(cls, db_path):
 		cls.add_index('nct')
 		cls.add_index('pmid')
 	
@@ -320,9 +320,4 @@ class Paper (DBObject):
 	
 	def __repr__(self):
 		return str(self)
-
-# init tables	
-Paper.setup_tables()
-
-	
 
