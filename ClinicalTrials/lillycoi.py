@@ -17,6 +17,9 @@ class LillyCOI (object):
 	
 	See the reference guide here:
 	http://portal.lillycoi.com/api-reference-guide/
+	
+	ClinicalTrials.gov API "documentation":
+	http://clinicaltrials.gov/ct2/info/linking
 	"""
 	
 	baseURL = 'http://api.lillycoi.com/v1'

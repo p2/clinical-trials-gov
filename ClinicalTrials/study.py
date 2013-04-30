@@ -522,12 +522,13 @@ class StudyEligibility (DBObject):
 		
 		ct_in = os.path.join(ct.get('root', '.'), 'ctakes_input')
 		if ct_in and os.path.exists(ct_in):
+			self.waiting_for_ctakes = True
+			
 			infile = os.path.join(ct_in, '%d.txt' % self.id)
 			if not os.path.exists(infile):
 				with codecs.open(infile, 'w', 'utf-8') as handle:
 					handle.write(self.text)
 				
-				self.waiting_for_ctakes = True
 			return
 		
 		# still here - not properly set up

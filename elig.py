@@ -69,8 +69,6 @@ if __name__ == "__main__":
 			run_ctakes = True
 		study.store()
 	
-	Study.sqlite_commit_if_needed()
-	
 	# run cTakes if needed
 	if run_ctakes:
 		print 'Running cTakes...'
@@ -79,6 +77,7 @@ if __name__ == "__main__":
 		# make sure we got all criteria
 		for study in results:
 			study.codify_eligibility()
+			study.store()
 	
 	Study.sqlite_commit_if_needed()
 	
