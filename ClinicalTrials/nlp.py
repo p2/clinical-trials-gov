@@ -19,6 +19,9 @@ def split_inclusion_exclusion(string):
 	# split on newlines
 	rows = re.compile("(?:\n\s*){2,}").split(string)
 	
+	# can try to trim lists into sentences (seems to be better for cTAKES)
+	trim_list = False
+	
 	# loop all rows
 	inc = []
 	exc = []
@@ -26,7 +29,7 @@ def split_inclusion_exclusion(string):
 	at_exc = False
 	
 	for row in rows:
-		string = list_trim(row)
+		string = list_trim(row) if trim_list else row
 		if len(row) < 1 or 'none' == string:
 			continue
 		
@@ -54,9 +57,13 @@ def split_inclusion_exclusion(string):
 		logging.info(string)
 		inc.append(string)
 	
-	# join back into sentences (seems to be better for cTAKES)
-	inc = ['. '.join(inc)] if len(inc) > 0 else []
-	exc = ['. '.join(exc)] if len(exc) > 0 else []
+	# join arrays back into one string
+	if trim_list:
+		inc = ['. '.join(inc)] if len(inc) > 0 else []
+		exc = ['. '.join(exc)] if len(exc) > 0 else []
+	else:
+		inc = ["\n".join(inc)]
+		exc = ["\n".join(exc)]
 	
 	return (inc, exc)
 
