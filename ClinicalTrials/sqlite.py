@@ -7,6 +7,7 @@
 
 
 import sqlite3
+import threading
 
 
 SQLITE_INSTANCES = {}
@@ -17,19 +18,37 @@ class SQLite (object):
 	"""
 	
 	@classmethod
-	def get(cls, database=None):
+	def get(cls, database):
 		""" Use this to get SQLite instances for a given database. Avoids
 		creating multiple instances for the same database.
+		
+		We keep instances around per thread per database, maybe there should be
+		a way to turn this off. However, here we always release instances for
+		threads that are no longer alive. If this is better than just always
+		creating a new instance should be tested.
 		"""
-		if database is None:
-			raise Exception('No database provided')
 		
 		global SQLITE_INSTANCES
-		if database not in SQLITE_INSTANCES:
-			sql = SQLite(database)
-			SQLITE_INSTANCES[database] = sql
 		
-		return SQLITE_INSTANCES[database]
+		# group per thread
+		thread_id = threading.current_thread().ident
+		if thread_id not in SQLITE_INSTANCES:
+			SQLITE_INSTANCES[thread_id] = {}
+		by_thread = SQLITE_INSTANCES[thread_id]
+		
+		# group per database
+		if database not in by_thread:
+			sql = SQLite(database)
+			by_thread[database] = sql
+		
+		# free up memory for terminated threads
+		clean = {}
+		for alive in threading.enumerate():
+			if alive.ident in SQLITE_INSTANCES:
+				clean[alive.ident] = SQLITE_INSTANCES[alive.ident]
+		SQLITE_INSTANCES = clean
+		
+		return by_thread[database]
 	
 	
 	def __init__(self, database=None):

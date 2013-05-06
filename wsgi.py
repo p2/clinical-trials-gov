@@ -8,7 +8,8 @@ import logging
 import bottle
 import json
 from jinja2 import Template, Environment, PackageLoader
-from datetime import datetime
+from datetime import date, datetime
+import dateutil.parser
 from subprocess import call
 from threading import Thread
 
@@ -118,8 +119,7 @@ def run_trials(run_id, condition=None, term=None):
 	UMLS.import_snomed_if_necessary()
 	
 	# search for studies
-	with open(run_id, 'w') as handle:
-		handle.write("Fetching %s studies..." % condition if condition is not None else term)
+	_write_status_for_run(run_id, "Fetching %s studies..." % condition if condition is not None else term)
 	
 	lilly = LillyCOI()
 	if condition is not None:
@@ -129,11 +129,10 @@ def run_trials(run_id, condition=None, term=None):
 	
 	# process all studies
 	run_ctakes = False
-	i = 0
+	nct = []
 	for study in results:
-		i += 1
-		with open(run_id, 'w') as handle:
-			handle.write('Processing %d of %d...' % (i, len(results)))
+		nct.append(study.nct)
+		_write_status_for_run(run_id, "Processing %d of %d...\n" % (len(nct), len(results)))
 		 
 		study.load()
 		study.process_eligibility_from_text()
@@ -142,20 +141,19 @@ def run_trials(run_id, condition=None, term=None):
 			run_ctakes = True
 		study.store()
 	
+	_write_ncts_for_run(run_id, nct, False)
+	
 	# run cTakes if needed
 	if run_ctakes:
-		with open(run_id, 'w') as handle:
-			handle.write('Running cTakes (this will take a while)...')
+		_write_status_for_run(run_id, "Running cTakes (this will take a while)...\n")
 		
 		try:
 			if call(['./run_ctakes.sh', run_dir]) > 0:
-				with open(run_id, 'w') as handle:
-					handle.write('Error running cTakes')
-					return
-		except Exception, e:
-			with open(run_id, 'w') as handle:
-				handle.write('Error running cTakes: %s' % e)
+				_write_status_for_run(run_id, 'Error running cTakes')
 				return
+		except Exception, e:
+			_write_status_for_run(run_id, 'Error running cTakes: %s' % e)
+			return
 		
 		# make sure we got all criteria
 		for study in results:
@@ -163,21 +161,53 @@ def run_trials(run_id, condition=None, term=None):
 			study.store()
 	
 	Study.sqlite_commit_if_needed()
-	os.remove(run_id)
+	Study.sqlite_release_handle()
+	_write_status_for_run(run_id, 'done')
 
 
 @app.get('/trials/<run_id>/progress')
 def trial_progress(run_id):
 	""" Returns text status from the file corresponding to the given run-id, if
-	its missing the run is assumed to have ended and "done" is returned. """
+	its missing returns a 404. """
 	
-	status = 'done'
-	
-	if os.path.exists(run_id):
-		with open(run_id) as handle:
-			status = handle.read()
+	status = _get_status_for_run(run_id)
+	if status is None:
+		bottle.abort(404)
 	
 	return status
+
+
+def _write_status_for_run(run_id, status):
+	with open('%s.status' % run_id, 'w') as handle:
+		handle.write(status)
+
+def _write_ncts_for_run(run_id, ncts, filtered=False):
+	filename = '%s.%s' % (run_id, 'filtered' if filtered else 'all')
+	with open(filename, 'w') as handle:
+		handle.write('|'.join(ncts) if ncts else '')
+	
+
+def _get_status_for_run(run_id):
+	if not os.path.exists('%s.status' % run_id):
+		return None
+	
+	with open('%s.status' % run_id) as handle:
+		status = handle.readline()
+	
+	return status.strip() if status else None
+
+def _get_ncts_for_run(run_id, filtered=False):
+	filename = '%s.%s' % (run_id, 'filtered' if filtered else 'all')
+	if not os.path.exists(filename):
+		return None
+	
+	ncts = []
+	with open(filename) as handle:
+		nct_line = handle.readline()
+		ncts = nct_line.strip().split('|') if nct_line else []
+	
+	return ncts
+
 
 @app.get('/trials/<run_id>/results')
 def trial_results(run_id):
@@ -185,8 +215,65 @@ def trial_results(run_id):
 	Currently ignores the run-id since we only support one query at the time
 	for testing purposes. """
 	
-	return "Found some studies"
+	status = _get_status_for_run(run_id)
+	if status is None:
+		bottle.abort(404)
+	
+	if 'done' != status:
+		bottle.abort(400, "Trial results are not available")
+	
+	ncts = _get_ncts_for_run(run_id, False)
+	return json.dumps(ncts)
 
+@app.get('/trials/<run_id>/filter/<filter_by>')
+def trial_filter_demo(run_id, filter_by):
+	status = _get_status_for_run(run_id)
+	if 404 == status:
+		bottle.abort(404)
+	
+	if 'done' != status:
+		bottle.abort(400, "Trial results are not available")
+	
+	# demographics - get age and gender
+	if 'demographics' == filter_by:
+		demo = demographics()
+		is_male = "male" == demo.get('foaf:gender')
+		bday_iso = demo.get('vcard:bday')
+		bday = dateutil.parser.parse(bday_iso)		# no need for timezone correction
+		age = dateutil.relativedelta.relativedelta(date.today(), bday).years
+		
+		ncts = _get_ncts_for_run(run_id, False)
+		keep = []
+		for nct in ncts:
+			trial = Study(nct)
+			trial.load()
+			
+			# filter gender
+			if is_male:
+				if trial.gender == 2:
+					continue
+			else:
+				if trial.gender == 1:
+					continue
+			
+			# filter age
+			if trial.min_age > age or trial.max_age < age:
+				continue
+			
+			keep.append(nct)
+		
+		_write_ncts_for_run(run_id, keep, True)
+		return json.dumps(keep)
+	
+	# problems
+	elif 'problems' == filter_by:
+		probs = problems()
+		ncts = _get_ncts_for_run(run_id, True)
+		keep = []
+		print probs
+		return json.dumps(probs)
+	
+	return '{"error": "not cool"}'
 
 
 # ------------------------------------------------------------------------------ Static Files

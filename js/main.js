@@ -146,14 +146,62 @@ function _checkTrialStatus(run_id) {
 			}
 		}
 		else {
-			console.error(obj1, ' -- ', status, ' -- ', obj2);
-			_showTrialStatus('Error, see console');
+			console.error(obj1, status, obj2);
+			_showTrialStatus('Error checking trial status, see console');
 		}
 	});
 }
 
 function _getTrialResults(run_id) {
-	
+	$.ajax({
+		'url': 'trials/' + run_id + '/results',
+		'dataType': 'json'
+	})
+	.always(function(obj1, status, obj2) {
+		if ('success' == status) {
+			console.log(obj1);
+			_showTrialStatus('Found ' + obj1.length + ' trials, filtering by demographics...');
+			_filterTrialsByDemographics(run_id, obj1.length);
+		}
+		else {
+			console.error(obj1, status, obj2);
+			_showTrialStatus('Error getting trial results, see console');
+		}
+	});
+}
+
+function _filterTrialsByDemographics(run_id, num_trials) {
+	$.ajax({
+		'url': 'trials/' + run_id + '/filter/demographics',
+		'dataType': 'json'
+	})
+	.always(function(obj1, status, obj2) {
+		if ('success' == status) {
+			console.log(obj1);
+			_showTrialStatus(obj1.length + ' of ' + num_trials + ' trials, now filtering by problem list...');
+			// _filterTrialsByProblems(run_id);
+		}
+		else {
+			console.error(obj1, status, obj2);
+			_showTrialStatus('Error filtering trials (demographics), see console');
+		}
+	});
+}
+
+function _filterTrialsByProblems(run_id) {
+	$.ajax({
+		'url': 'trials/' + run_id + '/filter/problems',
+		'dataType': 'json'
+	})
+	.always(function(obj1, status, obj2) {
+		if ('success' == status) {
+			console.log(obj1);
+		}
+		else {
+			console.error(obj1, status, obj2);
+			_showTrialStatus('Error filtering trials (problems), see console');
+		}
+	});
 }
 
 function _showTrialStatus(status) {

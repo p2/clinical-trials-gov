@@ -166,6 +166,10 @@ class DBObject (object):
 			cls.sqlite_handle = SQLite.get(cls.sqlite_default_db)
 	
 	@classmethod
+	def sqlite_release_handle(cls):
+		cls.sqlite_handle = None
+	
+	@classmethod
 	def sqlite_commit_if_needed(cls):
 		""" Commits to SQLite if the flag had been set. """
 		if cls.sqlite_handle is None:

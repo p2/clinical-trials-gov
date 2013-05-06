@@ -376,6 +376,11 @@ class Study (DBObject):
 	def setup_ctakes(cls, setting):
 		cls.ctakes = setting
 	
+	@classmethod
+	def sqlite_release_handle(cls):
+		cls.sqlite_handle = None
+		StudyEligibility.sqlite_release_handle()
+	
 	
 	# -------------------------------------------------------------------------- Utilities
 	def __unicode__(self):
