@@ -1,0 +1,83 @@
+{
+	"@context": {
+		"api": "http://smartplatforms.org/terms/api#",
+		"dcterms": "http://purl.org/dc/terms/",
+		"foaf": "http://xmlns.com/foaf/0.1/",
+		"owl": "http://www.w3.org/2002/07/owl#",
+		"rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+		"rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+		"sp": "http://smartplatforms.org/terms#",
+		"spcode": "http://smartplatforms.org/terms/codes/",
+		"vcard": "http://www.w3.org/2006/vcard/ns#",
+		"xsd": "http://www.w3.org/2001/XMLSchema#"
+	},
+	"@graph": [
+		{
+			"@id": "http://sandbox-api-v06.smartplatforms.org/records/665677/demographics",
+			"@type": "sp:Demographics",
+			"foaf:gender": "female",
+			"sp:belongsTo": {
+				"@id": "http://sandbox-api-v06.smartplatforms.org/records/665677"
+			},
+			"sp:medicalRecordNumber": {
+				"@type": "sp:Code",
+				"dcterms:identifier": "665677",
+				"dcterms:title": "My Hospital Record 665677",
+				"sp:system": "My Hospital Record"
+			},
+			"vcard:adr": {
+				"@type": [
+					"vcard:Address",
+					"vcard:Home",
+					"vcard:Pref"
+				],
+				"vcard:country": "USA",
+				"vcard:extended-address": "Apt 22",
+				"vcard:locality": "Sapulpa",
+				"vcard:postal-code": "74066",
+				"vcard:region": "OK",
+				"vcard:street-address": "26 South Rd"
+			},
+			"vcard:bday": "1951-08-23",
+			"vcard:email": "ruth.black@example.com",
+			"vcard:n": {
+				"@type": "vcard:Name",
+				"vcard:additional-name": "C",
+				"vcard:family-name": "Black",
+				"vcard:given-name": "Ruth"
+			},
+			"vcard:tel": [
+				{
+					"@type": [
+						"vcard:Tel",
+						"vcard:Cell"
+					],
+					"rdf:value": "800-808-7785"
+				},
+				{
+					"@type": [
+						"vcard:Tel",
+						"vcard:Home",
+						"vcard:Pref"
+					],
+					"rdf:value": "800-599-2739"
+				}
+			]
+		},
+		{
+			"@type": "api:ResponseSummary",
+			"api:processingTimeMs": {
+				"@type": "xsd:integer",
+				"@value": "14"
+			},
+			"api:resultsReturned": {
+				"@type": "xsd:integer",
+				"@value": "1"
+			},
+			"api:totalResultCount": {
+				"@type": "xsd:integer",
+				"@value": "1"
+			}
+		}
+	]
+}

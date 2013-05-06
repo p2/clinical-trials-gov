@@ -1,0 +1,49 @@
+html, body { height: 100%; margin: 0; padding: 0; font: 11pt "Helvetica-Neue", Helvetica, sans-serif; line-height: 1.3; background-color: #f6f6f6; }
+
+h2 { margin-bottom: 0.3em; }
+
+h3:first-child { margin-top: 0.3em; }
+
+p { padding: 0.5em 0; }
+p:first-child { margin-top: 0; }
+p:last-child { margin-bottom: 0; }
+
+table { border-collapse: collapse; }
+
+td:first-child { padding-left: 0; }
+td:last-child { padding-right: 0; }
+
+#container { max-width: 70em; height: 100%; margin: 0 auto; border: 1px solid #787878; border-width: 0 1px; }
+
+#content { padding: 2em 3em; }
+
+/** Patient Styles */
+.patient_portrait { float: left; width: 68px; margin: 0 20px 10px 0; text-align: center; }
+.patient_portrait img { width: 60px; height: 80px; border: 4px solid rgba(0, 0, 0, 0.2); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
+
+.demographics h1 { font-size: 1.6em; }
+
+#patient_problems { clear: left; padding-top: 2em; }
+
+#form_problems ul { padding: 0; list-style-type: none; }
+#form_problems ul li { padding: 0.5em; cursor: pointer; }
+#form_problems ul li:hover { background-color: #e6e6e6; }
+
+/** SMART specific styles */
+#endpoints { overflow: hidden; background-color: white; border: 1px solid #787878; -webkit-border-radius: 5px 5px 5px 5px; -moz-border-radius: 5px 5px 5px 5px; -ms-border-radius: 5px 5px 5px 5px; -o-border-radius: 5px 5px 5px 5px; border-radius: 5px 5px 5px 5px; }
+#endpoints a { display: block; padding: 0.5em 1em; text-decoration: none; color: black; border-bottom: 1px solid #787878; }
+#endpoints a:last-child { border-bottom: none; }
+#endpoints a:hover { color: #08394d; background-color: #d8f1fb; }
+#endpoints a span { display: block; color: #787878; }
+
+.green { color: #090; }
+
+.red { color: #A00; }
+
+.bigger { font-size: 1.1em; font-weight: bold; }
+
+.faded { color: #505050; }
+
+.supplement { font-size: 0.9em; color: #505050; }
+
+.small { font-size: 0.85em; }

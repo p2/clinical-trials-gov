@@ -1,0 +1,29 @@
+/**
+ *  SMART specific styles
+ */
+
+#endpoints {
+	overflow: hidden;
+	background-color: white;
+	border: 1px solid $col-border; @include border-radius-all();
+	
+	a {
+		display: block;
+		padding: 0.5em 1em;
+		text-decoration: none; color: darken($col-border, 50%);
+		border-bottom: 1px solid $col-border;
+		&:last-child {
+			border-bottom: none;
+		}
+		
+		&:hover {
+			color: darken($col-blue, 50%);
+			background-color: lighten($col-blue, 25%);
+		}
+		
+		span {
+			display: block;
+			color: $col-border;
+		}
+	}
+}

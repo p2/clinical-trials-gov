@@ -1,0 +1,43 @@
+/**
+ *  Patient Styles
+ */
+
+.patient_portrait {
+	float: left;
+	width: 68px;
+	margin: 0 20px 10px 0;
+	text-align: center;
+	
+	img {
+		width: 60px; height: 80px;
+		border: 4px solid rgba(0,0,0,0.2);
+		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+	}
+}
+
+.demographics {
+	h1 {
+		font-size: 1.6em;
+	}
+}
+
+#patient_problems {
+	clear: left;
+	padding-top: 2em;
+}
+
+#form_problems {
+	ul {
+		padding: 0;
+		list-style-type: none;
+		
+		li {
+			padding: 0.5em;
+			cursor: pointer;
+			
+			&:hover {
+				background-color: $col-boxbg;
+			}
+		}
+	}
+}
