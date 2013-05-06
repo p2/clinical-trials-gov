@@ -145,17 +145,17 @@ def run_trials(run_id, condition=None, term=None):
 	# run cTakes if needed
 	if run_ctakes:
 		with open(run_id, 'w') as handle:
-			handle.write('Running cTakes...')
+			handle.write('Running cTakes (this will take a while)...')
 		
 		try:
-			if call(['run_ctakes.sh', run_dir]) > 0:
+			if call(['./run_ctakes.sh', run_dir]) > 0:
 				with open(run_id, 'w') as handle:
 					handle.write('Error running cTakes')
-					sys.exit(1)
+					return
 		except Exception, e:
 			with open(run_id, 'w') as handle:
-					handle.write('Error running cTakes: %s' % e)
-					sys.exit(1)
+				handle.write('Error running cTakes: %s' % e)
+				return
 		
 		# make sure we got all criteria
 		for study in results:

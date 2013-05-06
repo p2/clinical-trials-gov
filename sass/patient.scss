@@ -33,9 +33,15 @@ ul#problem_list {
 	li {
 		padding: 0.5em;
 		cursor: pointer;
+		border: 1px solid transparent;
 		
 		&:hover {
 			background-color: $col-boxbg;
+		}
+		&.active {
+			border-color: $col-blue;
+			box-shadow: 0 0 5px $col-border-glow;
+			border-radius: 0.25em;
 		}
 	}
 }

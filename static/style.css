@@ -26,8 +26,9 @@ td:last-child { padding-right: 0; }
 #patient_problems { clear: left; padding-top: 2em; }
 
 ul#problem_list { padding: 0; list-style-type: none; }
-ul#problem_list li { padding: 0.5em; cursor: pointer; }
+ul#problem_list li { padding: 0.5em; cursor: pointer; border: 1px solid transparent; }
 ul#problem_list li:hover { background-color: #e6e6e6; }
+ul#problem_list li.active { border-color: #64c8f0; box-shadow: 0 0 5px #0596be; border-radius: 0.25em; }
 
 /** SMART specific styles */
 #endpoints { overflow: hidden; background-color: white; border: 1px solid #787878; -webkit-border-radius: 5px 5px 5px 5px; -moz-border-radius: 5px 5px 5px 5px; -ms-border-radius: 5px 5px 5px 5px; -o-border-radius: 5px 5px 5px 5px; border-radius: 5px 5px 5px 5px; }
