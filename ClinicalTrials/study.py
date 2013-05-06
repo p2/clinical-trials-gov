@@ -86,6 +86,24 @@ class Study (DBObject):
 			self.criteria_text = crit.get('textblock') if crit else None
 	
 	
+	def json(self):
+		""" Returns a JSON-ready representation. """
+		# criteria
+		c = {
+			'gender': self.gender,
+			'min_age': self.min_age,
+			'max_age': self.max_age,
+			'healthy_volunteers': self.healthy_volunteers,
+			'formatted': self.eligibility_formatted
+		}
+		
+		# main dict
+		d = {
+			'nct': self.nct,
+			'criteria': c
+		}
+		return d
+	
 	@property
 	def eligibility_formatted(self):
 		""" Puts the criteria in a human-readable format
@@ -601,7 +619,7 @@ class StudyEligibility (DBObject):
 	
 	# -------------------------------------------------------------------------- Utilities
 	def __unicode__(self):
-		return '<study.StudyEligibility %s (%s)>' % (self.nct, 'inclusion' if self.is_inclusion else 'exclusion')
+		return '<study.StudyEligibility %s (%s)>' % (self.study.nct, 'inclusion' if self.is_inclusion else 'exclusion')
 	
 	def __str__(self):
 		return unicode(self).encode('utf-8')

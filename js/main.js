@@ -104,7 +104,7 @@ function _initTrialSearch(problem_name) {
 	_showTrialStatus('Starting...');
 	
 	$.ajax({
-		'url': 'trials',
+		'url': 'trial_runs',
 		'data': {'cond': problem_name}
 	})
 	.always(function(obj1, status, obj2) {
@@ -120,7 +120,7 @@ function _initTrialSearch(problem_name) {
 
 function _checkTrialStatus(run_id) {
 	$.ajax({
-		'url': 'trials/' + run_id + '/progress'
+		'url': 'trial_runs/' + run_id + '/progress'
 	})
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
@@ -154,14 +154,14 @@ function _checkTrialStatus(run_id) {
 
 function _getTrialResults(run_id) {
 	$.ajax({
-		'url': 'trials/' + run_id + '/results',
+		'url': 'trial_runs/' + run_id + '/results',
 		'dataType': 'json'
 	})
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
 			console.log(obj1);
 			_showTrialStatus('Found ' + obj1.length + ' trials, filtering by demographics...');
-			_filterTrialsByDemographics(run_id, obj1.length);
+			_filterTrialsByDemographics(run_id, obj1);
 		}
 		else {
 			console.error(obj1, status, obj2);
@@ -170,16 +170,16 @@ function _getTrialResults(run_id) {
 	});
 }
 
-function _filterTrialsByDemographics(run_id, num_trials) {
+function _filterTrialsByDemographics(run_id, all_trials) {
 	$.ajax({
-		'url': 'trials/' + run_id + '/filter/demographics',
+		'url': 'trial_runs/' + run_id + '/filter/demographics',
 		'dataType': 'json'
 	})
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
 			console.log(obj1);
-			_showTrialStatus(obj1.length + ' of ' + num_trials + ' trials, now filtering by problem list...');
-			// _filterTrialsByProblems(run_id);
+			_showTrialStatus(obj1.length + ' of ' + all_trials.length + ' trials, now filtering by problem list...');
+			_filterTrialsByProblems(run_id, all_trials);
 		}
 		else {
 			console.error(obj1, status, obj2);
@@ -188,20 +188,77 @@ function _filterTrialsByDemographics(run_id, num_trials) {
 	});
 }
 
-function _filterTrialsByProblems(run_id) {
+function _filterTrialsByProblems(run_id, all_trials) {
 	$.ajax({
-		'url': 'trials/' + run_id + '/filter/problems',
+		'url': 'trial_runs/' + run_id + '/filter/problems',
 		'dataType': 'json'
 	})
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
 			console.log(obj1);
+			_showTrialStatus(obj1.length + ' of ' + all_trials.length + ' trials remain.');
+			_loadTrials(obj1, all_trials);
 		}
 		else {
 			console.error(obj1, status, obj2);
 			_showTrialStatus('Error filtering trials (problems), see console');
 		}
 	});
+}
+
+function _loadTrials(filtered, all_trials) {
+	var main = $('#trials');
+	var loader = $('<div/>', {'id': 'trial_loader'}).text('Loading trials...');
+	var list_good = $('<ul/>', {'id': 'trials_good'});
+	var list_bad = $('<ul/>', {'id': 'trials_bad'});
+	main.append(loader);
+	main.append("<h3>Matching Trials</h3>");
+	main.append(list_good);
+	main.append("<h3>Filtered Trials</h3>");
+	main.append(list_bad);
+	
+	// load all trials individually
+	for (var i = 0; i < all_trials.length; i++) {
+		nct = all_trials[i];
+		$.ajax({
+			'url': 'trials/' + nct,
+			'dataType': 'json'
+		})
+		.always(function(obj1, status, obj2) {
+			if ('success' == status) {
+				if (loader) {
+					loader.remove();
+					loader = null;
+				}
+				
+				// got a trial, show in list (oh god is this ugly!)
+				var li = $('<li/>', {'id': obj1.nct});
+				var detail = $('<div/>').hide().html(text2html(obj1['criteria']['formatted']));
+				detail.addClass('formatted_criteria');
+				var title = $('<a/>', {'href': 'javascript:void(0)'});
+				title.click(function() { detail.toggle() });
+				title.text(obj1.nct);
+				var link = $('<a/>', {'href': "http://www.clinicaltrials.gov/ct2/show/" + obj1.nct, 'target': '_blank'});
+				link.addClass('supplement');
+				link.text('» ClinicalTrials.gov');
+				li.append(title);
+				li.append(link);
+				li.append(detail);
+				
+				if (filtered.contains(obj1.nct)) {
+					list_good.append(li);
+				}
+				else {
+					list_bad.append(li);
+				}
+				
+				console.log(obj1);
+			}
+			else {
+				console.error(obj1, status, obj2);
+			}
+		});
+	}
 }
 
 function _showTrialStatus(status) {
@@ -211,10 +268,47 @@ function _showTrialStatus(status) {
 
 
 
-/**
- *  Thanks Twitter, like this we can use console.xy without fear.
+/*
+ *  ----------------------------
+ *  Extending Array capabilities
+ *  ----------------------------
  */
-if ( ! window.console ) {
+
+Array.prototype.contains = function(obj) {
+	return (this.indexOf(obj) >= 0);
+}
+
+Array.prototype.indexOf = function(obj) {
+	for(var i = 0; i < this.length; i++) {
+		if (this[i] == obj)
+			return i;
+	}
+	
+	return -1;
+}
+
+
+/*
+ *	-----------------
+ *	Text manipulation
+ *	-----------------
+ */
+
+function text2html(string) {
+	if (!string)
+		return '';
+	
+	var conv = string.replace(/(^\s+)|(\s+$)/g, '');			// replace leading/trailing whitespace
+	conv = conv.replace(/(\r\n|\n)/g, "<br />");				// replace \n with <br />
+	
+	return conv;
+}
+
+
+/**
+ *  Thanks Twitter, with this we can use console.xy without fear.
+ */
+if (!window.console) {
 	(function() {
 		var names = ["log", "debug", "info", "warn", "error", "assert", "dir", "dirxml", "group", "groupEnd", "time", "timeEnd", "count", "trace", "profile", "profileEnd"];
 		var l = names.length;

@@ -30,6 +30,9 @@ ul#problem_list li { padding: 0.5em; cursor: pointer; border: 1px solid transpar
 ul#problem_list li:hover { background-color: #e6e6e6; }
 ul#problem_list li.active { border-color: #64c8f0; box-shadow: 0 0 5px #0596be; border-radius: 0.25em; }
 
+#trials > ul li > a:first-child { margin-right: 1em; }
+#trials > ul .formatted_criteria { margin: 0.5em 0 1em; padding: 1em 1em 1em; border: 1px solid #b4b4b4; border-radius: 0.25em; background-color: #f0f0f0; }
+
 /** SMART specific styles */
 #endpoints { overflow: hidden; background-color: white; border: 1px solid #787878; -webkit-border-radius: 5px 5px 5px 5px; -moz-border-radius: 5px 5px 5px 5px; -ms-border-radius: 5px 5px 5px 5px; -o-border-radius: 5px 5px 5px 5px; border-radius: 5px 5px 5px 5px; }
 #endpoints a { display: block; padding: 0.5em 1em; text-decoration: none; color: black; border-bottom: 1px solid #787878; }

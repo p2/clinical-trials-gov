@@ -76,7 +76,22 @@ def problems():
 
 
 # ------------------------------------------------------------------------------ Trials
-@app.get('/trials')
+@app.get('/trials/<nct>')
+def get_trial(nct):
+	""" Returns one trial.
+	VERY dirty for now... """
+	
+	run_dir = "run-server"
+	if not os.path.exists(run_dir):
+		bottle.abort(404)
+	
+	trial = Study(nct)
+	trial.load()
+	
+	return trial.json()
+
+
+@app.get('/trial_runs')
 def find_trials():
 	""" Initiates the chain to find trials for the given condition or search-
 	term. Supply with parameters "cond" or "term", the prior taking precedence.
@@ -113,6 +128,8 @@ def run_trials(run_id, condition=None, term=None):
 		os.mkdir(os.path.join(run_dir, 'ctakes_output'))
 	
 	# setup
+	Study.sqlite_release_handle()
+	UMLS.sqlite_handle = None
 	db_path = os.path.join(run_dir, 'storage.db')
 	Study.setup_tables(db_path)
 	Study.setup_ctakes({'root': run_dir, 'cleanup': False})
@@ -165,7 +182,7 @@ def run_trials(run_id, condition=None, term=None):
 	_write_status_for_run(run_id, 'done')
 
 
-@app.get('/trials/<run_id>/progress')
+@app.get('/trial_runs/<run_id>/progress')
 def trial_progress(run_id):
 	""" Returns text status from the file corresponding to the given run-id, if
 	its missing returns a 404. """
@@ -184,7 +201,7 @@ def _write_status_for_run(run_id, status):
 def _write_ncts_for_run(run_id, ncts, filtered=False):
 	filename = '%s.%s' % (run_id, 'filtered' if filtered else 'all')
 	with open(filename, 'w') as handle:
-		handle.write('|'.join(ncts) if ncts else '')
+		handle.write('|'.join(set(ncts)) if ncts else '')
 	
 
 def _get_status_for_run(run_id):
@@ -209,7 +226,7 @@ def _get_ncts_for_run(run_id, filtered=False):
 	return ncts
 
 
-@app.get('/trials/<run_id>/results')
+@app.get('/trial_runs/<run_id>/results')
 def trial_results(run_id):
 	""" Returns the results from a given run-id.
 	Currently ignores the run-id since we only support one query at the time
@@ -225,7 +242,7 @@ def trial_results(run_id):
 	ncts = _get_ncts_for_run(run_id, False)
 	return json.dumps(ncts)
 
-@app.get('/trials/<run_id>/filter/<filter_by>')
+@app.get('/trial_runs/<run_id>/filter/<filter_by>')
 def trial_filter_demo(run_id, filter_by):
 	status = _get_status_for_run(run_id)
 	if 404 == status:
@@ -267,13 +284,39 @@ def trial_filter_demo(run_id, filter_by):
 	
 	# problems
 	elif 'problems' == filter_by:
-		probs = problems()
+		probs = problems().get('problems', [])
+		
+		# extract snomed codes
+		sno = []
+		for problem in probs:
+			snomed_url = problem.get('sp:problemName', {}).get('sp:code', {}).get('@id')
+			if snomed_url is not None:
+				snomed = os.path.basename(snomed_url)
+				sno.append(snomed)
+		
+		# look at criteria
 		ncts = _get_ncts_for_run(run_id, True)
 		keep = []
-		print probs
-		return json.dumps(probs)
+		for nct in ncts:
+			trial = Study(nct)
+			trial.load()
+			keep_this = True
+			for crit in trial.criteria:
+				
+				# remove matching exclusion criteria
+				if not crit.is_inclusion:
+					intersection = set(sno).intersection(crit.snomed)
+					if len(intersection) > 0:
+						keep_this = False
+						continue
+			
+			if keep_this:
+				keep.append(nct)
+		
+		_write_ncts_for_run(run_id, keep, True)
+		return json.dumps(keep)
 	
-	return '{"error": "not cool"}'
+	return '{"error": "We can not filter by %s"}' % filter_by
 
 
 # ------------------------------------------------------------------------------ Static Files

@@ -46,3 +46,15 @@ ul#problem_list {
 	}
 }
 
+#trials > ul {
+	li > a:first-child {
+		margin-right: 1em;
+	}
+	
+	.formatted_criteria {
+		margin: 0.5em 0 1em; padding: 1em 1em 1em;
+		border: 1px solid rgb(180,180,180); border-radius: 0.25em;
+		background-color: rgb(240,240,240); 
+	}
+}
+
