@@ -26,18 +26,17 @@
 	padding-top: 2em;
 }
 
-#form_problems {
-	ul {
-		padding: 0;
-		list-style-type: none;
+ul#problem_list {
+	padding: 0;
+	list-style-type: none;
+	
+	li {
+		padding: 0.5em;
+		cursor: pointer;
 		
-		li {
-			padding: 0.5em;
-			cursor: pointer;
-			
-			&:hover {
-				background-color: $col-boxbg;
-			}
+		&:hover {
+			background-color: $col-boxbg;
 		}
 	}
 }
+

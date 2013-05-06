@@ -1,36 +1,34 @@
-<form class="process_form" id="form_problems">
-	<p>Choose for which problem to find trials:</p>
-	<ul>
-	<% 
-	var probs = (data && 'problems' in data) ? data['problems'] : [];
-	if (probs.length > 0) {
-		probs.sort(compareProblemByNameASC);
-		
-		for (var i = 0; i < probs.length; i++) {
-			var prob = probs[i];
-			var html_id = prob['@id'] ? prob['@id'].replace(/[^\w\d]+/g, '') : 'xxx';
-			if ('sp:Problem' == prob['@type']) { %>
-				<li id="<%= html_id %>" onclick="_didClickProblem('<%= html_id %>')">
-					<div class="bigger"><%= prob['sp:problemName']['dcterms:title'] %></div>
-					
-					<% if ('sp:startDate' in prob || 'sp:endDate' in prob) {
-						var period = '';
-						if ('sp:startDate' in prob) {
-							period = ('sp:endDate' in prob) ? 'from ' : 'since ';
-							period += '<b>' + moment(prob['sp:startDate']).format('ll') + '</b>';
+<p>Choose for which problem to find trials:</p>
+<ul id="problem_list">
+<% 
+var probs = (data && 'problems' in data) ? data['problems'] : [];
+if (probs.length > 0) {
+	probs.sort(compareProblemByNameASC);
+	
+	for (var i = 0; i < probs.length; i++) {
+		var prob = probs[i];
+		var html_id = prob['@id'] ? prob['@id'].replace(/[^\w\d]+/g, '') : 'xxx';
+		if ('sp:Problem' == prob['@type']) { %>
+			<li id="<%= html_id %>" onclick="didClickProblem('<%= html_id %>')">
+				<div class="bigger"><%= prob['sp:problemName']['dcterms:title'] %></div>
+				
+				<% if ('sp:startDate' in prob || 'sp:endDate' in prob) {
+					var period = '';
+					if ('sp:startDate' in prob) {
+						period = ('sp:endDate' in prob) ? 'from ' : 'since ';
+						period += '<b>' + moment(prob['sp:startDate']).format('ll') + '</b>';
+					}
+					if ('sp:endDate' in prob) {
+						if (period.length > 0) {
+							period += ' until ';
 						}
-						if ('sp:endDate' in prob) {
-							if (period.length > 0) {
-								period += ' until ';
-							}
-							period += '<b>' + moment(prob['sp:endDate']).format('ll') + '</b>';
-						} %>
-					<div class="supplement"><%== period %></div>
-					<% } %>
-				</li><%
-			}
+						period += '<b>' + moment(prob['sp:endDate']).format('ll') + '</b>';
+					} %>
+				<div class="supplement"><%== period %></div>
+				<% } %>
+			</li><%
 		}
-	} %>
-		<li class="faded">Enter manually (disabled)</li>
-	</ul>
-</form>
+	}
+} %>
+	<li class="faded">Enter manually (disabled)</li>
+</ul>
