@@ -89,6 +89,7 @@ function didClickProblem(problem_id) {
 		});
 		
 		prob_elem.removeClass('active');
+		$('#trials').empty();
 	}
 }
 
