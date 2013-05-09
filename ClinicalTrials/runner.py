@@ -8,6 +8,7 @@
 
 
 import os
+import logging
 
 from threading import Thread
 from subprocess import call
@@ -50,10 +51,12 @@ class Runner (object):
 		
 		self.condition = None
 		self.term = None
+		self.found_studies = None
 		
 		self._status = None
 		self._done = False
 		self.in_background = False
+		self.log_status = False
 		self.worker = None
 	
 	
@@ -93,16 +96,16 @@ class Runner (object):
 		
 		lilly = LillyCOI()
 		if self.condition is not None:
-			results = lilly.search_for_condition(self.condition, True, ['id', 'eligibility'])
+			self.found_studies = lilly.search_for_condition(self.condition, True, ['id', 'eligibility'])
 		else:
-			results = lilly.search_for_term(self.term, True, ['id', 'eligibility'])
+			self.found_studies = lilly.search_for_term(self.term, True, ['id', 'eligibility'])
 		
 		# process all studies
 		run_ctakes = False
 		nct = []
-		for study in results:
+		for study in self.found_studies:
 			nct.append(study.nct)
-			self.status = "Processing %d of %d..." % (len(nct), len(results))
+			self.status = "Processing %d of %d..." % (len(nct), len(self.found_studies))
 			 
 			study.load()
 			study.process_eligibility_from_text()
@@ -126,7 +129,7 @@ class Runner (object):
 				return
 			
 			# make sure we got all criteria
-			for study in results:
+			for study in self.found_studies:
 				study.codify_eligibility()
 				study.store()
 		
@@ -171,7 +174,9 @@ class Runner (object):
 	
 	@status.setter
 	def status(self, status):
-		print "Status: ", status
+		if self.log_status:
+			logging.info("%s: %s" % (self.name, status))
+		
 		self._status = status
 		with open('%s.status' % self.run_id, 'w') as handle:
 			handle.write(status)

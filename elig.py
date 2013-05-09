@@ -11,11 +11,7 @@ import codecs
 import logging
 from datetime import date
 
-from ClinicalTrials.lillycoi import LillyCOI
-from ClinicalTrials.sqlite import SQLite
-from ClinicalTrials.study import Study
-from ClinicalTrials.study import Paper
-from ClinicalTrials.umls import UMLS
+from ClinicalTrials.runner import Runner
 
 _use_recruiting = False
 _generate_report = True
@@ -25,67 +21,27 @@ _generate_report = True
 if __name__ == "__main__":
 	logging.basicConfig(level=logging.DEBUG)
 	
-	# make sure we have SNOMED setup
-	UMLS.import_snomed_if_necessary()
-	
 	# ask for a condition and recruitment status
 	term = raw_input("Search for: ")
 	if term is None or len(term) < 1:
 		term = 'diabetic cardiomyopathy'
 	
-	recruiting = None
-	if _use_recruiting:
-		recruiting = raw_input("Recruiting: [no] ")
-		if recruiting is None or len(recruiting) < 1:
-			recruiting = False
-		else:
-			recruiting = recruiting[:1] is 'y' or recruiting[:1] is 'Y'
+	# recruiting = None
+	# if _use_recruiting:
+	# 	recruiting = raw_input("Recruiting: [no] ")
+	# 	if recruiting is None or len(recruiting) < 1:
+	# 		recruiting = False
+	# 	else:
+	# 		recruiting = recruiting[:1] is 'y' or recruiting[:1] is 'Y'
 	
-	# prepare a run directory
+	# run the runner
 	now = date.today()
-	run_dir = "run-%s-%s" % (re.sub(r'[^\w\d\-]+', '_', term.lower()), now.isoformat())
-	if not os.path.exists(run_dir):
-		os.mkdir(run_dir)
-		os.mkdir(os.path.join(run_dir, 'ctakes_input'))
-		os.mkdir(os.path.join(run_dir, 'ctakes_output'))
-	
-	Study.setup_ctakes({'root': run_dir, 'cleanup': False})
-	
-	# init tables
-	db_path = os.path.join(run_dir, 'storage.db')
-	Study.setup_tables(db_path)
-	Paper.setup_tables(db_path)
-	
-	# search for studies
-	print "Fetching %s studies..." % term
-	lilly = LillyCOI()
-	results = lilly.search_for_term(term, recruiting, ['id', 'eligibility'])
-	
-	# process all studies
-	run_ctakes = False
-	i = 0
-	for study in results:
-		i += 1
-		print 'Processing %d of %d...' % (i, len(results))
-		study.load()
-		study.process_eligibility_from_text()
-		study.run_pmc(run_dir)
-		study.codify_eligibility()
-		if study.waiting_for_ctakes():
-			run_ctakes = True
-		study.store()
-	
-	# run cTakes if needed
-	if run_ctakes:
-		print 'Running cTakes...'
-		call(['run_ctakes.sh', run_dir])
-		
-		# make sure we got all criteria
-		for study in results:
-			study.codify_eligibility()
-			study.store()
-	
-	Study.sqlite_commit_if_needed()
+	run_id = now.isoformat()
+	run_dir = "run-%s-%s" % (re.sub(r'[^\w\d\-]+', '_', term.lower()), run_id)
+	runner = Runner(run_id ,run_dir)
+	runner.term = term
+	runner.log_status = True
+	runner.run()
 	
 	# generate HTML report
 	if _generate_report:
@@ -138,7 +94,7 @@ if __name__ == "__main__":
 			<tbody>
 		""" % (term, term, recr_status)
 		
-		for study in results:
+		for study in runner.found_studies:
 			html += study.report_row()
 		
 		html += """		</tbody>
