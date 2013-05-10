@@ -165,7 +165,7 @@ class Runner (object):
 			if not os.path.exists('%s.status' % self.run_id):
 				return None
 			
-			with open('%s.status' % self.run_id) as handle:
+			with open('%s/%s.status' % (self.run_dir, self.run_id)) as handle:
 				status = handle.readline()
 				if status is not None:
 					self._status = status.strip()
@@ -178,7 +178,7 @@ class Runner (object):
 			logging.info("%s: %s" % (self.name, status))
 		
 		self._status = status
-		with open('%s.status' % self.run_id, 'w') as handle:
+		with open('%s/%s.status' % (self.run_dir, self.run_id), 'w') as handle:
 			handle.write(status)
 	
 	@property
@@ -188,12 +188,12 @@ class Runner (object):
 	
 	# -------------------------------------------------------------------------- Results
 	def write_ncts(self, ncts, filtered=False):
-		filename = '%s.%s' % (self.run_id, 'filtered' if filtered else 'all')
+		filename = '%s/%s.%s' % (self.run_dir, self.run_id, 'filtered' if filtered else 'all')
 		with open(filename, 'w') as handle:
 			handle.write('|'.join(set(ncts)) if ncts else '')
 	
 	def get_ncts(self, filtered=False):
-		filename = '%s.%s' % (self.run_id, 'filtered' if filtered else 'all')
+		filename = '%s/%s.%s' % (self.run_dir, self.run_id, 'filtered' if filtered else 'all')
 		if not os.path.exists(filename):
 			return None
 		
