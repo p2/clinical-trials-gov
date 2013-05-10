@@ -7,10 +7,15 @@ if (probs.length > 0) {
 	
 	for (var i = 0; i < probs.length; i++) {
 		var prob = probs[i];
-		var html_id = prob['@id'] ? prob['@id'].replace(/[^\w\d]+/g, '') : 'xxx';
+		var prob_name = prob['sp:problemName']['dcterms:title'];
+		var html_id = '@id' in prob ? prob['@id'].replace(/[^\w\d]+/g, '') : null;
+		if (!html_id) {  		// i2b2 does not have @id!
+			html_id = prob_name.replace(/[^\w\d]+/g, '') + '_' + Math.round(Math.random() * 10000);
+		}
+		
 		if ('sp:Problem' == prob['@type']) { %>
 			<li id="<%= html_id %>" onclick="didClickProblem('<%= html_id %>')">
-				<div class="bigger"><%= prob['sp:problemName']['dcterms:title'] %></div>
+				<div class="bigger"><%= prob_name %></div>
 				
 				<% if ('sp:startDate' in prob || 'sp:endDate' in prob) {
 					var period = '';

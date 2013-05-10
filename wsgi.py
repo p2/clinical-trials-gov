@@ -6,6 +6,7 @@ import os
 import sys
 import logging
 import json
+import re
 from datetime import date, datetime
 import dateutil.parser
 
@@ -193,12 +194,14 @@ def find_trials():
 	# configure
 	cond = bottle.request.query.get('cond')
 	if cond is not None:
+		cond = re.sub(r'\s+\((disorder|finding)\)', '', cond)
 		runner.condition = cond
 	else:
 		term = bottle.request.query.get('term')
 		if term is None:
 			bottle.abort(400, 'You need to specify "cond" or "term"')
 		else:
+			term = re.sub(r'\s+\((disorder|finding)\)', '', term)
 			runner.term = term
 	
 	# launch and return id

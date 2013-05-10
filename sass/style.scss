@@ -50,7 +50,12 @@ td {
 #container {
 	max-width: 70em; min-height: 100%;
 	margin: 0 auto;
-	border: 1px solid $col-border; border-width: 0 1px;
+}
+
+@media screen and (min-width: 72em) {
+	#container {
+		border: 1px solid $col-border; border-width: 0 1px;
+	}	
 }
 
 #content {

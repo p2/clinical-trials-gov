@@ -13,8 +13,9 @@ table { border-collapse: collapse; }
 td:first-child { padding-left: 0; }
 td:last-child { padding-right: 0; }
 
-#container { max-width: 70em; min-height: 100%; margin: 0 auto; border: 1px solid #787878; border-width: 0 1px; }
+#container { max-width: 70em; min-height: 100%; margin: 0 auto; }
 
+@media screen and (min-width: 72em) { #container { border: 1px solid #787878; border-width: 0 1px; } }
 #content { padding: 2em 3em; }
 
 /** Patient Styles */

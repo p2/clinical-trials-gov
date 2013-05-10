@@ -47,7 +47,7 @@ class LillyCOI (object):
 		if condition is None or len(condition) < 1:
 			raise Exception('You must provide a condition to search for')
 		
-		cond = condition.replace(' ', '-')
+		cond = condition.replace(' ', '+')
 		if recruiting is not None:
 			recr = 'open' if recruiting is True else 'closed'
 			query = 'recr:%s,cond:%s' % (recr, cond)

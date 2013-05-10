@@ -166,6 +166,8 @@ function _checkTrialStatus(run_id) {
 		else {
 			console.error(obj1, status, obj2);
 			_showTrialStatus('Error checking trial status, see console');
+			window.clearInterval(_trialSearchInterval);
+			_trialSearchInterval = null;
 		}
 	});
 }
@@ -177,7 +179,6 @@ function _getTrialResults(run_id) {
 	})
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
-			console.log(obj1);
 			_showTrialStatus('Found ' + obj1.length + ' trials, filtering by demographics...');
 			_filterTrialsByDemographics(run_id, obj1);
 		}
@@ -195,7 +196,6 @@ function _filterTrialsByDemographics(run_id, all_trials) {
 	})
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
-			console.log(obj1);
 			_showTrialStatus(obj1.length + ' of ' + all_trials.length + ' trials, now filtering by problem list...');
 			_filterTrialsByProblems(run_id, all_trials);
 		}
@@ -213,7 +213,6 @@ function _filterTrialsByProblems(run_id, all_trials) {
 	})
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
-			console.log(obj1);
 			_showTrialStatus(obj1.length + ' of ' + all_trials.length + ' trials remain.');
 			_loadTrials(obj1, all_trials);
 		}
@@ -269,8 +268,6 @@ function _loadTrials(filtered, all_trials) {
 				else {
 					list_bad.append(li);
 				}
-				
-				console.log(obj1);
 			}
 			else {
 				console.error(obj1, status, obj2);
