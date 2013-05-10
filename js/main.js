@@ -6,14 +6,27 @@
 var _ruleCtrl = null;
 var _reportCtrl = null;
 var _globals = {};
-$(document).ready(function() {
-	
+
+
+/**
+ *  Called when the DOM is ready, this function starts loading patient data.
+ */
+function initApp() {
 	// hide the patient selector if in an iframe
 	if (window != window.top) {
 		$('#back_to_patient_select').hide();
 	}
 	
-	// load demographics
+	// load patient data
+	loadDemographics();
+	loadProblemList();
+}
+
+
+/**
+ *  Load patient demographics.
+ */
+function loadDemographics() {
 	$.ajax({
 		'url': 'demographics',
 		'dataType': 'json'
@@ -31,8 +44,12 @@ $(document).ready(function() {
 		// display demographics
 		$('#patient_overview').html('templates/patient_demographics.ejs', {'demo': demo});
 	});
-	
-	// load problems
+}
+
+/**
+ *  Load problem list.
+ */
+function loadProblemList() {
 	$.ajax({
 		'url': 'problems',
 		'dataType': 'json'
@@ -49,7 +66,7 @@ $(document).ready(function() {
 			console.warn('No good response for problems', obj1, obj2);
 		}
 	});
-});
+}
 
 
 /**

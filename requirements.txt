@@ -1,0 +1,8 @@
+bottle
+beaker
+oauth2
+rdflib >= 3.2.0
+# rdfextras needs pyparsing, but pyparsing > 1.5.7 targets Python 3.0, so we need to request 1.5.7 specifically
+pyparsing == 1.5.7
+rdfextras
+jinja2

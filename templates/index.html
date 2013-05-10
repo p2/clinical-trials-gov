@@ -24,4 +24,49 @@
 <script src="static/moment.min.js"></script>
 <script src="static/Base.min.js"></script>
 <script src="static/main.min.js"></script>
+<!--script>
+$(document).ready(function() {
+	initApp();
+});
+</script-->
+<!-- SMART v0.5 hack -->
+<script src="http://sample-apps-v05.smartplatforms.org/framework/smart/scripts/smart-api-client.js"></script>
+<script>
+SMART.ready(function() {
+	
+	// get demographics
+	SMART.get_demographics()
+	.success(function(demo) {
+		$.ajax({
+			'url': 'session',
+			'data': 'demographics=' + encodeURI(demo.body),
+			'method': 'put'
+		})
+		.always(function() {
+			
+			// get problems
+			SMART.get_problems()
+			.success(function(problems) {
+				$.ajax({
+					'url': 'session',
+					'data': 'problems=' + encodeURI(problems.body),
+					'method': 'put'
+				})
+				.always(function() {
+					
+				    // finally start app
+					initApp();
+				});
+			})
+			.error(function(e) {
+				alert("Failed to get SMART problems: " + e.message + ' (' + e.status + ')');
+			});
+		});
+	})
+	.error(function(e) {
+		alert("Failed to get SMART demographics: " + e.message + ' (' + e.status + ')');
+	});
+});
+</script>
+<!-- /SMART v0.5 -->
 </html>

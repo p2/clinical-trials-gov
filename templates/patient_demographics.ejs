@@ -34,7 +34,7 @@
 	if ('vcard:deathdate' in demo) {
 		deathdate = moment(demo['vcard:deathdate']);
 	} %>
-	<%= bday.format('ll') %>
+	<%= bday ? bday.format('ll') : "(no birthday)" %>
 	<% if (deathdate) { %>
 		– <%= deathdate.format('ll') %>
 	<% } %>

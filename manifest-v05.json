@@ -1,0 +1,11 @@
+{
+	"name": "Trial Eligibility",
+	"description": "An app that checks ClinicalTrials.gov for trials that the patient is eligible for.",
+	"author": "Pascal Pfiffner",
+	"id": "clinical-trials-v05@apps.smartplatforms.org",
+	"version": "1.0",
+	"mode": "ui",
+	"scope": "record",
+	"index": "http://localhost:8008",
+	"icon": "http://localhost:8008/static/icon.png"
+}
