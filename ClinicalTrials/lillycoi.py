@@ -9,6 +9,7 @@
 
 import httplib2
 import json
+import logging
 
 from study import Study
 
@@ -94,7 +95,9 @@ class LillyCOI (object):
 		# loop page after page
 		results = self.get('trials/search.json', params)
 		while self.nextPageURI is not None:
-			results.extend(self._get(self.nextPageURI))
+			myNext = self.nextPageURI
+			self.nextPageURI = None					# reset here in case of error
+			results.extend(self._get(myNext))		# will set nextPageURI on success
 		
 		return results
 	
@@ -124,7 +127,7 @@ class LillyCOI (object):
 
 	# the base GET grabber
 	def _get(self, url):
-		#print '-->  GET: %s' % url
+		logging.debug('-->  GET: %s' % url)
 		headers = {}
 		
 		# fire it off
@@ -135,7 +138,7 @@ class LillyCOI (object):
 		try:
 			data = json.loads(content)
 		except Exception, e:
-			print "-----\n%s\n-----\n%s\n-----" % (e, content)
+			logging.error("-----\n%s\n-----\n%s\n-----" % (e, content))
 			return []
 		
 		self.previousPageURI = data.get('previousPageURI')

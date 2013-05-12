@@ -4,10 +4,16 @@
 var probs = (data && 'problems' in data) ? data['problems'] : [];
 if (probs.length > 0) {
 	probs.sort(compareProblemByNameASC);
+	var already_have = [];
 	
 	for (var i = 0; i < probs.length; i++) {
 		var prob = probs[i];
 		var prob_name = prob['sp:problemName']['dcterms:title'];
+		if (already_have.contains(prob_name)) {
+			continue;
+		}
+		
+		already_have.push(prob_name);
 		var html_id = '@id' in prob ? prob['@id'].replace(/[^\w\d]+/g, '') : null;
 		if (!html_id) {  		// i2b2 does not have @id!
 			html_id = prob_name.replace(/[^\w\d]+/g, '') + '_' + Math.round(Math.random() * 10000);

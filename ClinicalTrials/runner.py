@@ -118,7 +118,7 @@ class Runner (object):
 		
 		# run cTakes if needed
 		if run_ctakes:
-			self.status = "Running cTakes for %d studies (this will take a while)..." % len(nct)
+			self.status = "Running cTakes for %d trials (this will take a while)..." % len(nct)
 			
 			try:
 				if call(['./run_ctakes.sh', self.run_dir]) > 0:
