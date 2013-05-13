@@ -19,18 +19,14 @@ def split_inclusion_exclusion(string):
 	# split on newlines
 	rows = re.compile("(?:\n\s*){2,}").split(string)
 	
-	# can try to trim lists into sentences (seems to be better for cTAKES)
-	trim_list = False
-	
 	# loop all rows
 	inc = []
 	exc = []
 	at_inc = False
 	at_exc = False
 	
-	for row in rows:
-		string = list_trim(row) if trim_list else row
-		if len(row) < 1 or 'none' == string:
+	for string in rows:
+		if len(string) < 1 or 'none' == string:
 			continue
 		
 		# detect switching to inclusion criteria
@@ -58,14 +54,25 @@ def split_inclusion_exclusion(string):
 		inc.append(string)
 	
 	# join arrays back into one string
-	if trim_list:
-		inc = ['. '.join(inc)] if len(inc) > 0 else []
-		exc = ['. '.join(exc)] if len(exc) > 0 else []
-	else:
-		inc = ["\n".join(inc)]
-		exc = ["\n".join(exc)]
+	inc = ["\n".join(inc)]
+	exc = ["\n".join(exc)]
 	
 	return (inc, exc)
+
+
+def list_to_sentences(string):
+	""" Splits text at newlines and puts it back together after stripping new-
+	lines and enumeration symbols, joined by a period.
+	"""
+	if string is None:
+		return None
+	
+	lines = string.splitlines()
+	processed = []
+	for line in lines:
+		processed.append(list_trim(line))
+	
+	return '. '.join(processed) if len(processed) > 0 else ''
 
 
 def list_trim(string):

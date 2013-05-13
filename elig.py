@@ -39,6 +39,8 @@ if __name__ == "__main__":
 	run_id = now.isoformat()
 	run_dir = "run-%s-%s" % (re.sub(r'[^\w\d\-]+', '_', term.lower()), run_id)
 	runner = Runner(run_id ,run_dir)
+	runner.run_ctakes = True
+	runner.run_metamap = True
 	runner.term = term
 	runner.log_status = True
 	runner.run()

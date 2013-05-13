@@ -49,6 +49,9 @@ class Runner (object):
 		self.run_dir = run_dir
 		self.__class__.runs[run_id] = self
 		
+		self.run_ctakes = False
+		self.run_metamap = False
+		
 		self.condition = None
 		self.term = None
 		self.found_studies = None
@@ -86,10 +89,14 @@ class Runner (object):
 		# setup
 		Study.sqlite_release_handle()
 		UMLS.sqlite_handle = None
+		UMLS.import_snomed_if_necessary()
+		
 		db_path = os.path.join(self.run_dir, 'storage.db')
 		Study.setup_tables(db_path)
-		Study.setup_ctakes({'root': self.run_dir, 'cleanup': False})
-		UMLS.import_snomed_if_necessary()
+		if self.run_ctakes:
+			Study.setup_ctakes({'root': self.run_dir, 'cleanup': False})
+		if self.run_metamap:
+			Study.setup_metamap({'root': self.run_dir, 'cleanup': False})
 		
 		# search for studies
 		self.status = "Fetching %s studies..." % self.condition if self.condition is not None else self.term
@@ -102,6 +109,7 @@ class Runner (object):
 		
 		# process all studies
 		run_ctakes = False
+		run_metamap = False
 		nct = []
 		for study in self.found_studies:
 			nct.append(study.nct)
@@ -112,6 +120,8 @@ class Runner (object):
 			study.codify_eligibility()
 			if study.waiting_for_ctakes():
 				run_ctakes = True
+			if study.waiting_for_metamap():
+				run_metamap = True
 			study.store()
 		
 		self.write_ncts(nct, False)
@@ -133,6 +143,23 @@ class Runner (object):
 				study.codify_eligibility()
 				study.store()
 		
+		# run MetaMap if needed
+		if run_metamap:
+			self.status = "Running MetaMap for %d trials (this will take a while)..." % len(nct)
+			
+			try:
+				if call(['./run_metamap.sh', self.run_dir]) > 0:
+					self.status = 'Error running MetaMap'
+					return
+			except Exception, e:
+				self.status = 'Error running MetaMap: %s' % e
+				return
+			
+			# make sure we got all criteria
+			for study in self.found_studies:
+				study.codify_eligibility()
+				study.store()
+		
 		Study.sqlite_commit_if_needed()
 		Study.sqlite_release_handle()
 		self.status = 'done'
@@ -145,8 +172,12 @@ class Runner (object):
 		
 		if not os.path.exists(self.run_dir):
 			os.mkdir(self.run_dir)
-			os.mkdir(os.path.join(self.run_dir, 'ctakes_input'))
-			os.mkdir(os.path.join(self.run_dir, 'ctakes_output'))
+			if self.run_ctakes:
+				os.mkdir(os.path.join(self.run_dir, 'ctakes_input'))
+				os.mkdir(os.path.join(self.run_dir, 'ctakes_output'))
+			if self.run_metamap:
+				os.mkdir(os.path.join(self.run_dir, 'metamap_input'))
+				os.mkdir(os.path.join(self.run_dir, 'metamap_output'))
 		
 		if not os.path.exists(self.run_dir):
 			raise Exception("Failed to create run directory for runner %s" % self.name)

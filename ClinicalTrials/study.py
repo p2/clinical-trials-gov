@@ -18,7 +18,7 @@ requests_log = logging.getLogger("requests.packages.urllib3")
 requests_log.setLevel(logging.WARNING)
 
 from dbobject import DBObject
-from nlp import split_inclusion_exclusion
+from nlp import split_inclusion_exclusion, list_to_sentences
 from umls import UMLS, SNOMED
 from paper import Paper
 
@@ -27,7 +27,8 @@ class Study (DBObject):
 	""" Describes a study found on ClinicalTrials.gov.
 	"""
 	
-	ctakes = {}
+	ctakes = None
+	metamap = None
 	
 	def __init__(self, nct=0):
 		super(Study, self).__init__()
@@ -225,7 +226,7 @@ class Study (DBObject):
 	# assigns codes to all eligibility criteria
 	def codify_eligibility(self):
 		""" Retrieves the codes from SQLite or, if there are none, passes the
-		text criteria to cTakes.
+		text criteria to NLP.
 		"""
 		if self.criteria is not None:
 			for criterium in self.criteria:
@@ -241,6 +242,19 @@ class Study (DBObject):
 		if self.criteria and len(self.criteria) > 0:
 			for criterium in self.criteria:
 				if criterium.waiting_for_ctakes:
+					return True
+		
+		return False
+	
+	def waiting_for_metamap(self):
+		""" Returns True if any of our criteria needs to run through MetaMap.
+		"""
+		#if self.waiting_for_ctakes_pmc:
+		#	return True
+		
+		if self.criteria and len(self.criteria) > 0:
+			for criterium in self.criteria:
+				if criterium.waiting_for_metamap:
 					return True
 		
 		return False
@@ -396,6 +410,10 @@ class Study (DBObject):
 		cls.ctakes = setting
 	
 	@classmethod
+	def setup_metamap(cls, setting):
+		cls.metamap = setting
+	
+	@classmethod
 	def sqlite_release_handle(cls):
 		cls.sqlite_handle = None
 		StudyEligibility.sqlite_release_handle()
@@ -427,9 +445,12 @@ class StudyEligibility (DBObject):
 		self.is_inclusion = False
 		self.text = None
 		self.snomed = []
-		self.cui = []
-		self.did_process = False
+		self.cui_ctakes = []
+		self.cui_metamap = []
+		self.did_process_ctakes = False
+		self.did_process_metamap = False
 		self.waiting_for_ctakes = False
+		self.waiting_for_metamap = False
 	
 	
 	@classmethod
@@ -460,11 +481,74 @@ class StudyEligibility (DBObject):
 		self.is_inclusion = True if 1 == data[3] else False
 		self.text = data[4]
 		self.snomed = data[5].split('|') if data[5] else []
-		self.cui = data[6].split('|') if data[6] else []
-		self.did_process = (1 == data[7])
+		self.cui_ctakes = data[6].split('|') if data[6] else []
+		self.cui_metamap = data[7].split('|') if data[7] else []
+		self.did_process_ctakes = (1 == data[8])
+		self.did_process_metamap = (1 == data[9])
 	
 	
 	# -------------------------------------------------------------------------- Codification
+	def codify(self):
+		""" Three stages:
+		      1. Reads the codes from SQLite, if they are there
+		      2. Reads and stores the codes from the NLP output dir(s)
+		      3. Writes the criteria to the NLP input directories and sets the
+		         "waiting_for_xy" flag
+		"""
+		# not hydrated, fetch from SQLite (must be done manually)
+		if not self.hydrated:
+			raise Exception('must hydrate first (not yet implemented)')
+		
+		# cTAKES
+		if not self.did_process_ctakes:
+			if not self.read_ctakes_output():
+				self.write_ctakes_input()
+		
+		# MetaMap
+		if not self.did_process_metamap:
+			if not self.read_metamap_output():
+				self.write_metamap_input()
+	
+	
+	def write_ctakes_input(self):
+		""" Writes the criteria so cTAKES can process it. """
+		ct = Study.ctakes
+		if ct is None:
+			logging.error("cTAKES has not been configured")
+			return
+		
+		ct_in = os.path.join(ct.get('root', '.'), 'ctakes_input')
+		if not os.path.exists(ct_in):
+			logging.error("The input directory for cTAKES does not exist")
+			return
+		
+		self.waiting_for_ctakes = True
+		
+		infile = os.path.join(ct_in, '%d.txt' % self.id)
+		if not os.path.exists(infile):
+			with codecs.open(infile, 'w', 'utf-8') as handle:
+				handle.write(self.text)
+	
+	def write_metamap_input(self):
+		""" Writes the criteria so MetaMap can process it. """
+		mm = Study.metamap
+		if mm is None:
+			logging.error("MetaMap has not been configured")
+			return
+		
+		mm_in = os.path.join(mm.get('root', '.'), 'metamap_input')
+		if not os.path.exists(mm_in):
+			logging.error("The input directory for MetaMap does not exist")
+			return
+		
+		self.waiting_for_metamap = True
+		
+		infile = os.path.join(mm_in, '%d.txt' % self.id)
+		if not os.path.exists(infile):
+			with codecs.open(infile, 'w', 'utf-8') as handle:
+				handle.write(list_to_sentences(self.text))
+	
+	
 	def read_ctakes_output(self):
 		""" Reads and stores the codes from the cTakes output dir, if they
 		are there. """
@@ -505,13 +589,13 @@ class StudyEligibility (DBObject):
 					cuis.append(node.attributes['cui'].value)
 			
 			self.snomed = list(set(snomeds))
-			self.cui = list(set(cuis))
+			self.cui_ctakes = list(set(cuis))
 			
 		# mark as processed
-		self.did_process = True
+		self.did_process_ctakes = True
 		
-		# store to SQLite and remove the files if desired
-		cleanup = ct['cleanup'] if 'cleanup' in ct else False
+		# store to SQLite and remove the files unless instructed not to
+		cleanup = ct['cleanup'] if 'cleanup' in ct else True
 		if self.store() and cleanup:
 			os.remove(outfile)
 			
@@ -523,51 +607,12 @@ class StudyEligibility (DBObject):
 		self.waiting_for_ctakes = False
 		return True
 	
-	def codify(self):
-		""" Three stages:
-		      1. Reads the codes from SQLite, if they are there
-		      2. Reads and stores the codes from the cTakes output dir, if they
-		         are there
-		      3. Writes the criteria to the cTakes input directory and sets the
-		         "waiting_for_ctakes" flag
-		"""
-		if self.did_process:
-			return
-		
-		# 1. no codes and not hydrated, fetch from SQLite
-		if not self.hydrated:
-			raise Exception('must hydrate first (not yet implemented)')
-		
-		# 2. not there, look in cTakes output directory
-		if self.read_ctakes_output():
-			return
-		
-		# 3. not yet processed, put it there and wait for cTakes to process it
-		ct = Study.ctakes
-		if ct is None:
-			logging.error("cTAKES has not been configured")
-			return
-		
-		ct_in = os.path.join(ct.get('root', '.'), 'ctakes_input')
-		if ct_in and os.path.exists(ct_in):
-			self.waiting_for_ctakes = True
-			
-			infile = os.path.join(ct_in, '%d.txt' % self.id)
-			if not os.path.exists(infile):
-				with codecs.open(infile, 'w', 'utf-8') as handle:
-					handle.write(self.text)
-				
-			return
-		
-		# still here - not properly set up
-		if 'input' not in ct:
-			logging.error("The input directory for cTAKES has not been configured")
-		elif not os.path.exists(ct_in):
-			logging.error("The input directory for cTAKES at %s does not exist" % ct_in)
-		elif 'output' not in ct:
-			logging.error("The output directory for cTAKES has not been configured")
+	def read_metamap_output(self):
+		""" Process MetaMap's files. """
+		return False
 	
 	
+	# -------------------------------------------------------------------------- SQLite Handling
 	def should_insert(self):
 		return self.id is None
 	
@@ -587,14 +632,18 @@ class StudyEligibility (DBObject):
 	
 	def update_tuple(self):
 		sql = '''UPDATE criteria SET
-			updated = datetime(), is_inclusion = ?, text = ?, snomed = ?, cui = ?, did_process = ?
+			updated = datetime(), is_inclusion = ?, text = ?, snomed = ?,
+			cui_ctakes = ?, did_process_ctakes = ?,
+			cui_metamap = ?, did_process_metamap = ?
 			WHERE criterium_id = ?'''
 		params = (
 			1 if self.is_inclusion else 0,
 			self.text,
 			'|'.join(self.snomed),
-			'|'.join(self.cui),
-			1 if self.did_process else 0,
+			'|'.join(self.cui_ctakes),
+			'|'.join(self.cui_metamap),
+			1 if self.did_process_ctakes else 0,
+			1 if self.did_process_metamap else 0,
 			self.id
 		)
 		
@@ -613,8 +662,10 @@ class StudyEligibility (DBObject):
 			is_inclusion INTEGER,
 			text TEXT,
 			snomed TEXT,
-			cui TEXT,
-			did_process INTEGER DEFAULT 0
+			cui_ctakes TEXT,
+			cui_metamap TEXT,
+			did_process_ctakes INTEGER DEFAULT 0,
+			did_process_metamap INTEGER DEFAULT 0
 		)'''
 	
 	

@@ -190,6 +190,8 @@ def find_trials():
 	if runner is None:
 		runner = Runner(run_id, "run-server")
 		runner.in_background = True
+		runner.run_ctakes = True
+		runner.run_metamap = True
 	
 	# configure
 	cond = bottle.request.query.get('cond')
