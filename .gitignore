@@ -13,10 +13,11 @@ run-*/
 # ignore generated report
 report.html
 
-# ignore ctakes
+# ignore ctakes and metamap
 ctakes
 ctakes_input
 ctakes_output
+metamap
 
 # ignore editor files
 *.sublime-*

@@ -36,6 +36,16 @@ We checkout cTakes and add the pgpop module. Assuming we are in the main directo
       UMLS_USERNAME='username'
       UMLS_PASSWORD='password'
 
+### MetaMap ###
+
+To evaluate MetaMap, download and install MetaMap:
+
+- Download [from NLM](http://metamap.nlm.nih.gov/#Downloads)
+- Extract the archive into our root directory and rename it to `metamap`
+- Run the install script:
+    
+      ./bin/install.sh
+
 
 ### SNOMED CT ###
 
@@ -52,5 +62,6 @@ There is a SNOMED database at _ctakes/ctakes-dictionary-lookup/target/classes/or
 
 [ct]: http://www.clinicaltrials.gov
 [ctakes]: http://ctakes.apache.org
+[metamap]: http://metamap.nlm.nih.gov
 [homebrew]: http://mxcl.github.com/homebrew/
 [snomed]: http://www.nlm.nih.gov/research/umls/licensedcontent/snomedctfiles.html
