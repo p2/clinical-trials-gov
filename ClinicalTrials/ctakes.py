@@ -32,7 +32,7 @@ class cTAKES (NLPProcessing):
 		
 		in_dir = os.path.join(self.root if self.root is not None else '.', 'ctakes_input')
 		if not os.path.exists(in_dir):
-			logging.error("The input directory for cTAKES does not exist")
+			logging.error("The input directory for cTAKES at %s does not exist" % in_dir)
 			return False
 		
 		infile = os.path.join(in_dir, filename)
@@ -58,7 +58,7 @@ class cTAKES (NLPProcessing):
 			logging.error("The output directory for cTAKES at %s does not exist" % out_dir)
 			return (None, None)
 		
-		outfile = os.path.join(out_dir, filename)
+		outfile = os.path.join(out_dir, "%s.xmi" % filename)
 		if not os.path.exists(outfile):
 			return (None, None)
 		
@@ -86,7 +86,7 @@ class cTAKES (NLPProcessing):
 			
 			snomeds = list(set(snomeds))
 			cuis = list(set(cuis))
-			
+		
 		# clean up if instructed to do so
 		if self.cleanup:
 			os.remove(outfile)
@@ -97,3 +97,4 @@ class cTAKES (NLPProcessing):
 				os.remove(infile)
 		
 		return (snomeds, cuis)
+

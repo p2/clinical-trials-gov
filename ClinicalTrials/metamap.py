@@ -27,12 +27,12 @@ class MetaMap (NLPProcessing):
 		if text is None or len(text) < 1:
 			return False
 		
-		in_file = os.path.join(self.root if self.root is not None else '.', 'metamap_input')
-		if not os.path.exists(in_file):
-			logging.error("The input directory for MetaMap does not exist")
+		in_dir = os.path.join(self.root if self.root is not None else '.', 'metamap_input')
+		if not os.path.exists(in_dir):
+			logging.error("The input directory for MetaMap at %s does not exist" % in_dir)
 			return False
 		
-		infile = os.path.join(in_file, filename)
+		infile = os.path.join(in_dir, filename)
 		if os.path.exists(infile):
 			return False
 		

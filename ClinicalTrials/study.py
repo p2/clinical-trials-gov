@@ -511,13 +511,16 @@ class StudyEligibility (DBObject):
 		if snomed is None and cui is None:
 			return False
 		
-		# store the codes
-		if snomed is not None:
-			self.snomed = snomed
-		if cui is not None:
-			if 'ctakes' == nlp.name:
+		# got cTAKES data
+		if 'ctakes' == nlp.name:
+			if snomed is not None:
+				self.snomed = snomed
+			if cui is not None:
 				self.cui_ctakes = cui
-			elif 'metamap' == nlp.name:
+		
+		# got MetaMap data
+		elif 'metamap' == nlp.name:
+			if cui is not None:
 				self.cui_metamap = cui
 		
 		# no longer waiting
@@ -548,8 +551,8 @@ class StudyEligibility (DBObject):
 	
 	def update_tuple(self):
 		sql = '''UPDATE criteria SET
-			updated = datetime(), is_inclusion = ?, text = ?, snomed = ?,
-			cui_ctakes = ?, cui_metamap = ?
+			updated = datetime(), is_inclusion = ?, text = ?,
+			snomed = ?, cui_ctakes = ?, cui_metamap = ?
 			WHERE criterium_id = ?'''
 		params = (
 			1 if self.is_inclusion else 0,
