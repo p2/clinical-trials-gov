@@ -41,7 +41,10 @@ fi
 
 # run it
 for f in "../$RUN/metamap_input/"*; do
-	$METAMAP --XMLf "$f" "$(echo $f | sed s/_input/_output/)" >/dev/null
+	out=$(echo $f | sed s/_input/_output/)
+	# $METAMAP --XMLf "$f" "$out"		# this shit does not work!!!
+	# the only way it works is by piping echo!!! WHO DOES THIS???
+	echo $(cat "$f") | $METAMAP --XMLf --silent | awk "NR>1" >"$out"
 done
 
 exit 0

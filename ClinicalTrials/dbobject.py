@@ -91,21 +91,25 @@ class DBObject (object):
 		
 		return False
 	
+	def did_store(self):
+		""" Called after a successful call to self.store(). """
+		pass
+	
 	def store(self):
 		""" Stores the receiver's data to SQLite. You must MANUALLY COMMIT!
 		"""
 		
 		# do we need to insert first?
-		if self.should_insert():
-			if not self.insert():
-				logging.warning("Failed to INSERT %s" % self)
+		if self.should_insert() and not self.insert():
+			logging.warning("Failed to INSERT %s" % self)
 		
 		# perform the update
-		if not self.should_update() or self.update():
-			return True
+		if self.should_update() and not self.update():
+			logging.warning("Failed to UPDATE %s" % self)
+			return False
 		
-		logging.warning("Failed to UPDATE %s" % self)
-		return False	
+		self.did_store()
+		return True
 	
 	
 	# -------------------------------------------------------------------------- Hydration

@@ -311,7 +311,7 @@ class Study (DBObject):
 	# -------------------------------------------------------------------------- Database Storage
 	
 	def should_insert(self):
-		""" We use REPLACE INTO, so we always update. """
+		""" We use REPLACE INTO, so we always insert. """
 		return True
 	
 	def should_update(self):
@@ -339,6 +339,8 @@ class Study (DBObject):
 		
 		return sql, params
 	
+	def did_store(self):
+		self.store_criteria()
 	
 	def store_criteria(self):
 		""" Stores our criteria to SQLite.
@@ -441,8 +443,6 @@ class StudyEligibility (DBObject):
 		self.snomed = []
 		self.cui_ctakes = []
 		self.cui_metamap = []
-		self.did_process_ctakes = False
-		self.did_process_metamap = False
 		self.waiting_for_nlp = []
 	
 	
@@ -476,8 +476,6 @@ class StudyEligibility (DBObject):
 		self.snomed = data[5].split('|') if data[5] else []
 		self.cui_ctakes = data[6].split('|') if data[6] else []
 		self.cui_metamap = data[7].split('|') if data[7] else []
-		self.did_process_ctakes = (1 == data[8])
-		self.did_process_metamap = (1 == data[9])
 	
 	
 	# -------------------------------------------------------------------------- Codification
@@ -523,10 +521,10 @@ class StudyEligibility (DBObject):
 				self.cui_metamap = cui
 		
 		# no longer waiting
-		if self.waiting_for_nlp is not None:
+		if self.waiting_for_nlp is not None \
+			and nlp.name in self.waiting_for_nlp:
 			self.waiting_for_nlp.remove(nlp.name)
 		
-		self.store()
 		return True
 	
 	
@@ -551,8 +549,7 @@ class StudyEligibility (DBObject):
 	def update_tuple(self):
 		sql = '''UPDATE criteria SET
 			updated = datetime(), is_inclusion = ?, text = ?, snomed = ?,
-			cui_ctakes = ?, did_process_ctakes = ?,
-			cui_metamap = ?, did_process_metamap = ?
+			cui_ctakes = ?, cui_metamap = ?
 			WHERE criterium_id = ?'''
 		params = (
 			1 if self.is_inclusion else 0,
@@ -560,8 +557,6 @@ class StudyEligibility (DBObject):
 			'|'.join(self.snomed),
 			'|'.join(self.cui_ctakes),
 			'|'.join(self.cui_metamap),
-			1 if self.did_process_ctakes else 0,
-			1 if self.did_process_metamap else 0,
 			self.id
 		)
 		
@@ -581,9 +576,7 @@ class StudyEligibility (DBObject):
 			text TEXT,
 			snomed TEXT,
 			cui_ctakes TEXT,
-			cui_metamap TEXT,
-			did_process_ctakes INTEGER DEFAULT 0,
-			did_process_metamap INTEGER DEFAULT 0
+			cui_metamap TEXT
 		)'''
 	
 	
