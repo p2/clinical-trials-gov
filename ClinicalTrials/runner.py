@@ -118,9 +118,9 @@ class Runner (object):
 			study.load()
 			study.process_eligibility_from_text()
 			study.codify_eligibility()
-			if study.waiting_for_ctakes():
+			if study.waiting_for_nlp('ctakes'):
 				run_ctakes = True
-			if study.waiting_for_metamap():
+			if study.waiting_for_nlp('metamap'):
 				run_metamap = True
 			study.store()
 		

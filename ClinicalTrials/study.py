@@ -11,7 +11,6 @@ import dateutil.parser
 import os
 import logging
 import codecs
-from xml.dom.minidom import parse
 
 import requests
 requests_log = logging.getLogger("requests.packages.urllib3")
@@ -21,6 +20,8 @@ from dbobject import DBObject
 from nlp import split_inclusion_exclusion, list_to_sentences
 from umls import UMLS, SNOMED
 from paper import Paper
+from ctakes import cTAKES
+from metamap import MetaMap
 
 
 class Study (DBObject):
@@ -45,6 +46,12 @@ class Study (DBObject):
 		self.sampling_method = None
 		self.criteria_text = None
 		self.criteria = []
+		
+		self.nlp = []
+		if Study.ctakes is not None:
+			self.nlp.append(cTAKES(Study.ctakes))
+		if Study.metamap is not None:
+			self.nlp.append(MetaMap(Study.metamap))
 		
 		self.waiting_for_ctakes_pmc = False
 	
@@ -233,28 +240,15 @@ class Study (DBObject):
 				criterium.codify()
 	
 	
-	def waiting_for_ctakes(self):
-		""" Returns True if any of our criteria needs to run through cTakes.
+	def waiting_for_nlp(self, nlp_name):
+		""" Returns True if any of our criteria needs to run through NLP.
 		"""
-		if self.waiting_for_ctakes_pmc:
+		if 'ctakes' == nlp_name and self.waiting_for_ctakes_pmc:
 			return True
 		
 		if self.criteria and len(self.criteria) > 0:
 			for criterium in self.criteria:
-				if criterium.waiting_for_ctakes:
-					return True
-		
-		return False
-	
-	def waiting_for_metamap(self):
-		""" Returns True if any of our criteria needs to run through MetaMap.
-		"""
-		#if self.waiting_for_ctakes_pmc:
-		#	return True
-		
-		if self.criteria and len(self.criteria) > 0:
-			for criterium in self.criteria:
-				if criterium.waiting_for_metamap:
+				if nlp_name in criterium.waiting_for_nlp:
 					return True
 		
 		return False
@@ -449,8 +443,7 @@ class StudyEligibility (DBObject):
 		self.cui_metamap = []
 		self.did_process_ctakes = False
 		self.did_process_metamap = False
-		self.waiting_for_ctakes = False
-		self.waiting_for_metamap = False
+		self.waiting_for_nlp = []
 	
 	
 	@classmethod
@@ -492,124 +485,49 @@ class StudyEligibility (DBObject):
 		""" Three stages:
 		      1. Reads the codes from SQLite, if they are there
 		      2. Reads and stores the codes from the NLP output dir(s)
-		      3. Writes the criteria to the NLP input directories and sets the
-		         "waiting_for_xy" flag
+		      3. Writes the criteria to the NLP input directories and fills the
+		         "waiting_for_nlp" list
 		"""
 		# not hydrated, fetch from SQLite (must be done manually)
 		if not self.hydrated:
 			raise Exception('must hydrate first (not yet implemented)')
 		
-		# cTAKES
-		if not self.did_process_ctakes:
-			if not self.read_ctakes_output():
-				self.write_ctakes_input()
-		
-		# MetaMap
-		if not self.did_process_metamap:
-			if not self.read_metamap_output():
-				self.write_metamap_input()
-	
-	
-	def write_ctakes_input(self):
-		""" Writes the criteria so cTAKES can process it. """
-		ct = Study.ctakes
-		if ct is None:
-			logging.error("cTAKES has not been configured")
-			return
-		
-		ct_in = os.path.join(ct.get('root', '.'), 'ctakes_input')
-		if not os.path.exists(ct_in):
-			logging.error("The input directory for cTAKES does not exist")
-			return
-		
-		self.waiting_for_ctakes = True
-		
-		infile = os.path.join(ct_in, '%d.txt' % self.id)
-		if not os.path.exists(infile):
-			with codecs.open(infile, 'w', 'utf-8') as handle:
-				handle.write(self.text)
-	
-	def write_metamap_input(self):
-		""" Writes the criteria so MetaMap can process it. """
-		mm = Study.metamap
-		if mm is None:
-			logging.error("MetaMap has not been configured")
-			return
-		
-		mm_in = os.path.join(mm.get('root', '.'), 'metamap_input')
-		if not os.path.exists(mm_in):
-			logging.error("The input directory for MetaMap does not exist")
-			return
-		
-		self.waiting_for_metamap = True
-		
-		infile = os.path.join(mm_in, '%d.txt' % self.id)
-		if not os.path.exists(infile):
-			with codecs.open(infile, 'w', 'utf-8') as handle:
-				handle.write(list_to_sentences(self.text))
-	
-	
-	def read_ctakes_output(self):
-		""" Reads and stores the codes from the cTakes output dir, if they
-		are there. """
-		
-		ct = Study.ctakes
-		if ct is None:
+		if self.study is None or self.study.nlp is None:
 			return False
 		
-		# is there cTAKES output?
-		ct_out = os.path.join(ct.get('root', '.'), 'ctakes_output')
-		if not os.path.exists(ct_out):
-			logging.error("The output directory for cTAKES at %s does not exist" % ct_out)
-			return False
-		
-		outfile = os.path.join(ct_out, '%d.txt.xmi' % self.id)
-		if not os.path.exists(outfile):
-			return False
-		
-		# parse XMI file
-		root = parse(outfile).documentElement
-		
-		# pluck apart the SNOMED codes
-		code_nodes = root.getElementsByTagName('refsem:UmlsConcept')
-		if len(code_nodes) > 0:
-			cuis = []
-			snomeds = []
-			for node in code_nodes:
-				#print node.toprettyxml()
+		for nlp in self.study.nlp:
+			if not self.parse_nlp(nlp):
+				self.write_nlp(nlp)
 				
-				# extract SNOMED code
-				if 'codingScheme' in node.attributes.keys() \
-					and 'code' in node.attributes.keys() \
-					and 'SNOMED' == node.attributes['codingScheme'].value:
-					snomeds.append(node.attributes['code'].value)
-				
-				# extract UMLS CUI
-				if 'cui' in node.attributes.keys():
-					cuis.append(node.attributes['cui'].value)
-			
-			self.snomed = list(set(snomeds))
-			self.cui_ctakes = list(set(cuis))
-			
-		# mark as processed
-		self.did_process_ctakes = True
+	
+	def write_nlp(self, nlp):
+		if nlp.write_input(self.text, '%d.txt' % self.id):
+			if self.waiting_for_nlp is None:
+				self.waiting_for_nlp = [nlp.name]
+			else:
+				self.waiting_for_nlp.append(nlp.name)
+	
+	def parse_nlp(self, nlp):
+		filename = '%d.txt' % self.id
+		snomed, cui = nlp.parse_output(filename)
+		if snomed is None and cui is None:
+			return False
 		
-		# store to SQLite and remove the files unless instructed not to
-		cleanup = ct['cleanup'] if 'cleanup' in ct else True
-		if self.store() and cleanup:
-			os.remove(outfile)
-			
-			ct_in = os.path.join(ct.get('root', '.'), 'ctakes_input')
-			infile = os.path.join(ct_in, '%d.txt' % self.id)
-			if os.path.exists(infile):
-				os.remove(infile)
+		# store the codes
+		if snomed is not None:
+			self.snomed = snomed
+		if cui is not None:
+			if 'ctakes' == nlp.name:
+				self.cui_ctakes = cui
+			elif 'metamap' == nlp.name:
+				self.cui_metamap = cui
 		
-		self.waiting_for_ctakes = False
+		# no longer waiting
+		if self.waiting_for_nlp is not None:
+			self.waiting_for_nlp.remove(nlp.name)
+		
+		self.store()
 		return True
-	
-	def read_metamap_output(self):
-		""" Process MetaMap's files. """
-		return False
 	
 	
 	# -------------------------------------------------------------------------- SQLite Handling

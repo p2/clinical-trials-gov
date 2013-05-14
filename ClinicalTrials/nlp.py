@@ -9,6 +9,30 @@ import re
 import logging
 
 
+class NLPProcessing (object):
+	""" Abstract base class for handling NLP pipelines. """
+	
+	def __init__(self, settings):
+		""" Settings should be a dict with "root" pointing to the root directory
+		and "cleanup" if the files should be removed after parsing.
+		
+		- `root` defaults to the current directory
+		- `cleanup` defaults to True
+		"""
+		self.name = 'nlp'
+		self.root = settings.get('root', '.') if settings is not None else '.'
+		self.cleanup = settings.get('cleanup', True) if settings is not None else True
+	
+	def write_input(self, text, filename):
+		return False
+	
+	def parse_output(self, filename):
+		""" return a tuple (snomed_ids, cuis). """
+		return (None, None)
+	
+
+
+# ------------------------------------------------------------------------------ Helper Functions
 def split_inclusion_exclusion(string):
 	""" Returns a tuple of lists describing inclusion and exclusion criteria.
 	"""
