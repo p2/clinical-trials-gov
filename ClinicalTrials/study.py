@@ -18,7 +18,7 @@ requests_log.setLevel(logging.WARNING)
 
 from dbobject import DBObject
 from nlp import split_inclusion_exclusion, list_to_sentences
-from umls import UMLS, SNOMED
+from umls import UMLS, UMLSLookup, SNOMEDLookup
 from paper import Paper
 from ctakes import cTAKES
 from metamap import MetaMap
@@ -154,7 +154,8 @@ class Study (DBObject):
 		
 		# collect criteria
 		rows = []
-		snomed = SNOMED()
+		snomed = SNOMEDLookup()
+		umls = UMLSLookup()
 		is_first = True
 		for crit in self.criteria:
 			css_class = '' if is_first else 'crit_first'
@@ -162,21 +163,36 @@ class Study (DBObject):
 			
 			# this criterium has been codified
 			if len(crit.snomed) > 0:
-				c_html = """<td class="%s" rowspan="%d">%s</td>
-				<td class="%s" rowspan="%d">%s</td>""" % (css_class, len(crit.snomed), crit.text, css_class, len(crit.snomed), in_ex)
+				rspan = max(len(crit.snomed), len(crit.cui_metamap))
 				
-				for sno in crit.snomed:
-					rows.append(c_html + """<td class="%s">%s</td>
-						<td class="%s">%s</td>""" % (css_class, sno, css_class, snomed.lookup_code_meaning(sno)))
-					if len(c_html) > 0:
-						c_html = ''
-					css_class = ''
+				c_html = """<td class="%s" rowspan="%d">%s</td>
+				<td class="%s" rowspan="%d">%s</td>""" % (css_class, rspan, crit.text, css_class, rspan, in_ex)
+				
+				# create cells
+				for i in xrange(0, rspan):
+					sno = crit.snomed[i] if len(crit.snomed) > i else ''
+					cui = crit.cui_metamap[i] if len(crit.cui_metamap) > i else ''
+					
+					if 0 == i:
+						rows.append(c_html + """<td class="%s">%s</td>
+						<td class="%s">%s</td>
+						<td class="%s">%s</td>
+						<td class="%s">%s</td>""" % (css_class, sno, css_class, snomed.lookup_code_meaning(sno), css_class, cui, css_class, umls.lookup_code_meaning(cui)))
+					else:
+						rows.append("""<td>%s</td>
+						<td>%s</td>
+						<td>%s</td>
+						<td>%s</td>""" % (sno, snomed.lookup_code_meaning(sno), cui, umls.lookup_code_meaning(cui)))
 			
 			# no codes for this criterium
 			else:
 				rows.append("""<td class="%s">%s</td>
 					<td class="%s">%s</td>
-					<td class="%s"></td>""" % (css_class, crit.text, css_class, in_ex, css_class))
+					<td class="%s"></td>
+					<td class="%s"></td>
+					<td class="%s"></td>
+					<td class="%s"></td>
+					<td class="%s"></td>""" % (css_class, crit.text, css_class, in_ex, css_class, css_class, css_class, css_class, css_class))
 			
 			is_first = False
 		

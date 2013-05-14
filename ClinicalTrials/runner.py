@@ -88,8 +88,7 @@ class Runner (object):
 		
 		# setup
 		Study.sqlite_release_handle()
-		UMLS.sqlite_handle = None
-		UMLS.import_snomed_if_necessary()
+		UMLS.check_databases()
 		
 		db_path = os.path.join(self.run_dir, 'storage.db')
 		Study.setup_tables(db_path)
