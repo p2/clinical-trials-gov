@@ -72,7 +72,8 @@ class UMLSLookup (object):
 		if cui is None or len(cui) < 1:
 			return ''
 		
-		sql = 'SELECT DEF FROM MRDEF WHERE CUI = ? ORDER BY SAB LIMIT 1'
+		# sql = 'SELECT STR FROM MRCONSO WHERE CUI = ? AND LAT = "ENG" AND TS = "P" LIMIT 1'
+		sql = 'SELECT STR FROM descriptions WHERE CUI = ? LIMIT 1'
 		res = self.sqlite.executeOne(sql, (cui,))
 		if res:
 			return res[0]

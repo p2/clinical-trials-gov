@@ -54,6 +54,7 @@ if __name__ == "__main__":
 		
 		html = """<html>
 		<head>
+			<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 			<title>Report: %s</title>
 			<style>
 			body { font-size: small; font-family: 'Helvetica-Neue', Helvetica, sans-serif; }
@@ -86,12 +87,24 @@ if __name__ == "__main__":
 				<col />
 			</colgroup>
 			<thead>
-				<th>NCT</th>
-				<th>raw</th>
-				<th>text</th>
-				<th></th>
-				<th>SNOMED</th>
-				<th></th>
+				<tr>
+					<th></th>
+					<th></th>
+					<th></th>
+					<th></th>
+					<th colspan="2">cTAKES</th>
+					<th colspan="2">MetaMap</th>
+				</tr>
+				<tr>
+					<th>NCT</th>
+					<th>raw</th>
+					<th>text</th>
+					<th></th>
+					<th>SNOMED</th>
+					<th></th>
+					<th>CUI</th>
+					<th></th>
+				</tr>
 			</thead>
 			<tbody>
 		""" % (term, term, recr_status)
