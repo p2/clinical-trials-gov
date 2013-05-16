@@ -73,7 +73,7 @@ class MetaMap (NLPProcessing):
 			for utter in utterances:
 				phrases = utter.getElementsByTagName('Phrases')[0].getElementsByTagName('Phrase')
 				for phrase in phrases:
-					candidates = phrase.getElementsByTagName('Candidates')[0].getElementsByTagName('Candidate')
+					candidates.extend(phrase.getElementsByTagName('Candidates')[0].getElementsByTagName('Candidate'))
 					
 					# also get the mapping candidate candidates
 					mappings = phrase.getElementsByTagName('Mappings')[0].getElementsByTagName('Mapping')
@@ -81,6 +81,7 @@ class MetaMap (NLPProcessing):
 						for cand in mapping.getElementsByTagName('MappingCandidates'):
 							candidates.extend(cand.getElementsByTagName('Candidate'))
 		except Exception, e:
+			logging.warning("Exception while parsing MetaMap output: %s" % e)
 			pass
 		
 		# pull out codes
