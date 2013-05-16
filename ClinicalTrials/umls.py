@@ -69,15 +69,21 @@ class UMLSLookup (object):
 		self.sqlite = SQLite.get('databases/umls.db')
 	
 	def lookup_code_meaning(self, cui):
+		""" Return a string (an empty string if the cui is null or not found)
+		by looking it up in our "descriptions" database.
+		A lookup in our "descriptions" table is much faster than combing
+		through the full MRCONSO table.
+		"""
 		if cui is None or len(cui) < 1:
 			return ''
 		
-		# sql = 'SELECT STR FROM MRCONSO WHERE CUI = ? AND LAT = "ENG" AND TS = "P" LIMIT 1'
-		sql = 'SELECT STR FROM descriptions WHERE CUI = ? LIMIT 1'
-		res = self.sqlite.executeOne(sql, (cui,))
-		if res:
-			return res[0]
-		return ''
+		sql = 'SELECT STR, SAB, TTY FROM descriptions WHERE CUI = ?'
+		names = []
+		
+		for res in self.sqlite.execute(sql, (cui,)):
+			names.append("%s (<span style=\"color:#090;\">%s</span>: %s)" % (res[0], res[1], res[2]))
+		
+		return "<br/>\n".join(names) if len(names) > 0 else ''
 
 	
 

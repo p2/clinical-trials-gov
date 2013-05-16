@@ -68,7 +68,7 @@ if [ ! -e umls.db ]; then
 	done
 	
 	# create faster lookup table
-	sqlite3 umls.db "CREATE TABLE descriptions AS SELECT CUI, LAT, STR FROM MRCONSO WHERE LAT = 'ENG' AND TS = 'P' AND ISPREF = 'Y'"
+	sqlite3 umls.db "CREATE TABLE descriptions AS SELECT CUI, LAT, SAB, TTY, STR FROM MRCONSO WHERE LAT = 'ENG' AND TS = 'P' AND ISPREF = 'Y'"
 	
 	# create indexes
 	echo "-> Creating indexes"
