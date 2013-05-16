@@ -67,19 +67,15 @@ def split_inclusion_exclusion(string):
 		
 		# assign accordingly
 		elif at_inc:
-			inc.append(string)
+			inc.append(string.replace("\n", " "))
 		elif at_exc:
-			exc.append(string)
+			exc.append(string.replace("\n", " "))
 	
 	# if there was no inclusion/exclusion split, we assume the text describes inclusion criteria
 	if len(inc) < 1 or len(exc) < 1:
 		logging.info("No explicit separation of inclusion/exclusion criteria found, assuming this text to describe inclusion criteria:")
 		logging.info(string)
 		inc.append(string)
-	
-	# join arrays back into one string
-	inc = ["\n".join(inc)]
-	exc = ["\n".join(exc)]
 	
 	return (inc, exc)
 

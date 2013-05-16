@@ -227,9 +227,11 @@ class Study (DBObject):
 		
 		crit = []
 		
-		# split into arrays
+		# split into inclusion and exclusion
 		(inclusion, exclusion) = split_inclusion_exclusion(self.criteria_text)
 		
+		# parsed by bulleted list, produce one criterion per item; we also could
+		# concatenate them into one file each.
 		for txt in inclusion:
 			obj = StudyEligibility(self)
 			obj.is_inclusion = True

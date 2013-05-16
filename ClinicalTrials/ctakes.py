@@ -12,7 +12,7 @@ import codecs
 
 from xml.dom.minidom import parse
 
-from nlp import NLPProcessing
+from nlp import NLPProcessing, list_to_sentences
 
 
 class cTAKES (NLPProcessing):
@@ -41,7 +41,7 @@ class cTAKES (NLPProcessing):
 		
 		# write it
 		with codecs.open(infile, 'w', 'utf-8') as handle:
-			handle.write(text)
+			handle.write(list_to_sentences(text))
 		
 		return True
 	

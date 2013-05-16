@@ -27,6 +27,9 @@ class MetaMap (NLPProcessing):
 		if text is None or len(text) < 1:
 			return False
 		
+		if filename is None:
+			return False
+		
 		in_dir = os.path.join(self.root if self.root is not None else '.', 'metamap_input')
 		if not os.path.exists(in_dir):
 			logging.error("The input directory for MetaMap at %s does not exist" % in_dir)
@@ -43,7 +46,7 @@ class MetaMap (NLPProcessing):
 		return True
 	
 	
-	def parse_output(self, filename):
+	def parse_output(self, filename, with_mappings=False):
 		""" Parse MetaMap XML output. """
 		if filename is None:
 			return (None, None)
@@ -76,10 +79,14 @@ class MetaMap (NLPProcessing):
 					candidates.extend(phrase.getElementsByTagName('Candidates')[0].getElementsByTagName('Candidate'))
 					
 					# also get the mapping candidate candidates
-					mappings = phrase.getElementsByTagName('Mappings')[0].getElementsByTagName('Mapping')
-					for mapping in mappings:
-						for cand in mapping.getElementsByTagName('MappingCandidates'):
-							candidates.extend(cand.getElementsByTagName('Candidate'))
+					if with_mappings:
+						mappings = phrase.getElementsByTagName('Mappings')[0].getElementsByTagName('Mapping')
+						for mapping in mappings:
+							for cand in mapping.getElementsByTagName('MappingCandidates'):
+								candidates.extend(cand.getElementsByTagName('Candidate'))
+			
+			# think about parsing negations in "Negations"
+			
 		except Exception, e:
 			logging.warning("Exception while parsing MetaMap output: %s" % e)
 			pass
