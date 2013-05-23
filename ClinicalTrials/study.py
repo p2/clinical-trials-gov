@@ -517,7 +517,20 @@ class StudyEligibility (DBObject):
 				
 	
 	def write_nlp(self, nlp):
+		""" Writes the NLP engine input file and sets the waiting flag.
+		It also sets the waiting flag if the file hasn't been written but there
+		is yet no output. """
+		waiting = False
+		
 		if nlp.write_input(self.text, '%d.txt' % self.id):
+			waiting = True
+		else:
+			arr = self.cui_ctakes if 'ctakes' == nlp.name else self.cui_metamap
+			if len(arr) < 1:
+				waiting = True
+		
+		# waiting for NLP processing?
+		if waiting:
 			if self.waiting_for_nlp is None:
 				self.waiting_for_nlp = [nlp.name]
 			else:

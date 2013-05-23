@@ -124,44 +124,54 @@ class Runner (object):
 			study.store()
 		
 		self.write_ncts(nct, False)
+		success = True
 		
 		# run cTakes if needed
 		if run_ctakes:
 			self.status = "Running cTakes for %d trials (this will take a while)..." % len(nct)
+			success_ct = True
 			
 			try:
 				if call(['./run_ctakes.sh', self.run_dir]) > 0:
 					self.status = 'Error running cTakes'
-					return
+					success_ct = False
 			except Exception, e:
 				self.status = 'Error running cTakes: %s' % e
-				return
+				success_ct = False
 			
 			# make sure we got all criteria
-			for study in self.found_studies:
-				study.codify_eligibility()
-				study.store()
+			if success_ct:
+				for study in self.found_studies:
+					study.codify_eligibility()
+					study.store()
+			else:
+				success = False
 		
 		# run MetaMap if needed
 		if run_metamap:
 			self.status = "Running MetaMap for %d trials (this will take a while)..." % len(nct)
+			success_mm = True
 			
 			try:
 				if call(['./run_metamap.sh', self.run_dir]) > 0:
 					self.status = 'Error running MetaMap'
-					return
+					success_mm = False
 			except Exception, e:
 				self.status = 'Error running MetaMap: %s' % e
-				return
+				success_mm = False
 			
 			# make sure we got all criteria
-			for study in self.found_studies:
-				study.codify_eligibility()
-				study.store()
+			if success_mm:
+				for study in self.found_studies:
+					study.codify_eligibility()
+					study.store()
+			else:
+				success = False
 		
 		Study.sqlite_commit_if_needed()
 		Study.sqlite_release_handle()
-		self.status = 'done'
+		if success:
+			self.status = 'done'
 	
 	
 	# -------------------------------------------------------------------------- Run Directory

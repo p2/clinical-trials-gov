@@ -19,22 +19,22 @@ We checkout cTakes and add the pgpop module. Assuming we are in the main directo
 
 - Install Maven (This is for OS X, requires [Homebrew][], adapt accordingly)
     
-      brew install maven
+        brew install maven
 
 - Checkout cTakes from the repo  
 
-      svn co https://svn.apache.org/repos/asf/ctakes/trunk ctakes
+        svn co https://svn.apache.org/repos/asf/ctakes/trunk ctakes
 
-- Add the pgpop module to ctakes as `ctakes-pgpop` (**THIS IS A PRIVATE MODULE**)
+- Add the pgpop module to ctakes as `ctakes-pgpop` (**THIS IS A PRIVATE MODULE**). Make sure the pom contains the profile `pgpopPreprocessAndSerialize`.
 
 - Add this line to `ctakes/pom.xml` (under the `<modules>` node):  
 
-      <module>ctakes-pgpop</module>
+        <module>ctakes-pgpop</module>
 
 - Create a file named `umls.sh` containing your UMLS username and password:
       
-      UMLS_USERNAME='username'
-      UMLS_PASSWORD='password'
+        UMLS_USERNAME='username'
+        UMLS_PASSWORD='password'
 
 ### MetaMap ###
 
@@ -44,7 +44,7 @@ To evaluate MetaMap, download and install MetaMap:
 - Extract the archive into our root directory and rename it to `metamap`
 - Run the install script:
     
-      ./bin/install.sh
+        ./bin/install.sh
 
 
 ### SNOMED CT ###

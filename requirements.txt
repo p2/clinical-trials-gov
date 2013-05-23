@@ -6,3 +6,4 @@ rdflib >= 3.2.0
 pyparsing == 1.5.7
 rdfextras
 jinja2
+requests
