@@ -162,8 +162,8 @@ class Study (DBObject):
 			in_ex = 'in' if crit.is_inclusion else 'ex'
 			
 			# this criterium has been codified
-			if len(crit.snomed) > 0:
-				rspan = max(len(crit.snomed), len(crit.cui_metamap))
+			rspan = max(len(crit.snomed), len(crit.cui_metamap))
+			if rspan > 0:
 				
 				c_html = """<td class="%s" rowspan="%d">%s</td>
 				<td class="%s" rowspan="%d">%s</td>""" % (css_class, rspan, crit.text, css_class, rspan, in_ex)
