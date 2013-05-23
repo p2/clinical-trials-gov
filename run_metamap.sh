@@ -25,6 +25,11 @@ fi
 
 cd metamap
 
+if [ ! -f bin/wsdserverctl ]; then
+	echo "The MetaMap server executable is not present, did you run the install script?"
+	exit 1
+fi
+
 # start servers if they are not running
 if [ $(ps -ax | grep WSD_Server | wc -l) -lt 2 ]; then
 	./bin/wsdserverctl start

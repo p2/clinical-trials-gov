@@ -66,7 +66,11 @@ class MetaMap (NLPProcessing):
 		cuis = []
 		
 		# parse XMI file
-		root = parse(outfile).documentElement
+		try:
+			root = parse(outfile).documentElement
+		except Exception, e:
+			logging.error("Failed to parse MetaMap output file %s:  %s" % (outfile, e))
+			return (None, None)
 		
 		# find mappings
 		candidates = []
