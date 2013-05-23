@@ -19,17 +19,17 @@ We checkout cTakes and add the pgpop module. Assuming we are in the main directo
 
 - Install Maven (This is for OS X, requires [Homebrew][], adapt accordingly)
     
-      brew install maven`
+      brew install maven
 
 - Checkout cTakes from the repo  
 
-      svn co https://svn.apache.org/repos/asf/ctakes/trunk ctakes`
+      svn co https://svn.apache.org/repos/asf/ctakes/trunk ctakes
 
 - Add the pgpop module to ctakes as `ctakes-pgpop` (**THIS IS A PRIVATE MODULE**)
 
 - Add this line to `ctakes/pom.xml` (under the `<modules>` node):  
 
-      <module>ctakes-pgpop</module>`
+      <module>ctakes-pgpop</module>
 
 - Create a file named `umls.sh` containing your UMLS username and password:
       
