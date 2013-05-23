@@ -141,8 +141,10 @@ class SNOMED (object):
 				concept_id INTEGER PRIMARY KEY,
 				lang TEXT,
 				term TEXT,
+				isa VARCHAR,
 				active INT
 			)''')
+		cls.sqlite_handle.execute("CREATE INDEX IF NOT EXISTS isa_index ON descriptions (isa)")
 		
 		# relationships
 		cls.sqlite_handle.create('relationships', '''(
@@ -165,9 +167,9 @@ class SNOMED (object):
 		"""
 		if 'descriptions' == table_name:
 			return '''INSERT OR IGNORE INTO descriptions
-						(concept_id, lang, term, active)
+						(concept_id, lang, term, isa, active)
 						VALUES
-						(?, ?, ?, ?)'''
+						(?, ?, ?, ?, ?)'''
 		if 'relationships' == table_name:
 			return '''INSERT OR IGNORE INTO relationships
 						(relationship_id, source_id, destination_id, rel_type, active)
@@ -179,7 +181,13 @@ class SNOMED (object):
 	@classmethod
 	def insert_tuple_from_csv_row_for(cls, table_name, row):
 		if 'descriptions' == table_name:
-			return (int(row[4]), row[5], row[7], int(row[2]))
+			isa = ''
+			if len(row) > 6:
+				if '900000000000013009' == row[6]:
+					isa = 'synonym'
+				elif '900000000000003001' == row[6]:
+					isa = 'full'
+			return (int(row[4]), row[5], row[7], isa, int(row[2]))
 		if 'relationships' == table_name:
 			return (int(row[0]), int(row[4]), int(row[5]), int(row[7]), int(row[2]))
 		return None
