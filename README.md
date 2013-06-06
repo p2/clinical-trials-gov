@@ -9,8 +9,10 @@ Extracting and codifying study eligibility criteria from [ClinicalTrials.gov][ct
 Setup
 -----
 
+After initializing the submodules, the symlink to the databases should be functional. If not create it:
 
-[…]
+    $ cd clinical-trials-gov
+    $ ln -s ClinicalTrials/databases
 
 
 ### cTakes ###
@@ -58,6 +60,11 @@ There is a SNOMED database at _ctakes/ctakes-dictionary-lookup/target/classes/or
     - `sct2_Relationship_Full_INT_xxxxxxxx.txt`: `snomed_rel.csv`
     
     When these files are present, the app will automatically import all SNOMED codes into a local SQLite database, if this has not already been done.
+
+
+## RxNorm ###
+
+The script will prompt you to install an RxNorm database.
 
 
 [ct]: http://www.clinicaltrials.gov

@@ -92,7 +92,7 @@ if __name__ == "__main__":
 					<th></th>
 					<th></th>
 					<th></th>
-					<th colspan="2">cTAKES</th>
+					<th colspan="4">cTAKES</th>
 					<th colspan="2">MetaMap</th>
 				</tr>
 				<tr>
@@ -101,6 +101,8 @@ if __name__ == "__main__":
 					<th>text</th>
 					<th></th>
 					<th>SNOMED</th>
+					<th></th>
+					<th>RxNorm</th>
 					<th></th>
 					<th>CUI</th>
 					<th></th>
