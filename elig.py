@@ -119,7 +119,10 @@ if __name__ == "__main__":
 		</body>
 		</html>"""
 		
-		handle = codecs.open('report.html', 'w', 'utf-8')
+		report_path = os.path.join(run_dir, 'report.html')
+		handle = codecs.open(report_path, 'w', 'utf-8')
 		handle.write(html)
 		handle.close()
+		
+		print "Wrote report to %s" % report_path
 

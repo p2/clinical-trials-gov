@@ -62,7 +62,7 @@ There is a SNOMED database at _ctakes/ctakes-dictionary-lookup/target/classes/or
     When these files are present, the app will automatically import all SNOMED codes into a local SQLite database, if this has not already been done.
 
 
-## RxNorm ###
+### RxNorm ###
 
 The script will prompt you to install an RxNorm database.
 
