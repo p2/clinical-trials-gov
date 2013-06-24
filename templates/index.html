@@ -7,12 +7,13 @@
 <body>
 	<div id="container">
 		<div id="content">
-			<h1>Trial Eligibility</h1>
 			{% if not has_chrome %}
 			<div id="back_to_patient_select">
 				<a href="?api_base={{ api_base }}">« Select patient</a>
 			</div>
 			{% endif %}
+			
+			<h1>Trial Eligibility</h1>
 			<div id="patient_overview">
 				Loading patient...
 			</div>

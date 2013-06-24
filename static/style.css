@@ -26,6 +26,8 @@ td:last-child { padding-right: 0; }
 
 .demographics h1 { font-size: 1.6em; }
 
+.patient_location { margin-top: 0.5em; }
+
 #patient_problems { clear: left; padding-top: 1em; }
 
 ul#problem_list { padding: 0; list-style-type: none; }

@@ -15,7 +15,8 @@
 	%>
 	<h1><%= full_name %></h1>
 	
-	<% var bday = null;
+	<% // birthday, death-date and age
+	var bday = null;
 	var age = '';
 	var deathdate = null;
 	if ('vcard:bday' in demo) {
@@ -42,5 +43,23 @@
 	
 	<% if ('sp:ethnicity' in demo) { %>
 		<!-- <%= demo['sp:ethnicity'] %> -->
+	<% } %>
+	
+	<% if ('vcard:adr' in demo) {
+		// location
+		
+		var parts = ['Unknown'];
+		var adr = demo['vcard:adr'];
+		if ('vcard:locality' in adr) {
+			parts[0] = adr['vcard:locality'];
+		}
+		if ('vcard:region' in adr) {
+			parts.push(adr['vcard:region']);
+		}
+		if ('vcard:country' in adr) {
+			parts.push(adr['vcard:country']);
+		} %>
+		
+		<div class="patient_location"><%= parts.join(', ') %></div>
 	<% } %>
 </div>
