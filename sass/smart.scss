@@ -5,7 +5,12 @@
 #endpoints {
 	overflow: hidden;
 	background-color: white;
-	border: 1px solid $col-border; @include border-radius-all();
+	border: 1px solid $col-border; border-radius: 5px;
+	
+	padding-left: 0;
+	li {
+		list-style-type: none;
+	}
 	
 	a {
 		display: block;

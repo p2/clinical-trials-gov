@@ -2,6 +2,14 @@
 #
 #
 
+
+USE_APP_ID = "clinical-trials-localhost@apps.chip.org"
+USE_SMART_05 = False
+DEBUG = True
+
+
+
+# ------------------------------------------------------------------------------ Imports
 import os
 import sys
 import logging
@@ -16,8 +24,11 @@ from beaker.middleware import SessionMiddleware
 from jinja2 import Template, Environment, PackageLoader
 
 # SMART
-# from smart_client_python.smart import SmartClient
+if not USE_SMART_05:
+	from smart_client_python.client import SMARTClient
 from rdflib.graph import Graph
+
+from settings import ENDPOINTS
 
 # App
 from ClinicalTrials.study import Study
@@ -34,32 +45,56 @@ session_opts = {
 app = application = SessionMiddleware(bottle.app(), session_opts)		# "application" is needed for some services like AppFog
 _jinja_templates = Environment(loader=PackageLoader('wsgi', 'templates'), trim_blocks=True)
 
-DEBUG = True
 
 
 # ------------------------------------------------------------------------------ Utilities
 def _get_session():
-	return bottle.request.environ.get('beaker.session')
+	return bottle.request.environ.get('beaker.session')		
 
-
-# doesn't work with v0.5 and i2b2, leave in for v0.6 resurrection
-# def _get_smart():
-# 	sess = _get_session()
-# 	if sess is None:
-# 		return None
+# only used for SMART v0.6+
+def _get_smart():
+	sess = _get_session()
+	if sess is None:
+		logging.debug("There is no session")
+		return None
 	
-# 	# configure SMART client
-# 	app_id = "clinical-trials-v05@apps.smartplatforms.org"
-# 	server = {"api_base" : sess.get('api_base')}
-# 	token = {
-# 		"consumer_key": sess.get('rest_token'),
-# 		"consumer_secret": sess.get('rest_secret')
-# 	}
+	# configure SMART client
+	api_base = sess.get('api_base')
+	if not api_base:
+		logging.debug("No api_base is set")
+		return None
 	
-# 	smart = SmartClient(app_id, server, token)
-# 	smart.record_id = sess.get('record_id')
+	# find server credentials
+	cons_key = sess.get('rest_token')
+	cons_sec = sess.get('rest_secret')
+	if not cons_key or not cons_sec:
+		server = None
+		for ep in ENDPOINTS:
+			if ep.get('url') == api_base:
+				server = ep
+				break
+		
+		if server is None:
+			logging.error("There is no server with base URI %s" % api_base)
+			return None
+		
+		cons_key = server.get('consumer_key')
+		cons_sec = server.get('consumer_secret')
 	
-# 	return smart
+	# init client
+	token = {
+		'consumer_key': cons_key,
+		'consumer_secret': cons_sec
+	}
+	
+	try:
+		smart = SMARTClient(USE_APP_ID, api_base, token)
+		smart.record_id = sess.get('record_id')
+	except Exception, e:
+		logging.warning("Failed to instantiate SMART client: %s" % e)
+		smart = None
+	
+	return smart
 
 
 # ------------------------------------------------------------------------------ Index
@@ -67,11 +102,62 @@ def _get_session():
 @bottle.get('/index.html')
 def index():
 	""" The index page """
+	sess = _get_session()
+	
+	# look at URL params first, if they are there store them in the session
+	api_base = bottle.request.query.get('api_base')
+	if api_base:
+		sess['api_base'] = api_base
+		
+	else:
+		api_base = sess.get('api_base')
+	
+	record_id = bottle.request.query.get('record_id')
+	if record_id:
+		sess['record_id'] = record_id
+	
+	# no endpoint, show selector
+	if not api_base:
+		logging.debug('redirecting to endpoint selection')
+		bottle.redirect('endpoint_select')
+	
+	smart = _get_smart()
+	if smart is None:
+		return "Cannot connect to SMART sandbox"
+	
+	# no record id, call launch page
+	if not sess.get('record_id'):
+		launch = smart.launch_url
+		if launch is None:
+			return "Unknown app start URL, cannot launch without an app id"
+		
+		logging.debug('redirecting to app launch page')
+		bottle.redirect(launch)
+		return
 	
 	# render index
 	template = _jinja_templates.get_template('index.html')
-	return template.render(api_base='')
+	return template.render(smart_v05=USE_SMART_05, has_chrome=False, api_base=api_base)
 
+
+@bottle.get('/endpoint_select')
+def endpoint():
+	""" Shows all possible endpoints, sending the user back to index when one is chosen """
+	
+	# get the callback
+	# NOTE: this is done very cheaply, we need to make sure to end the url with either "?" or "&"
+	callback = bottle.request.query.get('callback', 'index.html?')
+	if '?' != callback[-1] and '&' != callback[-1]:
+		callback += '&' if '?' in callback else '?'
+	
+	available = []
+	for srvr in ENDPOINTS:
+		available.append(srvr)
+	
+	# render selections
+	template = _jinja_templates.get_template('endpoint_select.html')
+	return template.render(endpoints=available, callback=callback)
+	
 
 # ------------------------------------------------------------------------------ RESTful paths
 @bottle.put('/session')
@@ -191,7 +277,7 @@ def find_trials():
 		runner = Runner(run_id, "run-server")
 		runner.in_background = True
 		runner.run_ctakes = True
-		runner.run_metamap = True
+		# runner.run_metamap = True
 	
 	# configure
 	cond = bottle.request.query.get('cond')
@@ -335,9 +421,12 @@ def ejs(ejs_name):
 	return _serve_static('%s.ejs' % ejs_name, 'templates')
 
 
-# setup logging
+
+# start the server
 if __name__ == '__main__':
 	if DEBUG:
 		logging.basicConfig(level=logging.DEBUG)
+		bottle.run(app=app, host='0.0.0.0', port=8008, reloader=True)
 	else:
 		logging.basicConfig(level=logging.WARNING)
+		bottle.run(app=app, host='0.0.0.0', port=8008)

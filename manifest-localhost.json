@@ -1,0 +1,13 @@
+{
+	"name": "Trial Eligibility", 
+	"description": "An app that checks ClinicalTrials.gov for trials that the patient is eligible for.", 
+	"author": "Pascal Pfiffner, Harvard Medical School", 
+	"id": "clinical-trials-localhost@apps.chip.org", 
+	"mode": "ui", 
+	"scope": "record", 
+	"index": "http://localhost:8008/", 
+	"oauth_callback": "http://localhost:8008/authorize", 
+	"icon": "http://www.gravatar.com/avatar/7a2e37e3f4d9f1ee4467ec9520e919f1?s=32", 
+	"smart_version": "0.6", 
+	"version": "1.0"
+}

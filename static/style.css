@@ -16,6 +16,8 @@ td:last-child { padding-right: 0; }
 #container { max-width: 70em; min-height: 100%; margin: 0 auto; }
 
 @media screen and (min-width: 72em) { #container { border: 1px solid #787878; border-width: 0 1px; } }
+#container { background-color: white; }
+
 #content { padding: 2em 3em; }
 
 /** Patient Styles */
@@ -35,7 +37,8 @@ ul#problem_list li.active { border-color: #64c8f0; box-shadow: 0 0 5px #0596be; 
 #trials > ul .formatted_criteria { margin: 0.5em 0 1em; padding: 1em 1em 1em; border: 1px solid #b4b4b4; border-radius: 0.25em; background-color: #f0f0f0; }
 
 /** SMART specific styles */
-#endpoints { overflow: hidden; background-color: white; border: 1px solid #787878; -webkit-border-radius: 5px 5px 5px 5px; -moz-border-radius: 5px 5px 5px 5px; -ms-border-radius: 5px 5px 5px 5px; -o-border-radius: 5px 5px 5px 5px; border-radius: 5px 5px 5px 5px; }
+#endpoints { overflow: hidden; background-color: white; border: 1px solid #787878; border-radius: 5px; padding-left: 0; }
+#endpoints li { list-style-type: none; }
 #endpoints a { display: block; padding: 0.5em 1em; text-decoration: none; color: black; border-bottom: 1px solid #787878; }
 #endpoints a:last-child { border-bottom: none; }
 #endpoints a:hover { color: #08394d; background-color: #d8f1fb; }

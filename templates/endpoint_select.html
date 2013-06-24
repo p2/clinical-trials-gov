@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Adverse Event Reporting</title>
+	<link rel="stylesheet" type="text/css" href="static/style.css" />
+</head>
+<body>
+	<div id="container">
+		<div id="content">
+			<h1>AE Reporting</h1>
+			<h2>Choose a SMART container</h2>
+			<ul id="endpoints">
+				{% for ep in endpoints %}
+				<li><a href="{{ callback }}api_base={{ ep.url }}">
+					{{ ep.name }}
+					<span class="supplement">{{ ep.url }}</span>
+				</a></li>
+				{% else %}
+				<span>No SMART containers have been defined</span>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+</body>
+</html>

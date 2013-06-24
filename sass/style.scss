@@ -3,7 +3,8 @@
 //
 
 
-@import "mixins";
+@import "bourbon";
+
 $col-title:			rgb(30,30,30);
 $col-linkglow:		rgb(0,64,128);
 $col-faded:			rgb(80,80,80);
@@ -56,6 +57,10 @@ td {
 	#container {
 		border: 1px solid $col-border; border-width: 0 1px;
 	}	
+}
+
+#container {
+	background-color: white;
 }
 
 #content {
