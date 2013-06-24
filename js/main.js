@@ -180,7 +180,7 @@ function _getTrialResults(run_id) {
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
 			_showTrialStatus('Found ' + obj1.length + ' trials, filtering by demographics...');
-			_filterTrialsByDemographics(run_id, obj1);
+			_filterTrialsByDemographics(run_id);
 		}
 		else {
 			console.error(obj1, status, obj2);
@@ -189,15 +189,15 @@ function _getTrialResults(run_id) {
 	});
 }
 
-function _filterTrialsByDemographics(run_id, all_trials) {
+function _filterTrialsByDemographics(run_id) {
 	$.ajax({
 		'url': 'trial_runs/' + run_id + '/filter/demographics',
 		'dataType': 'json'
 	})
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
-			_showTrialStatus(obj1.length + ' of ' + all_trials.length + ' trials, now filtering by problem list...');
-			_filterTrialsByProblems(run_id, all_trials);
+			_showTrialStatus('Filtering by problem list...');
+			_filterTrialsByProblems(run_id);
 		}
 		else {
 			console.error(obj1, status, obj2);
@@ -206,15 +206,15 @@ function _filterTrialsByDemographics(run_id, all_trials) {
 	});
 }
 
-function _filterTrialsByProblems(run_id, all_trials) {
+function _filterTrialsByProblems(run_id) {
 	$.ajax({
 		'url': 'trial_runs/' + run_id + '/filter/problems',
 		'dataType': 'json'
 	})
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
-			_showTrialStatus(obj1.length + ' of ' + all_trials.length + ' trials remain.');
-			_loadTrials(obj1, all_trials);
+			_showTrialStatus();
+			_loadTrials(obj1);
 		}
 		else {
 			console.error(obj1, status, obj2);
@@ -223,7 +223,7 @@ function _filterTrialsByProblems(run_id, all_trials) {
 	});
 }
 
-function _loadTrials(filtered, all_trials) {
+function _loadTrials(trial_tuples) {
 	var main = $('#trials');
 	var loader = $('<div/>', {'id': 'trial_loader'}).text('Loading trials...');
 	var list_good = $('<ul/>', {'id': 'trials_good'});
@@ -235,11 +235,18 @@ function _loadTrials(filtered, all_trials) {
 	main.append(list_bad);
 	
 	// load all trials individually
-	for (var i = 0; i < all_trials.length; i++) {
-		nct = all_trials[i];
+	for (var i = 0; i < trial_tuples.length; i++) {
+		var tpl = trial_tuples[i];
+		var nct = tpl[0];
+		var reason = null;
+		if (tpl.length > 0) {
+			reason = tpl[1];
+		}
+		
 		$.ajax({
 			'url': 'trials/' + nct,
-			'dataType': 'json'
+			'dataType': 'json',
+			'context': {'reason': reason}
 		})
 		.always(function(obj1, status, obj2) {
 			if ('success' == status) {
@@ -262,11 +269,13 @@ function _loadTrials(filtered, all_trials) {
 				li.append(link);
 				li.append(detail);
 				
-				if (filtered.contains(obj1.nct)) {
-					list_good.append(li);
+				console.log("REASON:", this.reason);
+				if (this.reason) {
+					li.append('<tt>REASON: ' + this.reason + '</tt>');
+					list_bad.append(li);
 				}
 				else {
-					list_bad.append(li);
+					list_good.append(li);
 				}
 			}
 			else {

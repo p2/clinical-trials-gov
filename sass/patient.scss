@@ -51,8 +51,16 @@ ul#problem_list {
 }
 
 #trials > ul {
-	li > a:first-child {
-		margin-right: 1em;
+	li {
+		margin-bottom: 0.5em;
+		
+		& > a:first-child {
+			margin-right: 1em;
+		}
+		tt {
+			display: block; margin-top: 0.3em;
+			font-size: 10pt;
+		}
 	}
 	
 	.formatted_criteria {

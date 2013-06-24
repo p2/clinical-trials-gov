@@ -33,6 +33,7 @@ from settings import ENDPOINTS
 # App
 from ClinicalTrials.study import Study
 from ClinicalTrials.runner import Runner
+from ClinicalTrials.umls import SNOMEDLookup
 
 
 # bottle, beaker and Jinja setup
@@ -112,9 +113,16 @@ def index():
 	else:
 		api_base = sess.get('api_base')
 	
+	# determine record id
 	record_id = bottle.request.query.get('record_id')
-	if record_id:
-		sess['record_id'] = record_id
+	if record_id is not None:
+		if '0' != record_id:
+			sess['record_id'] = record_id
+		else:
+			del sess['record_id']
+			record_id = None
+	else:
+		record_id = sess.get('record_id')
 	
 	# no endpoint, show selector
 	if not api_base:
@@ -126,7 +134,7 @@ def index():
 		return "Cannot connect to SMART sandbox"
 	
 	# no record id, call launch page
-	if not sess.get('record_id'):
+	if record_id is None:
 		launch = smart.launch_url
 		if launch is None:
 			return "Unknown app start URL, cannot launch without an app id"
@@ -277,7 +285,7 @@ def find_trials():
 		runner = Runner(run_id, "run-server")
 		runner.in_background = True
 		runner.run_ctakes = True
-		# runner.run_metamap = True
+		runner.run_metamap = False
 	
 	# configure
 	cond = bottle.request.query.get('cond')
@@ -312,9 +320,7 @@ def trial_progress(run_id):
 
 @bottle.get('/trial_runs/<run_id>/results')
 def trial_results(run_id):
-	""" Returns the results from a given run-id.
-	Currently ignores the run-id since we only support one query at the time
-	for testing purposes. """
+	""" Returns the results from a given run-id. """
 	
 	runner = Runner.get(run_id)
 	if runner is None:
@@ -323,7 +329,7 @@ def trial_results(run_id):
 	if not runner.done:
 		bottle.abort(400, "Trial results are not available")
 	
-	ncts = runner.get_ncts(False)
+	ncts = runner.get_ncts()
 	return json.dumps(ncts)
 
 
@@ -336,6 +342,8 @@ def trial_filter_demo(run_id, filter_by):
 	if not runner.done:
 		bottle.abort(400, "Trial results are not available")
 	
+	ncts = runner.get_ncts()
+	
 	# demographics - get age and gender
 	if 'demographics' == filter_by:
 		demo = demographics()
@@ -344,64 +352,84 @@ def trial_filter_demo(run_id, filter_by):
 		bday = dateutil.parser.parse(bday_iso)		# no need for timezone correction
 		age = dateutil.relativedelta.relativedelta(date.today(), bday).years
 		
-		ncts = runner.get_ncts(False)
 		keep = []
-		for nct in ncts:
-			trial = Study(nct)
-			trial.load()
+		for tpl in ncts:
+			nct = tpl[0]
+			reason = tpl[1] if len(tpl) > 1 else None
 			
-			# filter gender
-			if is_male:
-				if trial.gender == 2:
-					continue
+			if not reason:
+				trial = Study(nct)
+				trial.load()
+				
+				# filter gender
+				if is_male:
+					if trial.gender == 2:
+						reason = "Limited to women"
+				else:
+					if trial.gender == 1:
+						reason = "Limited to men"
+				
+				# filter age
+				if trial.min_age > age:
+					reason = "Patient is too young (min age %d)" % trial.min_age
+				elif trial.max_age < age:
+					reason = "Patient is too old (max age %d)" % trial.max_age
+			
+			if reason:
+				keep.append((nct, reason))
 			else:
-				if trial.gender == 1:
-					continue
-			
-			# filter age
-			if trial.min_age > age or trial.max_age < age:
-				continue
-			
-			keep.append(nct)
+				keep.append((nct,))
 		
-		runner.write_ncts(keep, True)
-		return json.dumps(keep)
+		runner.write_ncts(keep)
+		ncts = keep
 	
 	# problems
 	elif 'problems' == filter_by:
 		probs = problems().get('problems', [])
 		
-		# extract snomed codes
-		sno = []
+		# extract snomed codes from patient's problem list
+		snomed = SNOMEDLookup()
+		exclusion_codes = []
 		for problem in probs:
 			snomed_url = problem.get('sp:problemName', {}).get('sp:code', {}).get('@id')
 			if snomed_url is not None:
-				snomed = os.path.basename(snomed_url)
-				sno.append(snomed)
+				snomed_code = os.path.basename(snomed_url)
+				exclusion_codes.append(snomed_code)
 		
-		# look at criteria
-		ncts = runner.get_ncts(True)
+		# look at trial criteria
 		keep = []
-		for nct in ncts:
-			trial = Study(nct)
-			trial.load()
-			keep_this = True
-			for crit in trial.criteria:
-				
-				# remove matching exclusion criteria
-				if not crit.is_inclusion:
-					intersection = set(sno).intersection(crit.snomed)
-					if len(intersection) > 0:
-						keep_this = False
-						continue
+		for tpl in ncts:
+			nct = tpl[0]
+			reason = tpl[1] if len(tpl) > 1 else None
 			
-			if keep_this:
-				keep.append(nct)
+			if not reason:
+				trial = Study(nct)
+				trial.load()
+				for crit in trial.criteria:
+					
+					# remove matching exclusion criteria
+					if not crit.is_inclusion and crit.snomed is not None:
+						intersection = set(exclusion_codes).intersection(crit.snomed)
+						if len(intersection) > 0:
+							reasons = ["Matches exclusion criteria:"]
+							for exc_snomed in intersection:
+								reasons.append(" - %s (SNOMED %s)" % (snomed.lookup_code_meaning(exc_snomed), exc_snomed))
+							reason = "\n".join(reasons)
+							break
+			
+			if reason:
+				keep.append((nct, reason))
+			else:
+				keep.append((nct,))
 		
-		runner.write_ncts(keep, True)
-		return json.dumps(keep)
+		runner.write_ncts(keep)
+		ncts = keep
 	
-	return '{"error": "We can not filter by %s"}' % filter_by
+	# unknown filtering property
+	else:
+		return '{"error": "We can not filter by %s"}' % filter_by
+	
+	return json.dumps(ncts)
 
 
 # ------------------------------------------------------------------------------ Static Files

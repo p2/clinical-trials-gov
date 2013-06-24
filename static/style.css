@@ -35,7 +35,9 @@ ul#problem_list li { padding: 0.5em; cursor: pointer; border: 1px solid transpar
 ul#problem_list li:hover { background-color: #e6e6e6; }
 ul#problem_list li.active { border-color: #64c8f0; box-shadow: 0 0 5px #0596be; border-radius: 0.25em; }
 
+#trials > ul li { margin-bottom: 0.5em; }
 #trials > ul li > a:first-child { margin-right: 1em; }
+#trials > ul li tt { display: block; margin-top: 0.3em; font-size: 10pt; }
 #trials > ul .formatted_criteria { margin: 0.5em 0 1em; padding: 1em 1em 1em; border: 1px solid #b4b4b4; border-radius: 0.25em; background-color: #f0f0f0; }
 
 /** SMART specific styles */
