@@ -141,7 +141,7 @@ def index():
 
 
 @bottle.get('/endpoint_select')
-def endpoint():
+def endpoints():
 	""" Shows all possible endpoints, sending the user back to index when one is chosen """
 	
 	# get the callback
@@ -294,7 +294,7 @@ def find_trials():
 			runner.term = term
 	
 	# launch and return id
-	runner.run()
+	runner.run(['id', 'eligibility', 'location'])
 	
 	return run_id
 

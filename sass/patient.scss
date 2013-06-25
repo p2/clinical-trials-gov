@@ -68,7 +68,9 @@ ul#problem_list {
 	}
 	
 	.formatted_criteria {
+		display: none; white-space: pre-wrap;
 		margin: 0.5em 0 1em; padding: 1em 1em 1em;
+		font-size: 10pt;
 		border: 1px solid rgb(180,180,180); border-radius: 0.25em;
 		background-color: rgb(240,240,240); 
 	}

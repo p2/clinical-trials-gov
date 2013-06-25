@@ -1,0 +1,8 @@
+<li id="<%= trial.nct %>">
+	<a href="javascript:void();" onclick="$(this).siblings('.formatted_criteria').toggle()"><%= trial.nct %></a>
+	<a class="supplement" href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank">» ClinicalTrials.gov</a>
+	<% if ('reason' in trial && trial.reason) { %>
+		<tt><%= trial.reason %></tt>
+	<% } %>
+	<pre class="formatted_criteria"><%= 'formatted' in trial.criteria ? trial.criteria.formatted : "(unknown criteria" %></pre>
+</li>

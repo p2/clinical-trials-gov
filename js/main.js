@@ -228,23 +228,27 @@ function _filterTrialsByProblems(run_id) {
 function _loadTrials(trial_tuples) {
 	var main = $('#trials');
 	var loader = $('<div/>', {'id': 'trial_loader'}).text('Loading trials...');
+	main.append(loader);
+	
+	var num_good = 0;
+	var num_bad = 0;
 	var list_good = $('<ul/>', {'id': 'trials_good'});
 	var list_bad = $('<ul/>', {'id': 'trials_bad'});
-	main.append(loader);
-	main.append("<h3>Matching Trials</h3>");
-	main.append(list_good);
-	main.append("<h3>Filtered Trials</h3>");
-	main.append(list_bad);
 	
-	// load all trials individually
+	// loop all trials
 	for (var i = 0; i < trial_tuples.length; i++) {
 		var tpl = trial_tuples[i];
 		var nct = tpl[0];
 		var reason = null;
-		if (tpl.length > 0) {
+		if (tpl.length > 1) {
 			reason = tpl[1];
+			num_bad++;
+		}
+		else {
+			num_good++;
 		}
 		
+		// fetch trial details
 		$.ajax({
 			'url': 'trials/' + nct,
 			'dataType': 'json',
@@ -256,28 +260,14 @@ function _loadTrials(trial_tuples) {
 					loader.remove();
 					loader = null;
 				}
-				
-				// got a trial, show in list (oh god is this ugly!)
-				var li = $('<li/>', {'id': obj1.nct});
-				var detail = $('<div/>').hide().html(text2html(obj1['criteria']['formatted']));
-				detail.addClass('formatted_criteria');
-				var title = $('<a/>', {'href': 'javascript:void(0)'});
-				title.click(function() { detail.toggle() });
-				title.text(obj1.nct);
-				var link = $('<a/>', {'href': "http://www.clinicaltrials.gov/ct2/show/" + obj1.nct, 'target': '_blank'});
-				link.addClass('supplement');
-				link.text('» ClinicalTrials.gov');
-				li.append(title);
-				li.append(link);
-				li.append(detail);
-				
-				console.log("REASON:", this.reason);
+				console.log(obj1);
+				// got a trial, show in appropriate list
 				if (this.reason) {
-					li.append('<tt>REASON: ' + this.reason + '</tt>');
-					list_bad.append(li);
+					obj1.reason = this.reason;
+					list_bad.append('templates/trial_list.ejs', {'trial': obj1});
 				}
 				else {
-					list_good.append(li);
+					list_good.append('templates/trial_list.ejs', {'trial': obj1});
 				}
 			}
 			else {
@@ -285,6 +275,15 @@ function _loadTrials(trial_tuples) {
 			}
 		});
 	}
+	
+			
+	// add to DOM
+	var head_good = $('<h3/>').text('Matching Trials (' + num_good + ' of ' + trial_tuples.length + ')');
+	var head_bad = $('<h3/>').text('Filtered Trials (' + num_bad + ' of ' + trial_tuples.length + ')');
+	main.append(head_good);
+	main.append(list_good);
+	main.append(head_bad);
+	main.append(list_bad);
 }
 
 function _showTrialStatus(status) {
