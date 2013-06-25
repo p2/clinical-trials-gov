@@ -3,13 +3,6 @@
 #
 
 
-USE_APP_ID = "clinical-trials-localhost@apps.chip.org"
-USE_SMART_05 = False
-DEBUG = True
-
-
-
-# ------------------------------------------------------------------------------ Imports
 import os
 import sys
 import logging
@@ -24,11 +17,10 @@ from beaker.middleware import SessionMiddleware
 from jinja2 import Template, Environment, PackageLoader
 
 # SMART
+from settings import USE_APP_ID, USE_SMART_05, USE_NLP, DEBUG, ENDPOINTS
 if not USE_SMART_05:
 	from smart_client_python.client import SMARTClient
 from rdflib.graph import Graph
-
-from settings import ENDPOINTS
 
 # App
 from ClinicalTrials.study import Study
@@ -284,8 +276,9 @@ def find_trials():
 	if runner is None:
 		runner = Runner(run_id, "run-server")
 		runner.in_background = True
-		runner.run_ctakes = True
-		runner.run_metamap = False
+		if USE_NLP:
+			runner.run_ctakes = True
+			#runner.run_metamap = True
 	
 	# configure
 	cond = bottle.request.query.get('cond')
@@ -383,47 +376,48 @@ def trial_filter_demo(run_id, filter_by):
 		runner.write_ncts(keep)
 		ncts = keep
 	
-	# problems
+	# problems (only if NLP is on)
 	elif 'problems' == filter_by:
-		probs = problems().get('problems', [])
-		
-		# extract snomed codes from patient's problem list
-		snomed = SNOMEDLookup()
-		exclusion_codes = []
-		for problem in probs:
-			snomed_url = problem.get('sp:problemName', {}).get('sp:code', {}).get('@id')
-			if snomed_url is not None:
-				snomed_code = os.path.basename(snomed_url)
-				exclusion_codes.append(snomed_code)
-		
-		# look at trial criteria
-		keep = []
-		for tpl in ncts:
-			nct = tpl[0]
-			reason = tpl[1] if len(tpl) > 1 else None
+		if USE_NLP:
+			probs = problems().get('problems', [])
 			
-			if not reason:
-				trial = Study(nct)
-				trial.load()
-				for crit in trial.criteria:
-					
-					# remove matching exclusion criteria
-					if not crit.is_inclusion and crit.snomed is not None:
-						intersection = set(exclusion_codes).intersection(crit.snomed)
-						if len(intersection) > 0:
-							reasons = ["Matches exclusion criteria:"]
-							for exc_snomed in intersection:
-								reasons.append(" - %s (SNOMED %s)" % (snomed.lookup_code_meaning(exc_snomed), exc_snomed))
-							reason = "\n".join(reasons)
-							break
+			# extract snomed codes from patient's problem list
+			snomed = SNOMEDLookup()
+			exclusion_codes = []
+			for problem in probs:
+				snomed_url = problem.get('sp:problemName', {}).get('sp:code', {}).get('@id')
+				if snomed_url is not None:
+					snomed_code = os.path.basename(snomed_url)
+					exclusion_codes.append(snomed_code)
 			
-			if reason:
-				keep.append((nct, reason))
-			else:
-				keep.append((nct,))
-		
-		runner.write_ncts(keep)
-		ncts = keep
+			# look at trial criteria
+			keep = []
+			for tpl in ncts:
+				nct = tpl[0]
+				reason = tpl[1] if len(tpl) > 1 else None
+				
+				if not reason:
+					trial = Study(nct)
+					trial.load()
+					for crit in trial.criteria:
+						
+						# remove matching exclusion criteria
+						if not crit.is_inclusion and crit.snomed is not None:
+							intersection = set(exclusion_codes).intersection(crit.snomed)
+							if len(intersection) > 0:
+								reasons = ["Matches exclusion criteria:"]
+								for exc_snomed in intersection:
+									reasons.append(" - %s (SNOMED %s)" % (snomed.lookup_code_meaning(exc_snomed), exc_snomed))
+								reason = "\n".join(reasons)
+								break
+				
+				if reason:
+					keep.append((nct, reason))
+				else:
+					keep.append((nct,))
+			
+			runner.write_ncts(keep)
+			ncts = keep
 	
 	# unknown filtering property
 	else:

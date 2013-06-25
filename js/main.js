@@ -83,6 +83,7 @@ function didClickProblem(problem_id) {
 	// problem selected, hide all other and search for trials
 	if (!prob_elem.hasClass('active')) {
 		prob_elem.addClass('active');
+		$('#select_prompt').text("Showing trials pertaining to:");
 		
 		prob_list.find('li').each(function(idx, elem) {
 			if (problem_id != elem.getAttribute('id')) {
@@ -106,6 +107,7 @@ function didClickProblem(problem_id) {
 		});
 		
 		prob_elem.removeClass('active');
+		$('#select_prompt').text("Choose for which problem to find trials:");
 		$('#trials').empty();
 	}
 }

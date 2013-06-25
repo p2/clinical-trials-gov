@@ -1,5 +1,12 @@
-# configure servers
+# example settings file, copy to "settings.py" and adjust to your needs
 
+USE_APP_ID = "clinical-trials-localhost@apps.chip.org"
+USE_SMART_05 = False
+USE_NLP = True
+
+DEBUG = False
+
+# configure servers
 ENDPOINTS = [
 	{
 		"url": "http://sandbox-api-v06.smartplatforms.org",
