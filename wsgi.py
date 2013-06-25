@@ -294,7 +294,7 @@ def find_trials():
 			runner.term = term
 	
 	# launch and return id
-	runner.run(['id', 'eligibility', 'location'])
+	runner.run(['id', 'acronym', 'brief_title', 'official_title', 'brief_summary', 'eligibility', 'location'])
 	
 	return run_id
 

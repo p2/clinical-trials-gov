@@ -54,25 +54,81 @@ ul#problem_list {
 	}
 }
 
+#trials > h3 {
+	clear: right;
+	padding-top: 2em;
+}
+
 #trials > ul {
+	padding: 0;
+	list-style-type: none;
+	
 	li {
-		margin-bottom: 0.5em;
+		clear: right;
+		margin-bottom: 1em; padding-top: 1em;
+		line-height: 1.4;
+		border-top: 1px solid #CCC;
 		
 		& > a:first-child {
 			margin-right: 1em;
 		}
-		tt {
-			display: block; margin-top: 0.3em;
-			font-size: 10pt;
+		
+		.trial_info {
+			width: 35%;
+			
+			a {
+				text-decoration: none;
+			}
+			
+			.exclusion_reason {
+				display: block; margin-top: 0.3em;
+				font-size: 10pt; color: #A00;
+			}
 		}
-	}
-	
-	.formatted_criteria {
-		display: none; white-space: pre-wrap;
-		margin: 0.5em 0 1em; padding: 1em 1em 1em;
-		font-size: 10pt;
-		border: 1px solid rgb(180,180,180); border-radius: 0.25em;
-		background-color: rgb(240,240,240); 
+		
+		.trial_countries {
+			float: right; width: 65%;
+			margin-bottom: 1em;
+			
+			a {
+				margin-left: 2em;
+				color: #00B; font-size: 1.2em; font-weight: bold; text-decoration: none;
+			}
+		}
+		
+		.trial_locations {
+			float: right; width: 65%;
+			
+			& > div {
+				display: none;
+			}
+			
+			.trial_location {
+				display: inline-block;
+				max-width: 44%;					// don't ask why 45% + 5% will force a line break
+				margin: 0 0 1.5em 5%;
+				vertical-align: top; text-align: center;
+				
+				.loc_status {
+					color: #999; font-size: 0.9em;
+				}
+				.loc_city {
+					font-weight: bold;
+				}
+				.loc_country {
+					font-size: 1.2em; font-weight: bold;
+				}
+			}
+		}
+		
+		.formatted_criteria {
+			clear: right;
+			display: none;
+			margin: 0.5em 0 1em; padding: 1em;
+			font-size: 10pt; white-space: pre-wrap;
+			border: 1px solid rgb(180,180,180); border-radius: 0.25em;
+			background-color: rgb(240,240,240); 
+		}
 	}
 }
 

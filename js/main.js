@@ -278,8 +278,8 @@ function _loadTrials(trial_tuples) {
 	
 			
 	// add to DOM
-	var head_good = $('<h3/>').text('Matching Trials (' + num_good + ' of ' + trial_tuples.length + ')');
-	var head_bad = $('<h3/>').text('Filtered Trials (' + num_bad + ' of ' + trial_tuples.length + ')');
+	var head_good = $('<h3/>').text('Potential Trials (' + num_good + ' of ' + trial_tuples.length + ')');
+	var head_bad = $('<h3/>').text('Ineligible Trials (' + num_bad + ' of ' + trial_tuples.length + ')');
 	main.append(head_good);
 	main.append(list_good);
 	main.append(head_bad);

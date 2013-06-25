@@ -1,8 +1,64 @@
 <li id="<%= trial.nct %>">
-	<a href="javascript:void();" onclick="$(this).siblings('.formatted_criteria').toggle()"><%= trial.nct %></a>
-	<a class="supplement" href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank">» ClinicalTrials.gov</a>
-	<% if ('reason' in trial && trial.reason) { %>
-		<tt><%= trial.reason %></tt>
+	<% if ('location' in trial && trial.location.length > 0) {
+		var by_country = {};
+		for (var i = 0; i < trial.location.length; i++) {
+			var loc = trial.location[i];
+			var loc_parts = ('formatted' in loc.geodata && loc.geodata.formatted.length > 0) ? loc.geodata.formatted.split(/,\s+/) : ["Unknown"];
+			var loc_country = loc_parts.pop();
+			
+			var loc_dict = {
+				'name': ('facility' in loc && loc.facility.name) ? loc.facility.name : '',
+				'city': (loc_parts.length > 0) ? loc_parts.join(', ') : '',
+				'country': loc_country,
+				'status': loc.status
+			}
+			
+			if (loc_country in by_country) {
+				by_country[loc_country].push(loc_dict);
+			}
+			else {
+				by_country[loc_country] = [loc_dict];
+			}
+		} %>
+			
+		<div class="trial_countries">
+		<% for (var loc_country in by_country) { %>
+			<a href="javascript:void(0);" onclick="$(this).parent().parent().find('.trials_in_<%= loc_country.replace(/[^\w]/g, '') %>').toggle()"><%= loc_country %> <span class="faded">(<%= by_country[loc_country].length %>)</span></a>
+		<% } %>
+		</div>
+		
+		<div class="trial_locations">
+		<% for (var loc_country in by_country) {
+			var arr = by_country[loc_country]; %>
+			
+			<div class="trials_in_<%= loc_country.replace(/[^\w]/g, '') %>">
+			<% for (var i = 0; i < arr.length; i++) {
+				var loc = arr[i]; %>
+			
+			<div class="trial_location">
+				<div class="loc_status"><%= loc.status %></div>
+				<% if (loc.name) { %>
+				<div class="loc_name"><%= loc.name %></div>
+				<% } %>
+				<% if (loc.city) { %>
+				<div class="loc_city"><%= loc.city %></div>
+				<% } %>
+				<div class="loc_country"><%= loc.country %></div>
+			</div>
+			<% } %>
+			</div>
+		<% } %>
+		</div>
 	<% } %>
-	<pre class="formatted_criteria"><%= 'formatted' in trial.criteria ? trial.criteria.formatted : "(unknown criteria" %></pre>
+	
+	<div class="trial_info">
+		<a href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank"><%= trial.title ? trial.title : trial.nct %></a><br />
+		<a class="supplement" href="javascript:void(0);" onclick="$(this).parent().siblings('.formatted_criteria').toggle()">show eligibility criteria</a>
+		
+		<% if ('reason' in trial && trial.reason) { %>
+			<tt class="exclusion_reason"><%= trial.reason %></tt>
+		<% } %>
+	</div>
+	
+	<pre class="formatted_criteria"><%= 'formatted' in trial.criteria ? trial.criteria.formatted.replace(/ +/g, ' ') : "(unknown criteria)" %></pre>
 </li>
