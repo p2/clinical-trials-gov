@@ -43,8 +43,8 @@ ul#problem_list li.active { border-color: #64c8f0; box-shadow: 0 0 5px #0596be; 
 #trials > ul li .trial_info { width: 35%; }
 #trials > ul li .trial_info a { text-decoration: none; }
 #trials > ul li .trial_info .exclusion_reason { display: block; margin-top: 0.3em; font-size: 10pt; color: #A00; }
-#trials > ul li .trial_countries { float: right; width: 65%; margin-bottom: 1em; }
-#trials > ul li .trial_countries a { margin-left: 2em; color: #00B; font-size: 1.2em; font-weight: bold; text-decoration: none; }
+#trials > ul li .trial_countries { float: right; width: 65%; margin-bottom: 1em; line-height: 1.6; }
+#trials > ul li .trial_countries a { margin-left: 2em; color: #00B; font-size: 1.2em; font-weight: bold; text-decoration: none; white-space: nowrap; }
 #trials > ul li .trial_locations { float: right; width: 65%; }
 #trials > ul li .trial_locations > div { display: none; }
 #trials > ul li .trial_locations .trial_location { display: inline-block; max-width: 44%; margin: 0 0 1.5em 5%; vertical-align: top; text-align: center; }

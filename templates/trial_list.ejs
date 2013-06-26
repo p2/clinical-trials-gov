@@ -1,16 +1,20 @@
 <li id="<%= trial.nct %>">
 	<% if ('location' in trial && trial.location.length > 0) {
 		var by_country = {};
+		var n_countries = 0;
 		for (var i = 0; i < trial.location.length; i++) {
 			var loc = trial.location[i];
 			var loc_parts = ('formatted' in loc.geodata && loc.geodata.formatted.length > 0) ? loc.geodata.formatted.split(/,\s+/) : ["Unknown"];
 			var loc_country = loc_parts.pop();
+			var loc_stat_m_recr = loc.status ? loc.status.match(/recruiting/i) : null;
+			var loc_stat_m_not = loc.status ? loc.status.match(/not\s+[\w\s]*\s+recruiting/i) : null;
 			
 			var loc_dict = {
 				'name': ('facility' in loc && loc.facility.name) ? loc.facility.name : '',
 				'city': (loc_parts.length > 0) ? loc_parts.join(', ') : '',
 				'country': loc_country,
-				'status': loc.status
+				'status': loc.status,
+				'status_color': loc_stat_m_not ? 'orange' : (loc_stat_m_recr ? 'green' : 'red')
 			}
 			
 			if (loc_country in by_country) {
@@ -18,10 +22,21 @@
 			}
 			else {
 				by_country[loc_country] = [loc_dict];
+				n_countries++;
 			}
-		} %>
+		}
+		
+		var hide_full = true;
+		if (n_countries < 2) {
+			for (var c in by_country) {
+				if (by_country[c].length < 3) {
+					hide_full = false;
+				}
+			}
+		}
+		%>
 			
-		<div class="trial_countries">
+		<div class="trial_countries" style="<%= hide_full ? '' : 'display:none;' %>">
 		<% for (var loc_country in by_country) { %>
 			<a href="javascript:void(0);" onclick="$(this).parent().parent().find('.trials_in_<%= loc_country.replace(/[^\w]/g, '') %>').toggle()"><%= loc_country %> <span class="faded">(<%= by_country[loc_country].length %>)</span></a>
 		<% } %>
@@ -31,12 +46,12 @@
 		<% for (var loc_country in by_country) {
 			var arr = by_country[loc_country]; %>
 			
-			<div class="trials_in_<%= loc_country.replace(/[^\w]/g, '') %>">
+			<div class="trials_in_<%= loc_country.replace(/[^\w]/g, '') %>" style="<%= hide_full ? '' : 'display:block;' %>">
 			<% for (var i = 0; i < arr.length; i++) {
 				var loc = arr[i]; %>
 			
 			<div class="trial_location">
-				<div class="loc_status"><%= loc.status %></div>
+				<div class="loc_status" style="color:<%= loc.status_color %>;"><%= loc.status %></div>
 				<% if (loc.name) { %>
 				<div class="loc_name"><%= loc.name %></div>
 				<% } %>
@@ -52,7 +67,8 @@
 	<% } %>
 	
 	<div class="trial_info">
-		<a href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank"><%= trial.title ? trial.title : trial.nct %></a><br />
+		<%= trial.title ? trial.title : 'Unnamed trial' %><br />
+		<a href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank"><%= trial.nct %></a><br />
 		<a class="supplement" href="javascript:void(0);" onclick="$(this).parent().siblings('.formatted_criteria').toggle()">show eligibility criteria</a>
 		
 		<% if ('reason' in trial && trial.reason) { %>

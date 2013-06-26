@@ -260,7 +260,7 @@ function _loadTrials(trial_tuples) {
 					loader.remove();
 					loader = null;
 				}
-				console.log(obj1);
+				
 				// got a trial, show in appropriate list
 				if (this.reason) {
 					obj1.reason = this.reason;

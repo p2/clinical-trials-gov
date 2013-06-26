@@ -89,10 +89,12 @@ ul#problem_list {
 		.trial_countries {
 			float: right; width: 65%;
 			margin-bottom: 1em;
+			line-height: 1.6;
 			
 			a {
 				margin-left: 2em;
 				color: #00B; font-size: 1.2em; font-weight: bold; text-decoration: none;
+				white-space: nowrap;
 			}
 		}
 		
