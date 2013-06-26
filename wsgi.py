@@ -396,19 +396,22 @@ def trial_filter_demo(run_id, filter_by):
 				nct = tpl[0]
 				reason = tpl[1] if len(tpl) > 1 else None
 				
+				# if we already have a reason, this trial has already been filtered
 				if not reason:
 					trial = Study(nct)
 					trial.load()
 					for crit in trial.criteria:
 						
-						# remove matching exclusion criteria
+						# check exclusion criteria
 						if not crit.is_inclusion and crit.snomed is not None:
-							intersection = set(exclusion_codes).intersection(crit.snomed)
-							if len(intersection) > 0:
-								reasons = ["Matches exclusion criteria:"]
-								for exc_snomed in intersection:
-									reasons.append(" - %s (SNOMED %s)" % (snomed.lookup_code_meaning(exc_snomed), exc_snomed))
-								reason = "\n".join(reasons)
+							match = None
+							for snomed_c in crit.snomed:
+								if '-' != snomed_c[0:1]:		# SNOMED codes starting with a minus were negated
+									match = snomed_c if snomed_c in exclusion_codes else None
+							
+							# exclusion criterion matched
+							if match is not None:
+								reason = 'Matches exclusion criterium "%s" (SNOMED %s)'  % (snomed.lookup_code_meaning(match, True, True), match)
 								break
 				
 				if reason:
