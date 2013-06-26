@@ -48,18 +48,18 @@ def _get_session():
 def _get_smart():
 	sess = _get_session()
 	if sess is None:
-		logging.debug("There is no session")
+		logging.info("There is no session")
 		return None
 	
 	# configure SMART client
 	api_base = sess.get('api_base')
 	if not api_base:
-		logging.debug("No api_base is set")
+		logging.info("No api_base is set")
 		return None
 	
-	# find server credentials
-	cons_key = sess.get('rest_token')
-	cons_sec = sess.get('rest_secret')
+	# find server credentials and store in session
+	cons_key = sess.get('consumer_key')
+	cons_sec = sess.get('consumer_secret')
 	if not cons_key or not cons_sec:
 		server = None
 		for ep in ENDPOINTS:
@@ -71,24 +71,63 @@ def _get_smart():
 			logging.error("There is no server with base URI %s" % api_base)
 			return None
 		
-		cons_key = server.get('consumer_key')
-		cons_sec = server.get('consumer_secret')
+		sess['consumer_key'] = cons_key = server.get('consumer_key')
+		sess['consumer_secret'] = cons_sec = server.get('consumer_secret')
 	
 	# init client
-	token = {
+	config = {
 		'consumer_key': cons_key,
 		'consumer_secret': cons_sec
 	}
 	
 	try:
-		smart = SMARTClient(USE_APP_ID, api_base, token)
+		smart = SMARTClient(USE_APP_ID, api_base, config)
 		smart.record_id = sess.get('record_id')
 	except Exception, e:
 		logging.warning("Failed to instantiate SMART client: %s" % e)
 		smart = None
 	
+	# if we have tokens, update the client
+	token = sess.get('token')
+	if token is not None:
+		smart.update_token(token)
+	
 	return smart
 
+def _test_record_token():
+	""" Tries to fetch demographics with the given token and returns a bool
+	whether thas was successful. """
+	
+	smart = _get_smart()
+	if smart is None:
+		return False
+	
+	# try to get demographics
+	try:
+		ret = smart.get_demographics()
+		
+		# did work!
+		if 200 == int(ret.response.status):
+			return True
+	except Exception, e:
+		pass
+	
+	return False
+
+def _reset_session():
+	""" Removes patient-related session settings. """
+	sess = _get_session()
+	
+	if 'record_id' in sess:
+		del sess['record_id']
+	if 'token' in sess:
+		del sess['token']
+	
+	if USE_SMART_05:
+		if 'demographics' in sess:
+			del sess['demographics']
+		if 'problems' in sess:
+			del sess['problems']
 
 # ------------------------------------------------------------------------------ Index
 @bottle.get('/')
@@ -99,27 +138,32 @@ def index():
 	
 	# look at URL params first, if they are there store them in the session
 	api_base = bottle.request.query.get('api_base')
-	if api_base:
+	if api_base is not None:
 		sess['api_base'] = api_base
-		
 	else:
 		api_base = sess.get('api_base')
-	
-	# determine record id
-	record_id = bottle.request.query.get('record_id')
-	if record_id is not None:
-		if '0' != record_id:
-			sess['record_id'] = record_id
-		else:
-			del sess['record_id']
-			record_id = None
-	else:
-		record_id = sess.get('record_id')
 	
 	# no endpoint, show selector
 	if not api_base:
 		logging.debug('redirecting to endpoint selection')
 		bottle.redirect('endpoint_select')
+	
+	# determine record id
+	record_id = bottle.request.query.get('record_id')
+	if record_id is not None:
+		old_id = sess.get('record_id')
+		
+		# reset session if we get a new record (or none)
+		if old_id != record_id:
+			_reset_session()
+		
+		# set (or don't) the record id
+		if '0' != record_id:
+			sess['record_id'] = record_id
+		else:
+			record_id = None
+	else:
+		record_id = sess.get('record_id')
 	
 	smart = _get_smart()
 	if smart is None:
@@ -129,15 +173,52 @@ def index():
 	if record_id is None:
 		launch = smart.launch_url
 		if launch is None:
-			return "Unknown app start URL, cannot launch without an app id"
+			return "Unknown app start URL, cannot launch"
 		
 		logging.debug('redirecting to app launch page')
 		bottle.redirect(launch)
 		return
 	
-	# render index
+	# still here, test the token
+	if not _test_record_token():
+		smart.token = None
+		try:
+			sess['token'] = smart.fetch_request_token()
+		except Exception, e:
+			return str(e)
+		
+		# now go and authorize the token
+		logging.debug("Have request token, redirecting to authorize token")
+		bottle.redirect(smart.auth_redirect_url)
+		return
+	
+	# everything in order, render index
 	template = _jinja_templates.get_template('index.html')
 	return template.render(smart_v05=USE_SMART_05, has_chrome=False, api_base=api_base)
+
+
+@bottle.get('/authorize')
+def authorize():
+	""" Extract the oauth_verifier from the callback and exchange it for an
+	access token. """
+	
+	verifier = bottle.request.query.get('oauth_verifier')
+	
+	# exchange
+	smart = _get_smart()
+	if smart is None:
+		return "Cannot connect to SMART sandbox"
+	
+	try:
+		sess = _get_session()
+		sess['token'] = smart.exchange_token(verifier)
+	except Exception, e:
+		logging.error("Token exchange failed: %s" % e)
+		return str(e)
+	
+	# looks good!
+	logging.debug("Got an access token, returning home")
+	bottle.redirect('/')
 
 
 @bottle.get('/endpoint_select')
@@ -183,18 +264,15 @@ def demographics():
 	""" Returns the current patient's demographics as JSON extracted from JSON-LD.
 	"""
 	
-	sess = _get_session()
-	demo_rdf = sess.get('demographics') if sess is not None else None
 	demo_ld = None
-	d = {}
+	d = {}	
 	
-	# fallback to hardcoded data
-	if demo_rdf is None:
-		with open('static/sample-demo.json') as handle:
-			demo_ld = json.load(handle)
-	
-	# use session data (parse RDF, convert to json-ld-serialization, load json... :P)
-	else:
+	# SMART 0.5 fallback (the JS client writes demographics to session storage)
+	if USE_SMART_05:
+		sess = _get_session()
+		demo_rdf = sess.get('demographics') if sess is not None else None
+		
+		# use session data (parse RDF, convert to json-ld-serialization, load json... :P)
 		try:
 			# hack v0.5 format to be similar to v0.6 format, part 1
 			demo_rdf = demo_rdf.replace('xmlns:v=', 'xmlns:vcard=')
@@ -208,11 +286,21 @@ def demographics():
 		# hack v0.5 format to be similar to v0.6 format, part 2
 		demo_ld = {u"@graph": [json.loads(graph.serialize(format='json-ld'))]}
 	
+	# SMART 0.6+
+	else:
+		smart = _get_smart()
+		ret = smart.get_demographics()
+		if 200 == int(ret.response.status):
+			demo_ld = json.loads(ret.graph.serialize(format='json-ld')) if ret.graph is not None else None
+		else:
+			logging.error("Failed to get demographics: %d" % ret.response.status)
+	
 	# extract interesting pieces
-	for gr in demo_ld.get("@graph", []):
-		if "sp:Demographics" == gr.get("@type"):
-			d = gr
-			break
+	if demo_ld is not None:
+		for gr in demo_ld.get("@graph", []):
+			if "sp:Demographics" == gr.get("@type"):
+				d = gr
+				break
 	
 	return d
 
@@ -222,17 +310,14 @@ def problems():
 	""" Returns the current patient's problems as JSON extracted from JSON-LD.
 	"""
 	
-	sess = _get_session()
-	prob_rdf = sess.get('problems') if sess is not None else None
 	prob_ld = None
 
-	# fallback to hardcoded data
-	if prob_rdf is None:
-		with open('static/sample-problems.json') as handle:
-			prob_ld = json.load(handle)
-	
-	# use session data (parse RDF, convert to json-ld-serialization, load json... :P)
-	else:
+	# SMART 0.5 fallback (the JS client writes problem data to session storage)
+	if USE_SMART_05:
+		sess = _get_session()
+		prob_rdf = sess.get('problems') if sess is not None else None
+		
+		# use session data (parse RDF, convert to json-ld-serialization, load json... :P)
 		try:
 			graph = Graph().parse(data=prob_rdf)
 		except Exception, e:
@@ -240,6 +325,15 @@ def problems():
 			return {'problems': []}
 		
 		prob_ld = json.loads(graph.serialize(format='json-ld'))
+	
+	# SMART 0.6+
+	else:
+		smart = _get_smart()
+		ret = smart.get_problems()
+		if 200 == int(ret.response.status):
+			prob_ld = json.loads(ret.graph.serialize(format='json-ld')) if ret.graph is not None else None
+		else:
+			logging.error("Failed to get problems: %d" % ret.response.status)
 	
 	# pick out the individual problems
 	problems = []
