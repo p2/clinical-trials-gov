@@ -16,8 +16,38 @@
 }
 
 .demographics {
-	h1 {
+	h1, .h1 {
 		font-size: 1.6em;
+	}
+	
+	#select_female, #select_male {
+		display: none;
+	}
+	.demo_gender {
+		padding: 0.4em 1em 0.3em;
+		color: #666;
+		border: 1px solid #CCC;
+		line-height: 2em;
+	}
+	input:checked + .demo_gender {
+		color: black;
+		border-color: #999;
+		background: rgba(200,200,0,0.5);
+	}
+	#select_female_label {
+		margin-left: 2em;
+		border-right: none;
+	}
+	
+	.demo_age {
+		font-size: 1.2em;
+		input {
+			font-size: 1em; text-align: right;
+		}
+		.demo_birthday {
+			margin-left: 1.5em;
+			font-size: 0.833em;
+		}
 	}
 }
 

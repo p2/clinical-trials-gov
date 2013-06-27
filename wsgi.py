@@ -185,7 +185,9 @@ def index():
 		try:
 			sess['token'] = smart.fetch_request_token()
 		except Exception, e:
-			return str(e)
+			_reset_session()
+			logging.error("Failed getting request token. %s" % e)
+			return "Failed to obtain access permissions, please reload"
 		
 		# now go and authorize the token
 		logging.debug("Have request token, redirecting to authorize token")
@@ -218,7 +220,7 @@ def authorize():
 	
 	# looks good!
 	logging.debug("Got an access token, returning home")
-	bottle.redirect('/')
+	bottle.redirect('/index.html?api_base=%s&record_id=%s' % (sess['api_base'], sess['record_id']))
 
 
 @bottle.get('/endpoint_select')
@@ -289,6 +291,9 @@ def demographics():
 	# SMART 0.6+
 	else:
 		smart = _get_smart()
+		if not smart:
+			return d
+		
 		ret = smart.get_demographics()
 		if 200 == int(ret.response.status):
 			demo_ld = json.loads(ret.graph.serialize(format='json-ld')) if ret.graph is not None else None
