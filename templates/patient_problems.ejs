@@ -1,5 +1,9 @@
-<p id="select_prompt">Choose for which problem to find trials:</p>
 <ul id="problem_list">
+	<li id="prob_manual">
+		<form method="get" action="" onsubmit="didClickProblem('prob_manual'); return false;">
+			<input type="text" size="40" class="bigger" id="manual_problem" placeholder="Enter disorder" /><button id="manual_submit" type="submit">Go</button>
+		</form>
+	</li>
 <% 
 var probs = (data && 'problems' in data) ? data['problems'] : [];
 if (probs.length > 0) {
@@ -41,5 +45,4 @@ if (probs.length > 0) {
 		}
 	}
 } %>
-	<li class="faded">Enter manually (disabled)</li>
 </ul>

@@ -21,26 +21,30 @@ td:last-child { padding-right: 0; }
 #content { padding: 2em 3em; }
 
 /** Patient Styles */
-.patient_portrait { float: left; width: 68px; margin: 0 20px 10px 0; text-align: center; }
-.patient_portrait img { width: 60px; height: 80px; border: 4px solid rgba(0, 0, 0, 0.2); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
+.patient_portrait { float: left; width: 4em; height: 5.5em; margin: 0 2em 1em 0; text-align: center; background: center center no-repeat url("portrait_default.png") transparent; background-size: 4em 5.5em; box-shadow: inset 0 1px 2em rgba(0, 0, 0, 0.2); }
 
 .demographics h1, .demographics .h1 { font-size: 1.6em; }
 .demographics #select_female, .demographics #select_male { display: none; }
 .demographics .demo_gender { padding: 0.4em 1em 0.3em; color: #666; border: 1px solid #CCC; line-height: 2em; }
-.demographics input:checked + .demo_gender { color: black; border-color: #999; background: rgba(200, 200, 0, 0.5); }
-.demographics #select_female_label { margin-left: 2em; border-right: none; }
-.demographics .demo_age { font-size: 1.2em; }
-.demographics .demo_age input { font-size: 1em; text-align: right; }
+.demographics input:checked + .demo_gender { color: black; border-color: #999; background-color: rgba(200, 200, 0, 0.5); }
+.demographics #select_female_label { margin-left: 2em; border-right-color: #999; }
+.demographics #select_male_label { border-left: none; }
+.demographics .demo_age { margin-top: 1em; font-size: 1.2em; }
+.demographics .demo_age input { font-size: 1em; text-align: right; background-color: rgba(200, 200, 0, 0.5); }
 .demographics .demo_age .demo_birthday { margin-left: 1.5em; font-size: 0.833em; }
-
-.patient_location { margin-top: 0.5em; }
+.demographics .patient_location { margin-top: 1em; }
 
 #patient_problems { clear: left; padding-top: 1em; }
 
 ul#problem_list { padding: 0; list-style-type: none; }
 ul#problem_list li { padding: 0.5em; cursor: pointer; border: 1px solid transparent; }
+ul#problem_list li#prob_manual { cursor: default; }
+ul#problem_list li#prob_manual input { margin: 0 0.5em 0 0; }
+ul#problem_list li#prob_manual button { font-size: 1.1em; }
 ul#problem_list li:hover { background-color: #e6e6e6; }
-ul#problem_list li.active { border-color: #64c8f0; box-shadow: 0 0 5px #0596be; border-radius: 0.25em; }
+ul#problem_list li.active { border: 1px solid #969696; background-color: rgba(200, 200, 0, 0.5); }
+ul#problem_list li #refresh_trials, ul#problem_list li #cancel_trials { float: right; font-size: 1.2em; }
+ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 
 #trials > h3 { clear: right; padding-top: 2em; }
 

@@ -72,7 +72,7 @@ function loadProblemList() {
 /**
  *  Functions for testing purposes.
  */
-function didClickProblem(problem_id) {
+function didClickProblem(problem_id, is_reload) {
 	var prob_list = $('#problem_list');
 	var prob_elem = $('#' + problem_id);
 	if (!prob_elem.is('*')) {
@@ -81,23 +81,52 @@ function didClickProblem(problem_id) {
 	}
 	
 	// problem selected, hide all other and search for trials
-	if (!prob_elem.hasClass('active')) {
+	if (is_reload || !prob_elem.hasClass('active')) {
+		var is_manual_problem = ('prob_manual' == problem_id);
 		prob_elem.addClass('active');
-		$('#select_prompt').text("Showing trials pertaining to:");
 		
+		// hide other problems
 		prob_list.find('li').each(function(idx, elem) {
 			if (problem_id != elem.getAttribute('id')) {
 				$(elem).slideUp('fast');
 			}
 		});
 		
-		// search by problem name
-		var prob_name = $('#' + problem_id).find('div.bigger').text();
-		if (!prob_name) {
-			prob_name = "diabetic cardiomyopathy";
+		// add refresh and cancel buttons
+		if (!is_manual_problem) {
+			var canc = $('#cancel_trials');
+			if (!canc.is('*')) {
+				canc = $('<button/>', {'type': 'clear', 'id': 'cancel_trials'}).text("Cancel");
+			}
+			prob_elem.prepend(canc);
 		}
 		
-		_initTrialSearch(prob_name);
+		var refr = $('#refresh_trials');
+		if (!refr.is('*')) {
+			refr = $('<button/>', {'type': 'button', 'id': 'refresh_trials'}).text("Refresh");
+		}
+		refr.click(function(e) {
+			didClickProblem(problem_id, true);
+			e.stopPropagation();
+		});
+		prob_elem.prepend(refr);
+		
+		// search by problem name
+		var prob_name = $('#' + problem_id).find('div.bigger').text();
+		if (is_manual_problem) {
+			prob_name = $('#manual_problem').val();
+			$('#manual_submit').text('Cancel');
+		}
+		if (!prob_name) {
+			prob_name = "diabetic cardiomyopathy";
+			$('#manual_problem').val(prob_name);
+		}
+		
+		// extract demographics
+		var gender = $('#select_female').is(':checked') ? 'female' : 'male';		// TODO: should we be able to not specify gender?
+		var age = 1* $('#demo_age').val();
+		
+		_initTrialSearch(prob_name, gender, age);
 	}
 	
 	// show all problems again
@@ -106,8 +135,16 @@ function didClickProblem(problem_id) {
 			$(elem).slideDown('fast');
 		});
 		
+		// reset manual field
+		if ('prob_manual' == problem_id) {
+			$('#manual_problem').val('');
+			$('#manual_submit').text('Go');
+		}
+		
+		// reset UI
+		$('#refresh_trials').remove();
+		$('#cancel_trials').remove();
 		prob_elem.removeClass('active');
-		$('#select_prompt').text("Choose for which problem to find trials:");
 		$('#trials').empty();
 	}
 }
@@ -115,7 +152,7 @@ function didClickProblem(problem_id) {
 
 var _trialSearchInterval = null;
 
-function _initTrialSearch(problem_name) {
+function _initTrialSearch(problem_name, gender, age) {
 	if (_trialSearchInterval) {
 		console.warn('Already searching');
 		return;
@@ -125,10 +162,17 @@ function _initTrialSearch(problem_name) {
 	
 	$.ajax({
 		'url': 'trial_runs',
-		'data': {'cond': problem_name}
+		'data': {
+			'cond': problem_name,
+			'gender': gender,
+			'age': age
+		}
 	})
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
+			if (_trialSearchInterval) {
+				window.clearInterval(_trialSearchInterval);
+			}
 			_trialSearchInterval = window.setInterval(function() { _checkTrialStatus(obj1); }, 1000);
 		}
 		else {
@@ -276,7 +320,6 @@ function _loadTrials(trial_tuples) {
 		});
 	}
 	
-			
 	// add to DOM
 	var head_good = $('<h3/>').text('Potential Trials (' + num_good + ' of ' + trial_tuples.length + ')');
 	var head_bad = $('<h3/>').text('Ineligible Trials (' + num_bad + ' of ' + trial_tuples.length + ')');

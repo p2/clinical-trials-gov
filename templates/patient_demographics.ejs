@@ -1,7 +1,5 @@
 <div class="demographics">
-	<div class="patient_portrait">
-		<img src="static/portrait_default.png" alt="" />
-	</div>
+	<div class="patient_portrait"></div>
 	
 	<% var full_name = 'Unknown';
 	if ('vcard:n' in demo) {
@@ -17,7 +15,7 @@
 	--><input type="radio" id="select_female" name="demo_gender" value="female" <% if ('female' == gender) { %>checked="checked"<% } %>/><!--
 	--><label for="select_female" id="select_female_label" class="demo_gender">Female</label><!--
 	--><input type="radio" id="select_male" name="demo_gender" value="male" <% if ('female' != gender) { %>checked="checked"<% } %>/><!--
-	--><label for="select_male" class="demo_gender">Male</label>
+	--><label for="select_male" id="select_male_label" class="demo_gender">Male</label>
 	
 	<div class="demo_age">
 	<% // birthday, death-date and age
@@ -41,7 +39,7 @@
 	if ('vcard:deathdate' in demo) {
 		deathdate = moment(demo['vcard:deathdate']);
 	} %>
-	<input type="text" size="4" name="demo_age" value="<%= (age_int > 0) ? age_int : '' %>" /> y
+	<input type="text" size="4" id="demo_age" name="demo_age" value="<%= (age_int > 0) ? age_int : '' %>" /> y
 	<span class="demo_birthday">
 	(<%= bday ? bday.format('ll') : "no birthday" %>
 	<% if (deathdate) { %>

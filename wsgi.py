@@ -114,7 +114,7 @@ def _test_record_token():
 	
 	return False
 
-def _reset_session():
+def _reset_session(with_runs=False):
 	""" Removes patient-related session settings. """
 	sess = _get_session()
 	
@@ -123,6 +123,12 @@ def _reset_session():
 	if 'token' in sess:
 		del sess['token']
 	
+	# clear run data
+	if with_runs:
+		if 'runs' in sess:
+			del sess['runs']
+	
+	# SMART 0.5 hacks
 	if USE_SMART_05:
 		if 'demographics' in sess:
 			del sess['demographics']
@@ -364,6 +370,8 @@ def get_trial(nct):
 def find_trials():
 	""" Initiates the chain to find trials for the given condition or search-
 	term. Supply with parameters "cond" or "term", the prior taking precedence.
+	Additional parameters are "gender" ('male' or 'female') and "age" (in
+	years).
 	
 	This method forks off and prints the status to a file which can be read by
 	calling /trials_status/<run-id>. "run-id" is returned from this call.
@@ -391,6 +399,16 @@ def find_trials():
 		else:
 			term = re.sub(r'\s+\((disorder|finding)\)', '', term)
 			runner.term = term
+	
+	# store in session
+	sess = _get_session()
+	runs = sess.get('runs', {})
+	runs[run_id] = {
+		'cond': cond,
+		'gender': bottle.request.query.get('gender'),
+		'age': int(bottle.request.query.get('age'))
+	}
+	sess['runs'] = runs;
 	
 	# launch and return id
 	runner.run(['id', 'acronym', 'brief_title', 'official_title', 'brief_summary', 'eligibility', 'location'])
@@ -435,14 +453,13 @@ def trial_filter_demo(run_id, filter_by):
 		bottle.abort(400, "Trial results are not available")
 	
 	ncts = runner.get_ncts()
+	sess = _get_session()
+	run_data = sess.get('runs', {}).get(run_id, {})
 	
 	# demographics - get age and gender
 	if 'demographics' == filter_by:
-		demo = demographics()
-		is_male = "male" == demo.get('foaf:gender')
-		bday_iso = demo.get('vcard:bday')
-		bday = dateutil.parser.parse(bday_iso)		# no need for timezone correction
-		age = dateutil.relativedelta.relativedelta(date.today(), bday).years
+		f_gender = run_data.get('gender')
+		f_age = int(run_data.get('age'))
 		
 		keep = []
 		for tpl in ncts:
@@ -454,7 +471,7 @@ def trial_filter_demo(run_id, filter_by):
 				trial.load()
 				
 				# filter gender
-				if is_male:
+				if 'male' == f_gender:
 					if trial.gender == 2:
 						reason = "Limited to women"
 				else:
@@ -462,9 +479,9 @@ def trial_filter_demo(run_id, filter_by):
 						reason = "Limited to men"
 				
 				# filter age
-				if trial.min_age > age:
+				if trial.min_age > f_age:
 					reason = "Patient is too young (min age %d)" % trial.min_age
-				elif trial.max_age < age:
+				elif trial.max_age < f_age:
 					reason = "Patient is too old (max age %d)" % trial.max_age
 			
 			if reason:
