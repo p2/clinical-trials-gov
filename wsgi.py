@@ -17,7 +17,7 @@ from beaker.middleware import SessionMiddleware
 from jinja2 import Template, Environment, PackageLoader
 
 # SMART
-from settings import USE_APP_ID, USE_SMART_05, USE_NLP, DEBUG, ENDPOINTS
+from settings import USE_APP_ID, USE_SMART_05, USE_NLP, GOOGLE_API_KEY, DEBUG, ENDPOINTS
 if not USE_SMART_05:
 	from smart_client_python.client import SMARTClient
 from rdflib.graph import Graph
@@ -202,7 +202,11 @@ def index():
 	
 	# everything in order, render index
 	template = _jinja_templates.get_template('index.html')
-	return template.render(smart_v05=USE_SMART_05, has_chrome=False, api_base=api_base)
+	defs = {
+		'smart_v05': USE_SMART_05,
+		'google_api_key': GOOGLE_API_KEY
+	}
+	return template.render(defs=defs, has_chrome=False, api_base=api_base)
 
 
 @bottle.get('/authorize')

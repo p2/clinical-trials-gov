@@ -68,6 +68,11 @@ td {
 	padding: 2em 3em;
 }
 
+#g_map {
+	display: none;
+	width: 100%; height: 400px;
+}
+
 
 @import "patient";
 @import "smart";

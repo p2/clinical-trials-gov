@@ -146,6 +146,7 @@ function didClickProblem(problem_id, is_reload) {
 		$('#cancel_trials').remove();
 		prob_elem.removeClass('active');
 		$('#trials').empty();
+		hideMap();
 	}
 }
 
@@ -319,6 +320,9 @@ function _loadTrials(trial_tuples) {
 			}
 		});
 	}
+	
+	// show map
+	locatePatient();
 	
 	// add to DOM
 	var head_good = $('<h3/>').text('Potential Trials (' + num_good + ' of ' + trial_tuples.length + ')');

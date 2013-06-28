@@ -18,6 +18,7 @@
 				Loading patient...
 			</div>
 			<div id="patient_problems"></div>
+			<div id="g_map"></div>
 			<div id="trials"></div>
 			<div style="clear:right;"> </div>
 		</div>
@@ -28,7 +29,8 @@
 <script src="static/moment.min.js"></script>
 <script src="static/Base.min.js"></script>
 <script src="static/main.min.js"></script>
-{% if smart_v05 %}
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key={{ defs.google_api_key }}&sensor=false"></script>
+{% if defs.smart_v05 %}
 <!-- SMART v0.5 hack -->
 <script src="http://sample-apps-v05.smartplatforms.org/framework/smart/scripts/smart-api-client.js"></script>
 <script>

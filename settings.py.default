@@ -4,6 +4,8 @@ USE_APP_ID = "clinical-trials-localhost@apps.chip.org"
 USE_SMART_05 = False
 USE_NLP = True
 
+GOOGLE_API_KEY = 'xxx'
+
 DEBUG = False
 
 # configure servers

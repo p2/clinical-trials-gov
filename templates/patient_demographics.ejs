@@ -67,6 +67,9 @@
 			parts.push(adr['vcard:country']);
 		} %>
 		
-		<div class="patient_location"><%= parts.join(', ') %></div>
+		<div class="patient_location">
+			<span id="patient_location"><%= parts.join(', ') %></span>
+			<button onclick="locatePatient()">Locate</button>
+		</div>
 	<% } %>
 </div>

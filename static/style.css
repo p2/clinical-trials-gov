@@ -20,6 +20,8 @@ td:last-child { padding-right: 0; }
 
 #content { padding: 2em 3em; }
 
+#g_map { display: none; width: 100%; height: 400px; }
+
 /** Patient Styles */
 .patient_portrait { float: left; width: 4em; height: 5.5em; margin: 0 2em 1em 0; text-align: center; background: center center no-repeat url("portrait_default.png") transparent; background-size: 4em 5.5em; box-shadow: inset 0 1px 2em rgba(0, 0, 0, 0.2); }
 
