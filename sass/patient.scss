@@ -28,7 +28,7 @@
 	}
 	input:checked + .demo_gender {
 		color: black;
-		border-color: #999;
+		border-color: $col-border-active;
 		background-color: $col-input-active;
 	}
 	#select_female_label {
@@ -69,9 +69,8 @@ ul#problem_list {
 	list-style-type: none;
 	
 	li {
-		padding: 0.5em;
+		padding: 0.5em 0;
 		cursor: pointer;
-		border: 1px solid transparent;
 		
 		&#prob_manual {
 			cursor: default;
@@ -87,7 +86,9 @@ ul#problem_list {
 		&:hover {
 			background-color: $col-boxbg;
 		}
+		
 		&.active {
+			padding: 0.5em;
 			border: 1px solid $col-border-active;
 			background-color: $col-input-active;
 		}
@@ -108,78 +109,89 @@ ul#problem_list {
 	padding-top: 2em;
 }
 
-#trials > ul {
+ul.trial_list {
 	padding: 0;
 	list-style-type: none;
 	
 	li {
-		clear: right;
 		margin-bottom: 1em; padding-top: 1em;
 		line-height: 1.4;
 		border-top: 1px solid #CCC;
 		
-		& > a:first-child {
-			margin-right: 1em;
+		&:first-child {
+			border-top: none;
+		}
+	}
+}
+
+.trial {
+	&.active {
+		padding: 1em;
+		border: 1px solid $col-border-active;
+		background-color: $col-input-active;
+	}
+	
+	& > a:first-child {
+		margin-right: 1em;
+	}
+	
+	.trial_info {
+		width: 35%;
+		
+		a {
+			text-decoration: none;
 		}
 		
-		.trial_info {
-			width: 35%;
-			
-			a {
-				text-decoration: none;
-			}
-			
-			.exclusion_reason {
-				display: block; margin-top: 0.3em;
-				font-size: 10pt; color: #A00;
-			}
+		.exclusion_reason {
+			display: block; margin-top: 0.3em;
+			font-size: 10pt; color: #A00;
 		}
+	}
+	
+	.trial_countries {
+		float: right; width: 65%;
+		margin-bottom: 1em;
+		line-height: 1.6;
 		
-		.trial_countries {
-			float: right; width: 65%;
-			margin-bottom: 1em;
-			line-height: 1.6;
-			
-			a {
-				margin-left: 2em;
-				color: #00B; font-size: 1.2em; font-weight: bold; text-decoration: none;
-				white-space: nowrap;
-			}
+		a {
+			margin-left: 2em;
+			color: #00B; font-size: 1.2em; font-weight: bold; text-decoration: none;
+			white-space: nowrap;
 		}
+	}
+	
+	.trial_locations {
+		float: right; width: 65%;
 		
-		.trial_locations {
-			float: right; width: 65%;
-			
-			& > div {
-				display: none;
-			}
-			
-			.trial_location {
-				display: inline-block;
-				max-width: 44%;					// don't ask why 45% + 5% will force a line break
-				margin: 0 0 1.5em 5%;
-				vertical-align: top; text-align: center;
-				
-				.loc_status {
-					color: #999; font-size: 0.9em;
-				}
-				.loc_city {
-					font-weight: bold;
-				}
-				.loc_country {
-					font-size: 1.2em; font-weight: bold;
-				}
-			}
-		}
-		
-		.formatted_criteria {
-			clear: right;
+		& > div {
 			display: none;
-			margin: 0.5em 0 1em; padding: 1em;
-			font-size: 10pt; white-space: pre-wrap;
-			border: 1px solid rgb(180,180,180); border-radius: 0.25em;
-			background-color: rgb(240,240,240); 
 		}
+		
+		.trial_location {
+			display: inline-block;
+			max-width: 44%;					// don't ask why 45% + 5% will force a line break
+			margin: 0 0 1.5em 5%;
+			vertical-align: top; text-align: center;
+			
+			.loc_status {
+				color: #999; font-size: 0.9em;
+			}
+			.loc_city {
+				font-weight: bold;
+			}
+			.loc_country {
+				font-size: 1.2em; font-weight: bold;
+			}
+		}
+	}
+	
+	.formatted_criteria {
+		clear: right;
+		display: none;
+		margin: 0.5em 0 1em; padding: 1em;
+		font-size: 10pt; white-space: pre-wrap;
+		border: 1px solid rgb(180,180,180);
+		background-color: rgb(245,245,245); 
 	}
 }
 

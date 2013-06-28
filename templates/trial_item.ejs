@@ -1,4 +1,4 @@
-<li id="<%= trial.nct %>">
+<div id="<%= trial.nct %>" class="trial">
 	<% if ('location' in trial && trial.location.length > 0) {
 		var by_country = {};
 		var n_countries = 0;
@@ -49,17 +49,17 @@
 			<div class="trials_in_<%= loc_country.replace(/[^\w]/g, '') %>" style="<%= hide_full ? '' : 'display:block;' %>">
 			<% for (var i = 0; i < arr.length; i++) {
 				var loc = arr[i]; %>
-			
-			<div class="trial_location">
-				<div class="loc_status" style="color:<%= loc.status_color %>;"><%= loc.status %></div>
-				<% if (loc.name) { %>
-				<div class="loc_name"><%= loc.name %></div>
-				<% } %>
-				<% if (loc.city) { %>
-				<div class="loc_city"><%= loc.city %></div>
-				<% } %>
-				<div class="loc_country"><%= loc.country %></div>
-			</div>
+				
+				<div class="trial_location">
+					<div class="loc_status" style="color:<%= loc.status_color %>;"><%= loc.status %></div>
+					<% if (loc.name) { %>
+					<div class="loc_name"><%= loc.name %></div>
+					<% } %>
+					<% if (loc.city) { %>
+					<div class="loc_city"><%= loc.city %></div>
+					<% } %>
+					<div class="loc_country"><%= loc.country %></div>
+				</div>
 			<% } %>
 			</div>
 		<% } %>
@@ -76,5 +76,6 @@
 		<% } %>
 	</div>
 	
+	<div style="clear: right;"> </div>
 	<pre class="formatted_criteria"><%= 'formatted' in trial.criteria ? trial.criteria.formatted.replace(/ +/g, ' ') : "(unknown criteria)" %></pre>
-</li>
+</div>

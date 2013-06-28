@@ -13,6 +13,9 @@ table { border-collapse: collapse; }
 td:first-child { padding-left: 0; }
 td:last-child { padding-right: 0; }
 
+#back_to_patient_select { margin-bottom: 2em; }
+#back_to_patient_select a { text-decoration: none; }
+
 #container { max-width: 70em; min-height: 100%; margin: 0 auto; }
 
 @media screen and (min-width: 72em) { #container { border: 1px solid #787878; border-width: 0 1px; } }
@@ -28,7 +31,7 @@ td:last-child { padding-right: 0; }
 .demographics h1, .demographics .h1 { font-size: 1.6em; }
 .demographics #select_female, .demographics #select_male { display: none; }
 .demographics .demo_gender { padding: 0.4em 1em 0.3em; color: #666; border: 1px solid #CCC; line-height: 2em; }
-.demographics input:checked + .demo_gender { color: black; border-color: #999; background-color: rgba(200, 200, 0, 0.5); }
+.demographics input:checked + .demo_gender { color: black; border-color: #969632; background-color: rgba(200, 200, 0, 0.5); }
 .demographics #select_female_label { margin-left: 2em; border-right-color: #999; }
 .demographics #select_male_label { border-left: none; }
 .demographics .demo_age { margin-top: 1em; font-size: 1.2em; }
@@ -39,32 +42,35 @@ td:last-child { padding-right: 0; }
 #patient_problems { clear: left; padding-top: 1em; }
 
 ul#problem_list { padding: 0; list-style-type: none; }
-ul#problem_list li { padding: 0.5em; cursor: pointer; border: 1px solid transparent; }
+ul#problem_list li { padding: 0.5em 0; cursor: pointer; }
 ul#problem_list li#prob_manual { cursor: default; }
 ul#problem_list li#prob_manual input { margin: 0 0.5em 0 0; }
 ul#problem_list li#prob_manual button { font-size: 1.1em; }
 ul#problem_list li:hover { background-color: #e6e6e6; }
-ul#problem_list li.active { border: 1px solid #969696; background-color: rgba(200, 200, 0, 0.5); }
+ul#problem_list li.active { padding: 0.5em; border: 1px solid #969632; background-color: rgba(200, 200, 0, 0.5); }
 ul#problem_list li #refresh_trials, ul#problem_list li #cancel_trials { float: right; font-size: 1.2em; }
 ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 
 #trials > h3 { clear: right; padding-top: 2em; }
 
-#trials > ul { padding: 0; list-style-type: none; }
-#trials > ul li { clear: right; margin-bottom: 1em; padding-top: 1em; line-height: 1.4; border-top: 1px solid #CCC; }
-#trials > ul li > a:first-child { margin-right: 1em; }
-#trials > ul li .trial_info { width: 35%; }
-#trials > ul li .trial_info a { text-decoration: none; }
-#trials > ul li .trial_info .exclusion_reason { display: block; margin-top: 0.3em; font-size: 10pt; color: #A00; }
-#trials > ul li .trial_countries { float: right; width: 65%; margin-bottom: 1em; line-height: 1.6; }
-#trials > ul li .trial_countries a { margin-left: 2em; color: #00B; font-size: 1.2em; font-weight: bold; text-decoration: none; white-space: nowrap; }
-#trials > ul li .trial_locations { float: right; width: 65%; }
-#trials > ul li .trial_locations > div { display: none; }
-#trials > ul li .trial_locations .trial_location { display: inline-block; max-width: 44%; margin: 0 0 1.5em 5%; vertical-align: top; text-align: center; }
-#trials > ul li .trial_locations .trial_location .loc_status { color: #999; font-size: 0.9em; }
-#trials > ul li .trial_locations .trial_location .loc_city { font-weight: bold; }
-#trials > ul li .trial_locations .trial_location .loc_country { font-size: 1.2em; font-weight: bold; }
-#trials > ul li .formatted_criteria { clear: right; display: none; margin: 0.5em 0 1em; padding: 1em; font-size: 10pt; white-space: pre-wrap; border: 1px solid #b4b4b4; border-radius: 0.25em; background-color: #f0f0f0; }
+ul.trial_list { padding: 0; list-style-type: none; }
+ul.trial_list li { margin-bottom: 1em; padding-top: 1em; line-height: 1.4; border-top: 1px solid #CCC; }
+ul.trial_list li:first-child { border-top: none; }
+
+.trial.active { padding: 1em; border: 1px solid #969632; background-color: rgba(200, 200, 0, 0.5); }
+.trial > a:first-child { margin-right: 1em; }
+.trial .trial_info { width: 35%; }
+.trial .trial_info a { text-decoration: none; }
+.trial .trial_info .exclusion_reason { display: block; margin-top: 0.3em; font-size: 10pt; color: #A00; }
+.trial .trial_countries { float: right; width: 65%; margin-bottom: 1em; line-height: 1.6; }
+.trial .trial_countries a { margin-left: 2em; color: #00B; font-size: 1.2em; font-weight: bold; text-decoration: none; white-space: nowrap; }
+.trial .trial_locations { float: right; width: 65%; }
+.trial .trial_locations > div { display: none; }
+.trial .trial_locations .trial_location { display: inline-block; max-width: 44%; margin: 0 0 1.5em 5%; vertical-align: top; text-align: center; }
+.trial .trial_locations .trial_location .loc_status { color: #999; font-size: 0.9em; }
+.trial .trial_locations .trial_location .loc_city { font-weight: bold; }
+.trial .trial_locations .trial_location .loc_country { font-size: 1.2em; font-weight: bold; }
+.trial .formatted_criteria { clear: right; display: none; margin: 0.5em 0 1em; padding: 1em; font-size: 10pt; white-space: pre-wrap; border: 1px solid #b4b4b4; background-color: whitesmoke; }
 
 /** SMART specific styles */
 #endpoints { overflow: hidden; background-color: white; border: 1px solid #787878; border-radius: 5px; padding-left: 0; }

@@ -129,7 +129,7 @@ function didClickProblem(problem_id, is_reload) {
 		_initTrialSearch(prob_name, gender, age);
 	}
 	
-	// show all problems again
+	// cleanup and show all problems again
 	else {
 		prob_list.find('li').each(function(idx, elem) {
 			$(elem).slideDown('fast');
@@ -145,7 +145,9 @@ function didClickProblem(problem_id, is_reload) {
 		$('#refresh_trials').remove();
 		$('#cancel_trials').remove();
 		prob_elem.removeClass('active');
+		$('#selected_trial').empty();
 		$('#trials').empty();
+		clearAllPins();
 		hideMap();
 	}
 }
@@ -159,6 +161,7 @@ function _initTrialSearch(problem_name, gender, age) {
 		return;
 	}
 	
+	clearAllPins();
 	_showTrialStatus('Starting...');
 	
 	$.ajax({
@@ -277,8 +280,8 @@ function _loadTrials(trial_tuples) {
 	
 	var num_good = 0;
 	var num_bad = 0;
-	var list_good = $('<ul/>', {'id': 'trials_good'});
-	var list_bad = $('<ul/>', {'id': 'trials_bad'});
+	var list_good = $('<ul/>', {'id': 'trials_good'}).addClass('trial_list');
+	var list_bad = $('<ul/>', {'id': 'trials_bad'}).addClass('trial_list');
 	
 	// loop all trials
 	for (var i = 0; i < trial_tuples.length; i++) {
@@ -307,12 +310,39 @@ function _loadTrials(trial_tuples) {
 				}
 				
 				// got a trial, show in appropriate list
+				obj1.reason = this.reason;
+				var li = $('<li/>').html('templates/trial_item.ejs', {'trial': obj1});
+				
 				if (this.reason) {
-					obj1.reason = this.reason;
-					list_bad.append('templates/trial_list.ejs', {'trial': obj1});
+					list_bad.append(li);
 				}
 				else {
-					list_good.append('templates/trial_list.ejs', {'trial': obj1});
+					list_good.append(li);
+				}
+				
+				// show locations on map
+				if ('location' in obj1) {
+					for (var j = 0; j < obj1.location.length; j++) {
+						if ('geodata' in obj1.location[j]) {
+							var lat = obj1.location[j].geodata.latitude;
+							var lng = obj1.location[j].geodata.longitude;
+							
+							// add pin with click handler
+							var pin = addPinToMap(lat, lng, obj1.title, this.reason ? 'AA2200' : '33CC22');
+							google.maps.event.addListener(pin, "click", function(e) {
+    							
+    							// on click, highlight and show the trial data
+    							highlightPin(this);
+    							$('#selected_trial').html('templates/trial_item.ejs', {'trial': obj1}).children(":first").addClass('active');
+							});
+						}
+						else {
+							console.warn("No geodata for trial location: ", obj1.location[j]);
+						}
+					}
+				}
+				else {
+					console.warn("No geodata for trial " + nct);
 				}
 			}
 			else {

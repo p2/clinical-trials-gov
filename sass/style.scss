@@ -9,7 +9,7 @@ $col-title:			rgb(30,30,30);
 $col-linkglow:		rgb(0,64,128);
 $col-faded:			rgb(80,80,80);
 $col-border:		rgb(120,120,120);
-$col-border-active:	rgb(150,150,150);
+$col-border-active:	rgb(150,150,50);
 $col-blue:			rgb(100,200,240);
 $col-input-active:	rgba(200,200,0,0.5);
 
@@ -47,6 +47,13 @@ table {
 td {
 	&:first-child { padding-left: 0; }
 	&:last-child { padding-right: 0; }
+}
+
+#back_to_patient_select {
+	margin-bottom: 2em;
+	a {
+		text-decoration: none;
+	}
 }
 
 #container {
