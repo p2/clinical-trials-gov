@@ -153,12 +153,14 @@ function loadTrialsAfterLocatingPatient(trial_tuples) {
 function _loadTrials(trial_tuples) {
 	var main = $('#trials');
 	var loader = $('<div/>', {'id': 'trial_loader'}).text('Loading trials...');
-	main.append(loader);
+	main.empty().append(loader);
 	
 	var num_good = 0;
 	var num_bad = 0;
-	var list_good = $('<ul/>', {'id': 'trials_good'}).addClass('trial_list');
-	var list_bad = $('<ul/>', {'id': 'trials_bad'}).addClass('trial_list');
+	var opt_goodbad = $('<div/>').addClass('trial_opt_selector');
+	var opt_location = $('<div/>').addClass('trial_opt_selector');
+	var opt_type = $('<div/>').addClass('trial_opt_selector');
+	var trial_list = $('<ul/>').addClass('trial_list');
 	
 	// loop all trials
 	for (var i = 0; i < trial_tuples.length; i++) {
@@ -181,10 +183,6 @@ function _loadTrials(trial_tuples) {
 		})
 		.always(function(obj1, status, obj2) {
 			if ('success' == status) {
-				if (loader) {
-					loader.remove();
-					loader = null;
-				}
 				
 				// calculate distance and show locations on map
 				if ('location' in obj1) {
@@ -218,7 +216,7 @@ function _loadTrials(trial_tuples) {
 						}
 					}
 					
-					// get closest centre
+					// get closest trial location
 					if (distances.length > 0) {
 						distances.sort(function(a, b) {
 							return a - b;
@@ -230,21 +228,55 @@ function _loadTrials(trial_tuples) {
 				else {
 					console.warn("No geodata for trial " + nct);
 				}
-								
+				
+				// pull out intervention
+				var types = [];
+				if ('intervention' in obj1) {
+					for (var j = 0; j < obj1.intervention.length; j++) {
+						if ('intervention_type' in obj1.intervention[j]) {
+							types.push(obj1.intervention[j].intervention_type);
+						}
+					}
+					types = types.uniqueArray();
+					
+					// update types selector
+					var existing = $.map(opt_type.children('a'), function(elem) {
+						var my_type = $(elem).data('type');
+						if (types.contains(my_type)) {
+							var span = $(elem).find('span');
+							span.text(span.text()*1 + 1);
+						}
+						return my_type;
+					});
+					
+					// add the new ones
+					for (var i = 0; i < types.length; i++) {
+						var type = types[i];
+						if (!existing.contains(type)) {
+							var elem = _getOptTabElement(type, 1);
+							elem.data('type', type);
+							opt_type.append(elem);
+						}
+					};
+				}
+							
 				// show in appropriate list
+				$('#trial_loader').remove();
+				
 				obj1.reason = this.reason;
 				var li = $('<li/>').html('templates/trial_item.ejs', {'trial': obj1});
+				li.data('good', !this.reason);
 				li.data('distance', obj1.closest);
+				li.data('intervention-types', types);
 				
-				var my_list = this.reason ? list_bad : list_good;
-				my_list.append(li);
+				trial_list.append(li);
 				
-				// sort continuously
-				var li_items = my_list.children('li').get();
+				// sort the list continuously
+				var li_items = trial_list.children('li').get();
 				li_items.sort(function(a, b) {
 					return $(a).data('distance') - $(b).data('distance');
 				});
-				$.each(li_items, function(idx, itm) { my_list.append(itm); });
+				$.each(li_items, function(idx, itm) { trial_list.append(itm); });
 			}
 			else {
 				console.error(obj1, status, obj2);
@@ -252,16 +284,23 @@ function _loadTrials(trial_tuples) {
 		});
 	}
 	
-	// add to DOM
-	var head_good = $('<h3/>').text('Potential Trials (' + num_good + ' of ' + trial_tuples.length + ')');
-	var head_bad = $('<h3/>').text('Ineligible Trials (' + num_bad + ' of ' + trial_tuples.length + ')');
-	main.append(head_good);
-	main.append(list_good);
-	main.append(head_bad);
-	main.append(list_bad);
+	// compose DOM
+	opt_goodbad.append(_getOptTabElement('Potential Trials', num_good + ' of ' + trial_tuples.length));
+	opt_goodbad.append(_getOptTabElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length));
+	main.append(opt_goodbad);
+	main.append(opt_location);
+	main.append(opt_type);
+	main.append(trial_list);
 }
 
 function _showTrialStatus(status) {
 	$('#trials').empty().text(status);
+}
+
+function _getOptTabElement(main, accessory, click) {
+	var elem = $('<a/>').text(main);
+	elem.append($('<span/>').text(accessory));
+	
+	return elem;
 }
 

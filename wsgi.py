@@ -367,7 +367,7 @@ def get_trial(nct):
 	trial = Study(nct)
 	trial.load()
 	
-	return trial.json()
+	return trial.json(['brief_summary', 'location', 'intervention'])
 
 
 @bottle.get('/trial_runs')
@@ -415,7 +415,7 @@ def find_trials():
 	sess['runs'] = runs;
 	
 	# launch and return id
-	runner.run(['id', 'acronym', 'brief_title', 'official_title', 'brief_summary', 'eligibility', 'location'])
+	runner.run(['id', 'acronym', 'brief_title', 'official_title', 'brief_summary', 'eligibility', 'location', 'attributes', 'intervention', 'intervention_browse', 'phase', 'study_design'])
 	
 	return run_id
 

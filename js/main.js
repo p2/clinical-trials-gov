@@ -173,6 +173,20 @@ Array.prototype.indexOf = function(obj) {
 	return -1;
 }
 
+Array.prototype.uniqueArray = function() {
+	var uniq = {};
+	var new_arr = [];
+	for (var i = 0, l = this.length; i < l; ++i){
+		if (uniq.hasOwnProperty(this[i])) {
+			continue;
+		}
+		new_arr.push(this[i]);
+		uniq[this[i]] = 1;
+	}
+	
+	return new_arr;
+}
+
 
 
 

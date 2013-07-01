@@ -13,8 +13,6 @@ var g_highlighted_pin = null;
  *  Pulls out the location text from the "#demo_location" field and geocodes the location, passing it into the callback.
  */
 function locatePatient(callback) {
-	$('#g_map').show();
-	
 	var adr = $('#demo_location').val();
 	if (adr) {
 		geocodeAddress(adr, callback);
@@ -25,6 +23,10 @@ function locatePatient(callback) {
 	if (callback) {
 		callback(false, null);
 	}
+}
+
+function showMap() {
+	$('#g_map').show();
 }
 
 function hideMap() {
@@ -99,8 +101,6 @@ function addPinToMap(lat, lng, title, color) {
 		console.error("I need lat and long to place a pin");
 		return;
 	}
-	
-	$('#g_map').show();
 	
 	// request marker images
 	var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2" + (color ? '|' + color : ''),

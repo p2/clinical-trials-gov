@@ -52,7 +52,13 @@ ul#problem_list li.active { padding: 0.5em; border: 1px solid #969632; backgroun
 ul#problem_list li #refresh_trials, ul#problem_list li #cancel_trials { float: right; font-size: 1.2em; }
 ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 
-#trials > h3 { clear: right; padding-top: 2em; }
+/** Styles for trial data */
+.trial_opt_selector { margin-top: 2em; }
+.trial_opt_selector a { display: inline-block; margin-left: 1em; font-size: 1.2em; text-decoration: none; }
+.trial_opt_selector a:first-child { margin-left: 0; }
+.trial_opt_selector a span { margin-left: 0.4em; }
+.trial_opt_selector a span:before, .trial_opt_selector a span::before { content: "("; }
+.trial_opt_selector a span:after, .trial_opt_selector a span::after { content: ")"; }
 
 ul.trial_list { padding: 0; list-style-type: none; }
 ul.trial_list li { margin-bottom: 1em; padding-top: 1em; line-height: 1.4; border-top: 1px solid #CCC; }
