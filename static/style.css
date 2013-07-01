@@ -68,7 +68,7 @@ ul.trial_list li:first-child { border-top: none; }
 .trial .trial_locations { float: right; width: 65%; }
 .trial .trial_locations > div { display: none; }
 .trial .trial_locations .trial_location { display: inline-block; max-width: 44%; margin: 0 0 1.5em 5%; vertical-align: top; text-align: center; }
-.trial .trial_locations .trial_location .loc_status { color: #999; font-size: 0.9em; }
+.trial .trial_locations .trial_location .loc_status, .trial .trial_locations .trial_location .loc_distance { color: rgba(0, 0, 0, 0.4); font-size: 0.9em; }
 .trial .trial_locations .trial_location .loc_city { font-weight: bold; }
 .trial .trial_locations .trial_location .loc_country { font-size: 1.2em; font-weight: bold; }
 .trial .formatted_criteria { clear: right; display: none; margin: 0.5em 0 1em; padding: 1em; font-size: 10pt; white-space: pre-wrap; border: 1px solid #b4b4b4; background-color: whitesmoke; }

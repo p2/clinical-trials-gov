@@ -13,6 +13,7 @@
 				'name': ('facility' in loc && loc.facility.name) ? loc.facility.name : '',
 				'city': (loc_parts.length > 0) ? loc_parts.join(', ') : '',
 				'country': loc_country,
+				'distance': loc.distance,
 				'status': loc.status,
 				'status_color': loc_stat_m_not ? 'orange' : (loc_stat_m_recr ? 'green' : 'red')
 			}
@@ -59,6 +60,9 @@
 					<div class="loc_city"><%= loc.city %></div>
 					<% } %>
 					<div class="loc_country"><%= loc.country %></div>
+					<% if (loc.distance) { %>
+					<div class="loc_distance"><%= Math.round(loc.distance * 0.621371) %> Miles</div>
+					<% } %>
 				</div>
 			<% } %>
 			</div>

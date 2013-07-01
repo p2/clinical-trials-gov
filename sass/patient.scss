@@ -179,8 +179,8 @@ ul.trial_list {
 			margin: 0 0 1.5em 5%;
 			vertical-align: top; text-align: center;
 			
-			.loc_status {
-				color: #999; font-size: 0.9em;
+			.loc_status, .loc_distance {
+				color: rgba(0,0,0,0.4); font-size: 0.9em;
 			}
 			.loc_city {
 				font-weight: bold;

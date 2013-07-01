@@ -423,7 +423,7 @@ def find_trials():
 @bottle.get('/trial_runs/<run_id>/progress')
 def trial_progress(run_id):
 	""" Returns text status from the file corresponding to the given run-id, if
-	its missing returns a 404. """
+	it's missing returns a 404. """
 	
 	runner = Runner.get(run_id)
 	if runner is None:

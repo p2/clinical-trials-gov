@@ -5,7 +5,7 @@
 
 var _ruleCtrl = null;
 var _reportCtrl = null;
-var _globals = {};
+var _patient_loc = null;
 
 
 /**
@@ -201,15 +201,14 @@ function _checkTrialStatus(run_id) {
 				_showTrialStatus('Retrieving results...');
 				_getTrialResults(run_id);
 			}
+			
+			// an error occurred
 			else {
-				
-				// an error occurred
 				if (obj1 && obj1.length > 5 && obj1.match(/^error/i)) {
 					window.clearInterval(_trialSearchInterval);
 					_trialSearchInterval = null;
 				}
 				
-				// show status
 				_showTrialStatus(obj1);
 			}
 		}
@@ -263,8 +262,18 @@ function _filterTrialsByProblems(run_id) {
 	})
 	.always(function(obj1, status, obj2) {
 		if ('success' == status) {
-			_showTrialStatus();
-			_loadTrials(obj1);
+			locatePatient(function(success, location) {
+				if (success) {
+					_patient_loc = location;
+				}
+				else {
+					console.warn("Failed to locate the patient");
+					_patient_loc = null;
+				}
+				
+				// load the trials
+				_loadTrials(obj1);
+			});
 		}
 		else {
 			console.error(obj1, status, obj2);
@@ -309,23 +318,23 @@ function _loadTrials(trial_tuples) {
 					loader = null;
 				}
 				
-				// got a trial, show in appropriate list
-				obj1.reason = this.reason;
-				var li = $('<li/>').html('templates/trial_item.ejs', {'trial': obj1});
-				
-				if (this.reason) {
-					list_bad.append(li);
-				}
-				else {
-					list_good.append(li);
-				}
-				
-				// show locations on map
+				// calculate distance and show locations on map
 				if ('location' in obj1) {
+					var distances = [];
 					for (var j = 0; j < obj1.location.length; j++) {
 						if ('geodata' in obj1.location[j]) {
 							var lat = obj1.location[j].geodata.latitude;
 							var lng = obj1.location[j].geodata.longitude;
+							
+							// distance
+							if (_patient_loc) {
+								var dist = kmDistanceBetweenLocations(_patient_loc, obj1.location[j].geodata);
+								distances.push(dist);
+								obj1.location[j].distance = dist;
+							}
+							else {
+								console.warn("Patient location is not yet available");
+							}
 							
 							// add pin with click handler
 							var pin = addPinToMap(lat, lng, obj1.title, this.reason ? 'AA2200' : '33CC22');
@@ -340,19 +349,40 @@ function _loadTrials(trial_tuples) {
 							console.warn("No geodata for trial location: ", obj1.location[j]);
 						}
 					}
+					
+					// get closest centre
+					if (distances.length > 0) {
+						distances.sort(function(a, b) {
+							return a - b;
+						});
+						
+						obj1.closest = distances[0];
+					}
 				}
 				else {
 					console.warn("No geodata for trial " + nct);
 				}
+								
+				// show in appropriate list
+				obj1.reason = this.reason;
+				var li = $('<li/>').html('templates/trial_item.ejs', {'trial': obj1});
+				li.data('distance', obj1.closest);
+				
+				var my_list = this.reason ? list_bad : list_good;
+				my_list.append(li);
+				
+				// sort continuously
+				var li_items = my_list.children('li').get();
+				li_items.sort(function(a, b) {
+					return $(a).data('distance') - $(b).data('distance');
+				});
+				$.each(li_items, function(idx, itm) { my_list.append(itm); });
 			}
 			else {
 				console.error(obj1, status, obj2);
 			}
 		});
 	}
-	
-	// show map
-	locatePatient();
 	
 	// add to DOM
 	var head_good = $('<h3/>').text('Potential Trials (' + num_good + ' of ' + trial_tuples.length + ')');

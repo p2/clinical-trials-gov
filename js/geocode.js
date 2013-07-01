@@ -9,15 +9,21 @@ var g_pins = [];
 var g_highlighted_pin = null;
 
 
-function locatePatient() {
+/**
+ *  Pulls out the location text from the "#demo_location" field and geocodes the location, passing it into the callback.
+ */
+function locatePatient(callback) {
 	$('#g_map').show();
 	
 	var adr = $('#demo_location').val();
 	if (adr) {
-		geocodeAddress(adr);
+		geocodeAddress(adr, callback);
+		return;
 	}
-	else {
-		console.warn("Cannot locate patient, no address given");
+	
+	console.warn("Cannot locate patient, no address given");
+	if (callback) {
+		callback(false, null);
 	}
 }
 
@@ -27,11 +33,15 @@ function hideMap() {
 
 /**
  *  Locate the address via Google and display in our map.
+ *  The callback receives a flag whether the geocoding was successful and a lat/long object.
  */
-function geocodeAddress(address) {
+function geocodeAddress(address, callback) {
 	if (!address) {
 		console.error("No address given, cannot geo-code");
-		return null;
+		if (callback) {
+			callback(false, null);
+		}
+		return;
 	}
 	
 	// create coder and map if needed
@@ -53,7 +63,15 @@ function geocodeAddress(address) {
 		'address': address
 	},
 	function(results, status) {
+		var loc = null;
+		
 		if (google.maps.GeocoderStatus.OK == status) {
+			loc = {
+				'latitude': results[0].geometry.location['jb'],
+				'longitude': results[0].geometry.location['kb']
+			};
+			
+			// center map and add a pin
 			g_map.setCenter(results[0].geometry.location);
 			var marker = new google.maps.Marker({
 				map: g_map,
@@ -65,6 +83,10 @@ function geocodeAddress(address) {
 		}
 		else {
 			console.error("Geocode failed: " + status);
+		}
+		
+		if (callback) {
+			callback(loc != null, loc);
 		}
 	});
 }
@@ -124,4 +146,22 @@ function clearAllPins() {
 		g_pins[i].setMap(null);
 	};
 	g_pins = [];
+}
+
+
+/**
+ *  Calculates earth surface distances between two lat/long pairs using the Haversine formula.
+ */
+function kmDistanceBetweenLocations(l1, l2) {
+	var R = 6371;										// Radius of the earth in km
+	var dLat = deg2rad(l2.latitude - l1.latitude);
+	var dLon = deg2rad(l2.longitude - l1.longitude); 
+	var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(l1.latitude)) * Math.cos(deg2rad(l2.latitude)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+	var c = 2 * Math.asin(Math.sqrt(a));
+	
+	return R * c;
+}
+
+function deg2rad(deg) {
+	return deg * (Math.PI / 180)
 }
