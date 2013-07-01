@@ -28,16 +28,17 @@ td:last-child { padding-right: 0; }
 /** Patient Styles */
 .patient_portrait { float: left; width: 4em; height: 5.5em; margin: 0 2em 1em 0; text-align: center; background: center center no-repeat url("portrait_default.png") transparent; background-size: 4em 5.5em; box-shadow: inset 0 1px 2em rgba(0, 0, 0, 0.2); }
 
-.demographics h1, .demographics .h1 { font-size: 1.6em; }
+.demographics h1 { font-size: 1.6em; }
+.demographics .demo_row { margin-top: 1em; font-size: 1.2em; }
+.demographics #demo_location, .demographics #demo_age { margin: 0; padding: 0.2em 0.4em; font-size: 1em; border: 1px solid #969632; background-color: rgba(200, 200, 0, 0.5); }
+.demographics #demo_location { width: 13.15em; }
+.demographics #demo_age { margin-left: 2em; width: 3.5em; text-align: right; }
+.demographics .demo_birthday { margin-left: 1em; font-size: 0.833em; }
 .demographics #select_female, .demographics #select_male { display: none; }
-.demographics .demo_gender { padding: 0.4em 1em 0.3em; color: #666; border: 1px solid #CCC; line-height: 2em; }
+.demographics .demo_gender { padding: 0.2em 0.4em; text-align: center; color: #666; border: 1px solid #CCC; cursor: pointer; }
 .demographics input:checked + .demo_gender { color: black; border-color: #969632; background-color: rgba(200, 200, 0, 0.5); }
-.demographics #select_female_label { margin-left: 2em; border-right-color: #999; }
+.demographics #select_female_label { border-right-color: #969632; }
 .demographics #select_male_label { border-left: none; }
-.demographics .demo_age { margin-top: 1em; font-size: 1.2em; }
-.demographics .demo_age input { font-size: 1em; text-align: right; background-color: rgba(200, 200, 0, 0.5); }
-.demographics .demo_age .demo_birthday { margin-left: 1.5em; font-size: 0.833em; }
-.demographics .patient_location { margin-top: 1em; }
 
 #patient_problems { clear: left; padding-top: 1em; }
 

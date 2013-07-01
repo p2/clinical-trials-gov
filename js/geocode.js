@@ -12,9 +12,12 @@ var g_highlighted_pin = null;
 function locatePatient() {
 	$('#g_map').show();
 	
-	var adr = $('#patient_location').text();
+	var adr = $('#demo_location').val();
 	if (adr) {
 		geocodeAddress(adr);
+	}
+	else {
+		console.warn("Cannot locate patient, no address given");
 	}
 }
 

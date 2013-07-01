@@ -13,18 +13,43 @@
 }
 
 .demographics {
-	h1, .h1 {
+	h1 {
 		font-size: 1.6em;
+	}
+	
+	.demo_row {
+		margin-top: 1em;
+		font-size: 1.2em;
+	}
+	
+	#demo_location, #demo_age {
+		margin: 0; padding: 0.2em 0.4em;
+		font-size: 1em;
+		border: 1px solid $col-border-active;
+		background-color: $col-input-active;
+	}
+	#demo_location {
+		width: 13.15em;
+	}
+	#demo_age {
+		margin-left: 2em;
+		width: 3.5em;
+		text-align: right;
+	}
+	
+	.demo_birthday {
+		margin-left: 1em;
+		font-size: 0.833em;
 	}
 	
 	#select_female, #select_male {
 		display: none;
 	}
 	.demo_gender {
-		padding: 0.4em 1em 0.3em;
-		color: #666;
+		padding: 0.2em 0.4em;
+		text-align: center; color: #666;
 		border: 1px solid #CCC;
-		line-height: 2em;
+		cursor: pointer;
 	}
 	input:checked + .demo_gender {
 		color: black;
@@ -32,29 +57,10 @@
 		background-color: $col-input-active;
 	}
 	#select_female_label {
-		margin-left: 2em;
-		border-right-color: #999;
+		border-right-color: $col-border-active;
 	}
 	#select_male_label {
 		border-left: none;
-	}
-	
-	.demo_age {
-		margin-top: 1em;
-		font-size: 1.2em;
-		
-		input {
-			font-size: 1em; text-align: right;
-			background-color: $col-input-active;
-		}
-		.demo_birthday {
-			margin-left: 1.5em;
-			font-size: 0.833em;
-		}
-	}
-	
-	.patient_location {
-		margin-top: 1em;
 	}
 }
 

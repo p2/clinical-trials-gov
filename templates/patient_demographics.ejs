@@ -1,75 +1,73 @@
 <div class="demographics">
-	<div class="patient_portrait"></div>
-	
-	<% var full_name = 'Unknown';
+	<% var full_name = null;
 	if ('vcard:n' in demo) {
 		var n = demo['vcard:n'];
-		full_name = (('vcard:family-name' in n) ? n['vcard:family-name'] : "Unknown") + ', ' + (('vcard:given-name' in n) ? n['vcard:given-name'] : '')
-	}
-	var gender = ('foaf:gender' in demo) ? demo['foaf:gender'] : null;
-	// if (gender) {
-	// 	full_name += ', ' + (('female' == gender) ? "♀" : "♂");
-	// }
-	%>
-	<input type="text" class="h1" value="<%= full_name %>" /><!--
-	--><input type="radio" id="select_female" name="demo_gender" value="female" <% if ('female' == gender) { %>checked="checked"<% } %>/><!--
-	--><label for="select_female" id="select_female_label" class="demo_gender">Female</label><!--
-	--><input type="radio" id="select_male" name="demo_gender" value="male" <% if ('female' != gender) { %>checked="checked"<% } %>/><!--
-	--><label for="select_male" id="select_male_label" class="demo_gender">Male</label>
+		full_name = (('vcard:family-name' in n) ? n['vcard:family-name'] : "Unknown") + ', ' + (('vcard:given-name' in n) ? n['vcard:given-name'] : ''); %>
+		<h1>Trials for <%= full_name %></h1>
+	<% } %>
+	<div class="patient_portrait"></div>
 	
-	<div class="demo_age">
-	<% // birthday, death-date and age
-	var bday = null;
-	var age_int = 0;
-	var age = '';
-	var deathdate = null;
-	if ('vcard:bday' in demo) {
-		bday = moment(demo['vcard:bday']);
-		if (bday) {
-			age_int = moment().diff(bday, 'years');
-			if (age_int < 3) {
-				age = moment().diff(bday, 'months');
-				age += (1 == age_int) ? ' month' : ' months';
+	<div class="demo_row">
+		<% var gender = ('foaf:gender' in demo) ? demo['foaf:gender'] : null;
+		
+		// location
+		if ('vcard:adr' in demo) {
+			
+			var parts = ['Unknown'];
+			var adr = demo['vcard:adr'];
+			if ('vcard:locality' in adr) {
+				parts[0] = adr['vcard:locality'];
 			}
-			else {
-				age += (1 == age_int) ? ' year' : ' years';
+			if ('vcard:region' in adr) {
+				parts.push(adr['vcard:region']);
 			}
-		}
-	} 
-	if ('vcard:deathdate' in demo) {
-		deathdate = moment(demo['vcard:deathdate']);
-	} %>
-	<input type="text" size="4" id="demo_age" name="demo_age" value="<%= (age_int > 0) ? age_int : '' %>" /> y
-	<span class="demo_birthday">
-	(<%= bday ? bday.format('ll') : "no birthday" %>
-	<% if (deathdate) { %>
-		– <%= deathdate.format('ll') %>
-	<% } %>)
-	</span>
+			if ('vcard:country' in adr) {
+				parts.push(adr['vcard:country']);
+			}
+		} %>
+		
+		<input type="text" id="demo_location" placeholder="City, State" value="<%= parts.join(', ') %>" />
+		<!--button onclick="locatePatient()">Locate</button-->
+	</div>
+	
+	<div class="demo_row">
+		<input type="radio" id="select_female" name="demo_gender" value="female" <% if ('female' == gender) { %>checked="checked"<% } %>/><!--
+	 --><label for="select_female" id="select_female_label" class="demo_gender">Female</label><!--
+	 --><input type="radio" id="select_male" name="demo_gender" value="male" <% if ('female' != gender) { %>checked="checked"<% } %>/><!--
+	 --><label for="select_male" id="select_male_label" class="demo_gender">Male</label>
+		
+		<% // birthday, death-date and age
+		var bday = null;
+		var age_int = 0;
+		var age = '';
+		var deathdate = null;
+		if ('vcard:bday' in demo) {
+			bday = moment(demo['vcard:bday']);
+			if (bday) {
+				age_int = moment().diff(bday, 'years');
+				if (age_int < 3) {
+					age = moment().diff(bday, 'months');
+					age += (1 == age_int) ? ' month' : ' months';
+				}
+				else {
+					age += (1 == age_int) ? ' year' : ' years';
+				}
+			}
+		} 
+		if ('vcard:deathdate' in demo) {
+			deathdate = moment(demo['vcard:deathdate']);
+		} %>
+		
+		<input type="number" id="demo_age" name="demo_age" value="<%= (age_int > 0) ? age_int : '' %>" /> y
+		<span class="demo_birthday">
+		(<%= bday ? (deathdate ? '' : "born ") + bday.format('ll') : "no birthday" %>
+		<% if (deathdate) { %>
+			– <%= deathdate.format('ll') %>
+		<% } %>)
+		</span>
 	</div>
 	
 	<% if ('sp:ethnicity' in demo) { %>
 		<!-- <%= demo['sp:ethnicity'] %> -->
-	<% } %>
-	
-	<% if ('vcard:adr' in demo) {
-		// location
-		
-		var parts = ['Unknown'];
-		var adr = demo['vcard:adr'];
-		if ('vcard:locality' in adr) {
-			parts[0] = adr['vcard:locality'];
-		}
-		if ('vcard:region' in adr) {
-			parts.push(adr['vcard:region']);
-		}
-		if ('vcard:country' in adr) {
-			parts.push(adr['vcard:country']);
-		} %>
-		
-		<div class="patient_location">
-			<span id="patient_location"><%= parts.join(', ') %></span>
-			<button onclick="locatePatient()">Locate</button>
-		</div>
 	<% } %>
 </div>
