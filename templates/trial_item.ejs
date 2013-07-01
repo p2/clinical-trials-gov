@@ -61,7 +61,7 @@
 					<% } %>
 					<div class="loc_country"><%= loc.country %></div>
 					<% if (loc.distance) { %>
-					<div class="loc_distance"><%= Math.round(loc.distance * 0.621371) %> Miles</div>
+					<div class="loc_distance"><%= Math.round(loc.distance * 0.621371 / 10) * 10 %> Miles</div>
 					<% } %>
 				</div>
 			<% } %>
