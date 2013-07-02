@@ -160,9 +160,9 @@ function _loadTrials(trial_tuples) {
 	
 	var num_good = 0;
 	var num_bad = 0;
-	var opt_goodbad = $('<div/>').addClass('trial_opt_selector');
-	var opt_location = $('<div/>').addClass('trial_opt_selector');
-	var opt_type = $('<div/>').addClass('trial_opt_selector');
+	var opt_goodbad = $('<div/>', {'id': 'selector_goodbad'}).addClass('trial_opt_selector');
+	var opt_location = $('<div/>', {'id': 'selector_location'}).addClass('trial_opt_selector');
+	var opt_type = $('<div/>', {'id': 'selector_inv_type'}).addClass('trial_opt_selector');
 	var trial_list = $('<ul/>', {'id': 'trial_list'}).addClass('trial_list');
 	
 	// loop all trials
@@ -172,7 +172,9 @@ function _loadTrials(trial_tuples) {
 		var reason = null;
 		if (tpl.length > 1) {
 			reason = tpl[1];
-			num_bad++;
+			if (reason) {
+				num_bad++;
+			}
 		}
 		else {
 			num_good++;
@@ -186,6 +188,7 @@ function _loadTrials(trial_tuples) {
 		})
 		.always(function(obj1, status, obj2) {
 			if ('success' == status) {
+				obj1.reason = this.reason;
 				
 				// calculate distance and show locations on map
 				if ('location' in obj1) {
@@ -241,40 +244,40 @@ function _loadTrials(trial_tuples) {
 						}
 					}
 					types = types.uniqueArray();
-					
-					// update types selector
-					var existing = $.map(opt_type.children('a'), function(elem) {
-						var my_type = $(elem).data('intervention-type');
-						if (types.contains(my_type)) {
-							var span = $(elem).find('.num_matches');
-							span.text(span.text()*1 + 1);
-						}
-						return my_type;
-					});
-					
-					// add the new ones
-					for (var i = 0; i < types.length; i++) {
-						var type = types[i];
-						if (!existing.contains(type)) {
-							var elem = _getOptTabElement(type, 1, function(e) {
-								$(this).toggleClass('active');
-								_toggleInterventionType($(this).data('intervention-type'));
-							});
-							elem.data('intervention-type', type);
-							opt_type.append(elem);
-						}
-					};
-					
-					// sort types alphabetically
-					sortChildren(opt_type, 'a', function(a, b) {
-						return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
-					});
 				}
-							
-				// show in appropriate list
+				
+				if (types.length < 1) {
+					types = ['N/A'];
+				}
+				
+				// update types selector
+				var existing = $.map(opt_type.children('a'), function(elem) {
+					var my_type = $(elem).data('intervention-type');
+					if (!obj1.reason && types.contains(my_type)) {		// initial display is good trials only, so only count if we are a good trial
+						var span = $(elem).find('.num_matches');
+						span.text(span.text()*1 + 1);
+					}
+					return my_type;
+				});
+				
+				// add the new ones
+				for (var i = 0; i < types.length; i++) {
+					var type = types[i];
+					if (!existing.contains(type)) {
+						var elem = _getOptTabElement(type, obj1.reason ? 0 : 1, _toggleInterventionType);
+						elem.data('intervention-type', type);
+						opt_type.append(elem);
+					}
+				};
+				
+				// sort types alphabetically
+				sortChildren(opt_type, 'a', function(a, b) {
+					return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
+				});
+				
+				// add to list
 				$('#trial_loader').remove();
 				
-				obj1.reason = this.reason;
 				var li = $('<li/>').html('templates/trial_item.ejs', {'trial': obj1});
 				li.hide();
 				li.data('good', !this.reason);
@@ -296,9 +299,17 @@ function _loadTrials(trial_tuples) {
 	
 	// compose DOM
 	_showGoodTrials = true;
-	var good_trials = _getOptTabElement('Potential Trials', num_good + ' of ' + trial_tuples.length).addClass('active');
+	var good_trials = _getOptTabElement('Potential Trials', num_good + ' of ' + trial_tuples.length, _toggleShowGoodTrials);
+	good_trials.addClass('active');
+	good_trials.data('is-good', true);
 	opt_goodbad.append(good_trials);
-	opt_goodbad.append(_getOptTabElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length));
+	
+	var bad_trials = _getOptTabElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length, _toggleShowGoodTrials);
+	bad_trials.data('is-good', false);
+	opt_goodbad.append(bad_trials);
+	
+	// opt_type.append('<div class="supplement">A trial can have one or more intervention types.</div>');
+	
 	main.append(opt_goodbad);
 	main.append(opt_location);
 	main.append(opt_type);
@@ -320,8 +331,15 @@ function _getOptTabElement(main, accessory, click) {
 	return elem;
 }
 
+
+function _toggleShowGoodTrials(evt) {
+	_showGoodTrials = !_showGoodTrials;
+	_updateShownHiddenTrials();
+}
+
 var _activeInterventionTypes = [];
-function _toggleInterventionType(type) {
+function _toggleInterventionType(evt) {
+	var type = $(this).data('intervention-type');
 	if (!type) {
 		console.error("No type supplied to _toggleInterventionType()");
 		return;
@@ -335,7 +353,7 @@ function _toggleInterventionType(type) {
 	else {
 		_activeInterventionTypes.push(type);
 	}
-	console.log(_activeInterventionTypes);
+	
 	_updateShownHiddenTrials();
 }
 
@@ -343,15 +361,26 @@ function _toggleInterventionType(type) {
  *  Loops all trials and shows or hides according to our globals.
  */
 function _updateShownHiddenTrials() {
+	var per_type = {};
+	
 	$('#trial_list').children('li').each(function(idx, item) {
 		var elem = $(item);
 		
 		// good or bad
-		var show = _showGoodTrials && elem.data('good');
+		var show = (_showGoodTrials == elem.data('good'));
 		
 		// intervention type
 		if (show) {
-			show = _activeInterventionTypes.intersects(elem.data('intervention-types'));
+			var types = elem.data('intervention-types');
+			show = _activeInterventionTypes.intersects(types);
+			for (var i = 0; i < types.length; i++) {
+				if (types[i] in per_type) {
+					per_type[types[i]]++;
+				}
+				else {
+					per_type[types[i]] = 1;
+				}
+			};
 		}
 		
 		// apply
@@ -360,6 +389,27 @@ function _updateShownHiddenTrials() {
 		}
 		else {
 			elem.slideUp('fast');
+		}
+	});
+	
+	// update good/bad selector
+	$('#selector_goodbad').children('a').each(function(idx, item) {
+		var elem = $(item);
+		elem.removeClass('active');
+		if (_showGoodTrials == elem.data('is-good')) {
+			elem.addClass('active');
+		}
+	});
+	
+	// update intervention type selector
+	$('#selector_inv_type').children('a').each(function(idx, item) {
+		var elem = $(item);
+		var type = elem.data('intervention-type');
+		elem.find('.num_matches').text(type in per_type ? per_type[type] : 0);
+		
+		elem.removeClass('active');
+		if (_activeInterventionTypes.contains(type)) {
+			elem.addClass('active');
 		}
 	});
 }
