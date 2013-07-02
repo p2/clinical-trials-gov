@@ -368,7 +368,7 @@ def get_trial(nct):
 	trial = Study(nct)
 	trial.load()
 	
-	return trial.json(['brief_summary', 'location', 'intervention'])
+	return trial.json(['brief_summary', 'location', 'intervention', 'study_design'])
 
 
 @bottle.get('/trial_runs')

@@ -5,6 +5,8 @@
 var _patient_loc = null;
 var _trialSearchInterval = null;
 
+var _trialNumExpected = 0;
+var _trialNumDone = 0;
 var _showGoodTrials = true;
 var _activeInterventionTypes = [];
 
@@ -24,6 +26,7 @@ function _initTrialSearch(problem_name, gender, age) {
 	}
 	
 	clearAllPins();
+	$('#trials').empty();
 	_showTrialStatus('Starting...');
 	
 	$.ajax({
@@ -157,8 +160,7 @@ function loadTrialsAfterLocatingPatient(trial_tuples) {
 
 function _loadTrials(trial_tuples) {
 	var main = $('#trials');
-	var loader = $('<div/>', {'id': 'trial_loader'}).text('Loading trials...');
-	main.empty().append(loader);
+	_showTrialStatus("Loading " + trial_tuples.length + "trial" + (1 == trial_tuples.length ? "s" : '') + "...");
 	
 	var num_good = 0;
 	var num_bad = 0;
@@ -167,6 +169,8 @@ function _loadTrials(trial_tuples) {
 	var opt_type = $('<div/>', {'id': 'selector_inv_type'}).addClass('trial_opt_selector');
 	var trial_list = $('<ul/>', {'id': 'trial_list'}).addClass('trial_list');
 	
+	_trialNumExpected = trial_tuples.length;
+	_trialNumDone = 0;
 	_showGoodTrials = true;
 	_activeInterventionTypes = [];
 	
@@ -192,6 +196,16 @@ function _loadTrials(trial_tuples) {
 			'context': {'reason': reason}
 		})
 		.always(function(obj1, status, obj2) {
+			
+			// update status
+			_trialNumDone++;
+			if (_trialNumDone >= _trialNumExpected) {
+				_showTrialStatus();
+			}
+			else {
+				_showTrialStatus("Loading, " + Math.round(_trialNumDone / _trialNumExpected * 100) + "% done...");
+			}
+			
 			if ('success' == status) {
 				obj1.reason = this.reason;
 				
@@ -281,8 +295,6 @@ function _loadTrials(trial_tuples) {
 				});
 				
 				// add to list
-				$('#trial_loader').remove();
-				
 				var li = $('<li/>').html('templates/trial_item.ejs', {'trial': obj1});
 				li.hide();
 				li.data('good', !this.reason);
@@ -319,8 +331,22 @@ function _loadTrials(trial_tuples) {
 	main.append(trial_list);
 }
 
+
+/**
+ *  Display the current trial loading status (or hide it if status is null)
+ */
 function _showTrialStatus(status) {
-	$('#trials').empty().text(status);
+	var stat = $('#trial_status');
+	if (!status) {
+		stat.remove();
+		return;
+	}
+	
+	if (!stat.is('*')) {
+		stat = $('<div/>', {'id': 'trial_status'});
+		$('#trials').append(stat);
+	}
+	stat.text(status);
 }
 
 function _getOptTabElement(main, accessory, click) {
