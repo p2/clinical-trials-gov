@@ -4,6 +4,8 @@ h2 { margin-bottom: 0.3em; }
 
 h3:first-child { margin-top: 0.3em; }
 
+a { color: #00B; text-decoration: none; }
+
 p { padding: 0.5em 0; }
 p:first-child { margin-top: 0; }
 p:last-child { margin-bottom: 0; }
@@ -35,7 +37,7 @@ td:last-child { padding-right: 0; }
 .demographics #demo_age { margin-left: 2em; width: 3.5em; text-align: right; }
 .demographics .demo_birthday { margin-left: 1em; font-size: 0.833em; }
 .demographics #select_female, .demographics #select_male { display: none; }
-.demographics .demo_gender { padding: 0.2em 0.4em; text-align: center; color: #666; border: 1px solid #CCC; cursor: pointer; }
+.demographics .demo_gender { padding: 0.2em 0.4em; text-align: center; color: #666; border: 1px solid #cccccc; cursor: pointer; }
 .demographics input:checked + .demo_gender { color: black; border-color: #969632; background-color: rgba(200, 200, 0, 0.5); }
 .demographics #select_female_label { border-right-color: #969632; }
 .demographics #select_male_label { border-left: none; }
@@ -43,7 +45,8 @@ td:last-child { padding-right: 0; }
 #patient_problems { clear: left; padding-top: 1em; }
 
 ul#problem_list { padding: 0; list-style-type: none; }
-ul#problem_list li { padding: 0.5em 0; cursor: pointer; }
+ul#problem_list li { padding: 0.5em 0; line-height: 1.4; cursor: pointer; }
+ul#problem_list li .problem_name { font-size: 1.2em; }
 ul#problem_list li#prob_manual { cursor: default; }
 ul#problem_list li#prob_manual input { margin: 0 0.5em 0 0; }
 ul#problem_list li#prob_manual button { font-size: 1.1em; }
@@ -53,24 +56,27 @@ ul#problem_list li #refresh_trials, ul#problem_list li #cancel_trials { float: r
 ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 
 /** Styles for trial data */
-.trial_opt_selector { margin-top: 2em; }
-.trial_opt_selector a { display: inline-block; margin-left: 1em; font-size: 1.2em; text-decoration: none; }
-.trial_opt_selector a:first-child { margin-left: 0; }
-.trial_opt_selector a span { margin-left: 0.4em; }
-.trial_opt_selector a span:before, .trial_opt_selector a span::before { content: "("; }
-.trial_opt_selector a span:after, .trial_opt_selector a span::after { content: ")"; }
+#trials { margin-top: 3em; }
 
-ul.trial_list { padding: 0; list-style-type: none; }
+.trial_opt_selector { margin-top: 1.5em; line-height: 1.6; }
+.trial_opt_selector a { display: inline-block; margin-right: 1.5em; font-size: 1.2em; }
+.trial_opt_selector a.active { padding: 0 0.4em; color: black; border: 1px solid #969632; background-color: rgba(200, 200, 0, 0.5); }
+.trial_opt_selector a:last-child { margin-right: 0; }
+.trial_opt_selector a span { white-space: nowrap; }
+.trial_opt_selector a span.num_matches { margin-left: 0.4em; }
+.trial_opt_selector a span.num_matches:before, .trial_opt_selector a span.num_matches::before { content: "("; }
+.trial_opt_selector a span.num_matches:after, .trial_opt_selector a span.num_matches::after { content: ")"; }
+
+ul.trial_list { margin-top: 3em; padding: 0; list-style-type: none; }
 ul.trial_list li { margin-bottom: 1em; padding-top: 1em; line-height: 1.4; border-top: 1px solid #CCC; }
 ul.trial_list li:first-child { border-top: none; }
 
 .trial.active { padding: 1em; border: 1px solid #969632; background-color: rgba(200, 200, 0, 0.5); }
 .trial > a:first-child { margin-right: 1em; }
 .trial .trial_info { width: 35%; }
-.trial .trial_info a { text-decoration: none; }
 .trial .trial_info .exclusion_reason { display: block; margin-top: 0.3em; font-size: 10pt; color: #A00; }
 .trial .trial_countries { float: right; width: 65%; margin-bottom: 1em; line-height: 1.6; }
-.trial .trial_countries a { margin-left: 2em; color: #00B; font-size: 1.2em; font-weight: bold; text-decoration: none; white-space: nowrap; }
+.trial .trial_countries a { margin-left: 2em; font-size: 1.2em; font-weight: bold; white-space: nowrap; }
 .trial .trial_locations { float: right; width: 65%; }
 .trial .trial_locations > div { display: none; }
 .trial .trial_locations .trial_location { display: inline-block; max-width: 44%; margin: 0 0 1.5em 5%; vertical-align: top; text-align: center; }
@@ -90,8 +96,6 @@ ul.trial_list li:first-child { border-top: none; }
 .green { color: #090; }
 
 .red { color: #A00; }
-
-.bigger { font-size: 1.1em; font-weight: bold; }
 
 .faded { color: #505050; }
 

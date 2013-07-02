@@ -2,32 +2,49 @@
  *  Styles for trial data
  */
 
+#trials {
+	margin-top: 3em;
+}
+
 .trial_opt_selector {
-	margin-top: 2em;
+	margin-top: 1.5em;
+	line-height: 1.6;
 	
 	a {
 		display: inline-block;
-		margin-left: 1em;
-		font-size: 1.2em; text-decoration: none;
+		margin-right: 1.5em;
+		font-size: 1.2em;
 		
-		&:first-child {
-			margin-left: 0;
+		&.active {
+			padding: 0 0.4em;
+			color: black;
+			border: 1px solid $col-border-active;
+			background-color: $col-input-active;
+		}
+		
+		&:last-child {
+			margin-right: 0;
 		}
 		
 		span {
-			margin-left: 0.4em;
-			&:before, &::before {
-				content: "(";
-			}
-			&:after, &::after {
-				content: ")";
+			white-space: nowrap;
+			
+			&.num_matches {
+				margin-left: 0.4em;
+				
+				&:before, &::before {
+					content: "(";
+				}
+				&:after, &::after {
+					content: ")";
+				}
 			}
 		}
 	}
 }
 
 ul.trial_list {
-	padding: 0;
+	margin-top: 3em; padding: 0;
 	list-style-type: none;
 	
 	li {
@@ -55,10 +72,6 @@ ul.trial_list {
 	.trial_info {
 		width: 35%;
 		
-		a {
-			text-decoration: none;
-		}
-		
 		.exclusion_reason {
 			display: block; margin-top: 0.3em;
 			font-size: 10pt; color: #A00;
@@ -72,7 +85,7 @@ ul.trial_list {
 		
 		a {
 			margin-left: 2em;
-			color: #00B; font-size: 1.2em; font-weight: bold; text-decoration: none;
+			font-size: 1.2em; font-weight: bold;
 			white-space: nowrap;
 		}
 	}

@@ -1,7 +1,7 @@
 <ul id="problem_list">
 	<li id="prob_manual">
 		<form method="get" action="" onsubmit="didClickProblem('prob_manual'); return false;">
-			<input type="text" size="40" class="bigger" id="manual_problem" placeholder="Enter disorder" /><button id="manual_submit" type="submit">Go</button>
+			<input type="text" size="40" class="problem_name" id="manual_problem" placeholder="Enter disorder" /><button id="manual_submit" type="submit">Go</button>
 		</form>
 	</li>
 <% 
@@ -25,7 +25,7 @@ if (probs.length > 0) {
 		
 		if ('sp:Problem' == prob['@type']) { %>
 			<li id="<%= html_id %>" onclick="didClickProblem('<%= html_id %>')">
-				<div class="bigger"><%= prob_name %></div>
+				<div class="problem_name"><%= prob_name %></div>
 				
 				<% if ('sp:startDate' in prob || 'sp:endDate' in prob) {
 					var period = '';

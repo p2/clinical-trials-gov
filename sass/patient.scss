@@ -48,7 +48,7 @@
 	.demo_gender {
 		padding: 0.2em 0.4em;
 		text-align: center; color: #666;
-		border: 1px solid #CCC;
+		border: 1px solid $col-border-inactive;
 		cursor: pointer;
 	}
 	input:checked + .demo_gender {
@@ -76,7 +76,12 @@ ul#problem_list {
 	
 	li {
 		padding: 0.5em 0;
+		line-height: 1.4;
 		cursor: pointer;
+		
+		.problem_name {
+			font-size: 1.2em;
+		}
 		
 		&#prob_manual {
 			cursor: default;

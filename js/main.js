@@ -111,7 +111,7 @@ function didClickProblem(problem_id, is_reload) {
 		prob_elem.prepend(refr);
 		
 		// search by problem name
-		var prob_name = $('#' + problem_id).find('div.bigger').text();
+		var prob_name = $('#' + problem_id).find('div.problem_name').text();
 		if (is_manual_problem) {
 			prob_name = $('#manual_problem').val();
 			$('#manual_submit').text('Cancel');
@@ -187,6 +187,34 @@ Array.prototype.uniqueArray = function() {
 	return new_arr;
 }
 
+Array.prototype.intersects = function(other) {
+	for (var i = 0; i < this.length; i++) {
+		for (var j = 0; j < other.length; j++) {
+			if (this[i] === other[j]) {
+				return true;
+			}
+		};
+	};
+	
+	return false;
+}
+
+
+
+
+/*
+ *	-------------
+ *	DOM Utilities
+ *	-------------
+ */
+function sortChildren(parent, selector, sortFunc) {
+	var items = parent.children(selector).get();
+	items.sort(sortFunc);
+	
+	$.each(items, function(idx, itm) {
+		parent.append(itm);
+	});
+}
 
 
 
