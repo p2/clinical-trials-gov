@@ -27,7 +27,7 @@ if (probs.length > 0) {
 			<li id="<%= html_id %>" onclick="didClickProblem('<%= html_id %>')">
 				<div class="problem_name"><%= prob_name %></div>
 				
-				<% if ('sp:startDate' in prob || 'sp:endDate' in prob) {
+				<% /* if ('sp:startDate' in prob || 'sp:endDate' in prob) {
 					var period = '';
 					if ('sp:startDate' in prob) {
 						period = ('sp:endDate' in prob) ? 'from ' : 'since ';
@@ -40,7 +40,7 @@ if (probs.length > 0) {
 						period += '<b>' + moment(prob['sp:endDate']).format('ll') + '</b>';
 					} %>
 				<div class="supplement"><%== period %></div>
-				<% } %>
+				<% } */ %>
 			</li><%
 		}
 	}

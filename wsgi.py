@@ -151,6 +151,7 @@ def index():
 	
 	# no endpoint, show selector
 	if not api_base:
+		_reset_session()
 		logging.debug('redirecting to endpoint selection')
 		bottle.redirect('endpoint_select')
 	

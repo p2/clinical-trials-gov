@@ -47,7 +47,7 @@
 	}
 	.demo_gender {
 		padding: 0.2em 0.4em;
-		text-align: center; color: #666;
+		text-align: center; color: $col-trans-faded;
 		border: 1px solid $col-border-inactive;
 		cursor: pointer;
 	}
@@ -76,7 +76,7 @@ ul#problem_list {
 	
 	li {
 		padding: 0.5em 0;
-		line-height: 1.4;
+		line-height: 1.6;
 		cursor: pointer;
 		
 		.problem_name {

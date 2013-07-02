@@ -308,11 +308,10 @@ function _loadTrials(trial_tuples) {
 	bad_trials.data('is-good', false);
 	opt_goodbad.append(bad_trials);
 	
-	// opt_type.append('<div class="supplement">A trial can have one or more intervention types.</div>');
-	
 	main.append(opt_goodbad);
 	main.append(opt_location);
 	main.append(opt_type);
+	main.append('<div class="supplement">A trial can have more than one intervention type.</div>');
 	main.append(trial_list);
 }
 

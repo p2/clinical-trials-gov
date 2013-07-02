@@ -50,7 +50,7 @@ ul.trial_list {
 	li {
 		margin-bottom: 1em; padding-top: 1em;
 		line-height: 1.4;
-		border-top: 1px solid #CCC;
+		border-top: 1px solid $col-border;
 		
 		&:first-child {
 			border-top: none;
@@ -104,7 +104,7 @@ ul.trial_list {
 			vertical-align: top; text-align: center;
 			
 			.loc_status, .loc_distance {
-				color: rgba(0,0,0,0.4); font-size: 0.9em;
+				color: $col-trans-faded; font-size: 0.9em;
 			}
 			.loc_city {
 				font-weight: bold;

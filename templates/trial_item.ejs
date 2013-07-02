@@ -72,8 +72,10 @@
 	
 	<div class="trial_info">
 		<%= trial.title ? trial.title : 'Unnamed trial' %><br />
-		<a href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank"><%= trial.nct %></a><br />
-		<a class="supplement" href="javascript:void(0);" onclick="$(this).parent().siblings('.formatted_criteria').toggle()">show eligibility criteria</a>
+		<a href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank"><%= trial.nct %></a>
+		<div class="supplement">
+			<a href="javascript:void(0);" onclick="$(this).parent().parent().siblings('.formatted_criteria').toggle()">show eligibility criteria</a>
+		</div>
 		
 		<% if ('reason' in trial && trial.reason) { %>
 			<tt class="exclusion_reason"><%= trial.reason %></tt>

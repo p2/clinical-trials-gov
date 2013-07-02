@@ -6,26 +6,25 @@
 @import "bourbon";
 
 $col-title:				rgb(30,30,30);
+$col-link:				rgb(0,20,190);
 $col-linkglow:			rgb(0,64,128);
 $col-faded:				rgb(80,80,80);
-$col-border:			rgb(120,120,120);
+$col-trans-faded:		rgba(0,0,0,0.4);
+$col-border:			rgb(200,200,200);
 $col-border-active:		rgb(150,150,50);
-$col-border-inactive:	#CCC;
-$col-blue:				rgb(100,200,240);
+$col-border-inactive:	rgb(185,185,185);
 $col-input-active:		rgba(200,200,0,0.5);
 
+$col-bg:				rgb(246,246,246);
 $col-boxbg:				rgb(230,230,230);
 $col-redbg:				rgb(200,30,20);
 $col-greenbg:			rgb(160,255,110);
 
-$mar-general:		15px;
-
-$w-column:			380px;
 
 html, body {
 	height: 100%; margin: 0; padding: 0;
 	font: 11pt "Helvetica-Neue", Helvetica, sans-serif; line-height: 1.3;
-	background-color: rgb(246,246,246);
+	background-color: $col-bg;
 }
 
 h2 {
@@ -37,7 +36,7 @@ h3 {
 }
 
 a {
-	color: #00B; text-decoration: none;
+	color: $col-link; text-decoration: none;
 }
 
 p {
@@ -105,6 +104,7 @@ td {
 }
 
 .supplement {
+	margin-top: 0.5em;
 	font-size: 0.9em; color: $col-faded;
 }
 

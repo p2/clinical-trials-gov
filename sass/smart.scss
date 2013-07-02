@@ -5,30 +5,31 @@
 #endpoints {
 	overflow: hidden;
 	background-color: white;
-	border: 1px solid $col-border; border-radius: 5px;
+	border: 1px solid darken($col-border, 10%); border-radius: 5px;
 	
 	padding-left: 0;
 	li {
 		list-style-type: none;
+		border-bottom: 1px solid darken($col-border, 10%);
+		
+		&:last-child {
+			border-bottom: none;
+		}
 	}
 	
 	a {
 		display: block;
 		padding: 0.5em 1em;
-		text-decoration: none; color: darken($col-border, 50%);
-		border-bottom: 1px solid $col-border;
-		&:last-child {
-			border-bottom: none;
-		}
+		text-decoration: none; color: black;
 		
 		&:hover {
-			color: darken($col-blue, 50%);
-			background-color: lighten($col-blue, 25%);
+			color: $col-link;
+			background-color: $col-bg;
 		}
 		
 		span {
 			display: block;
-			color: $col-border;
+			color: $col-faded;
 		}
 	}
 }
