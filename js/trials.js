@@ -165,7 +165,6 @@ function _loadTrials(trial_tuples) {
 	var num_good = 0;
 	var num_bad = 0;
 	var opt_goodbad = $('<div/>', {'id': 'selector_goodbad'}).addClass('trial_opt_selector');
-	var opt_location = $('<div/>', {'id': 'selector_location'}).addClass('trial_opt_selector');
 	var opt_type = $('<div/>', {'id': 'selector_inv_type'}).addClass('trial_opt_selector');
 	var trial_list = $('<ul/>', {'id': 'trial_list'}).addClass('trial_list');
 	
@@ -309,7 +308,7 @@ function _loadTrials(trial_tuples) {
 				});
 			}
 			else {
-				console.error(obj1, status, obj2);
+				console.error("Failed loading NCT:", nct, "obj1:", obj1, "obj2:", obj2);
 			}
 		});
 	}
@@ -325,7 +324,6 @@ function _loadTrials(trial_tuples) {
 	opt_goodbad.append(bad_trials);
 	
 	main.append(opt_goodbad);
-	main.append(opt_location);
 	main.append(opt_type);
 	main.append('<div class="supplement">A trial can have more than one intervention type.</div>');
 	main.append(trial_list);

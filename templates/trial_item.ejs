@@ -1,6 +1,7 @@
 <div id="<%= trial.nct %>" class="trial">
 	<% if ('location' in trial && trial.location.length > 0) {
 		var by_country = {};
+		var country_dist = {};
 		var n_countries = 0;
 		for (var i = 0; i < trial.location.length; i++) {
 			var loc = trial.location[i];
@@ -20,13 +21,23 @@
 			
 			if (loc_country in by_country) {
 				by_country[loc_country].push(loc_dict);
+				country_dist[loc_country] = Math.min(loc.distance, country_dist[loc_country]);
 			}
 			else {
 				by_country[loc_country] = [loc_dict];
+				country_dist[loc_country] = loc.distance;
 				n_countries++;
 			}
 		}
 		
+		// sort by distance
+		var sorted_countries = [];
+		for (var c in country_dist) {
+			sorted_countries.push([c, country_dist[c]]);
+		};
+		sorted_countries.sort(function(a, b) { return a[1] - b[1]; });
+		
+		// hide trial sites if we have 2 or more countries or 1 country but 3 or more locations
 		var hide_full = true;
 		if (n_countries < 2) {
 			for (var c in by_country) {
@@ -38,17 +49,21 @@
 		%>
 			
 		<div class="trial_countries" style="<%= hide_full ? '' : 'display:none;' %>">
-		<% for (var loc_country in by_country) { %>
+		<% for (var j = 0; j < sorted_countries.length; j++) {
+			var loc_country = sorted_countries[j][0]; %>
 			<a href="javascript:void(0);" onclick="$(this).parent().parent().find('.trials_in_<%= loc_country.replace(/[^\w]/g, '') %>').toggle()"><%= loc_country %> <span class="faded">(<%= by_country[loc_country].length %>)</span></a>
 		<% } %>
 		</div>
 		
 		<div class="trial_locations">
-		<% for (var loc_country in by_country) {
+		<% for (var j = 0; j < sorted_countries.length; j++) {
+			var loc_country = sorted_countries[j][0];
 			var arr = by_country[loc_country]; %>
 			
 			<div class="trials_in_<%= loc_country.replace(/[^\w]/g, '') %>" style="<%= hide_full ? '' : 'display:block;' %>">
-			<% for (var i = 0; i < arr.length; i++) {
+			<%
+			arr.sort(function(a, b) { return a.distance - b.distance; });
+			for (var i = 0; i < arr.length; i++) {
 				var loc = arr[i]; %>
 				
 				<div class="trial_location">
