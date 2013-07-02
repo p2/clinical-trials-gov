@@ -5,6 +5,9 @@
 var _patient_loc = null;
 var _trialSearchInterval = null;
 
+var _showGoodTrials = true;
+var _activeInterventionTypes = [];
+
 
 /**
  *  Entry function to trial search
@@ -151,7 +154,6 @@ function loadTrialsAfterLocatingPatient(trial_tuples) {
 }
 
 
-var _showGoodTrials = true;
 
 function _loadTrials(trial_tuples) {
 	var main = $('#trials');
@@ -164,6 +166,9 @@ function _loadTrials(trial_tuples) {
 	var opt_location = $('<div/>', {'id': 'selector_location'}).addClass('trial_opt_selector');
 	var opt_type = $('<div/>', {'id': 'selector_inv_type'}).addClass('trial_opt_selector');
 	var trial_list = $('<ul/>', {'id': 'trial_list'}).addClass('trial_list');
+	
+	_showGoodTrials = true;
+	_activeInterventionTypes = [];
 	
 	// loop all trials
 	for (var i = 0; i < trial_tuples.length; i++) {
@@ -298,7 +303,6 @@ function _loadTrials(trial_tuples) {
 	}
 	
 	// compose DOM
-	_showGoodTrials = true;
 	var good_trials = _getOptTabElement('Potential Trials', num_good + ' of ' + trial_tuples.length, _toggleShowGoodTrials);
 	good_trials.addClass('active');
 	good_trials.data('is-good', true);
@@ -336,7 +340,6 @@ function _toggleShowGoodTrials(evt) {
 	_updateShownHiddenTrials();
 }
 
-var _activeInterventionTypes = [];
 function _toggleInterventionType(evt) {
 	var type = $(this).data('intervention-type');
 	if (!type) {
