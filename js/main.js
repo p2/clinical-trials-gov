@@ -130,6 +130,7 @@ function didClickProblem(problem_id, is_reload) {
 	
 	// cleanup and show all problems again
 	else {
+		cancelTrialSearch();
 		prob_list.find('li').each(function(idx, elem) {
 			$(elem).slideDown('fast');
 		});

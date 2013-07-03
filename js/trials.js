@@ -4,6 +4,7 @@
 
 var _patient_loc = null;
 var _trialSearchInterval = null;
+var _trialSearchMustStop = false;
 
 var _trialNumExpected = 0;
 var _trialNumDone = 0;
@@ -15,7 +16,17 @@ var _activeInterventionTypes = [];
  *  Entry function to trial search
  */
 function searchTrials(prob_name, gender, age) {
+	_trialSearchMustStop = false;
 	_initTrialSearch(prob_name, gender, age);
+}
+
+function cancelTrialSearch() {
+	_showTrialStatus('Stopping...');
+	_trialSearchMustStop = true;
+	if (_trialSearchInterval) {
+		window.clearInterval(_trialSearchInterval);
+		_trialSearchInterval = null;
+	}
 }
 
 
@@ -38,6 +49,9 @@ function _initTrialSearch(problem_name, gender, age) {
 		}
 	})
 	.always(function(obj1, status, obj2) {
+		if (_trialSearchMustStop) {
+			return;
+		}
 		if ('success' == status) {
 			if (_trialSearchInterval) {
 				window.clearInterval(_trialSearchInterval);
@@ -60,6 +74,10 @@ function _checkTrialStatus(run_id) {
 		'url': 'trial_runs/' + run_id + '/progress'
 	})
 	.always(function(obj1, status, obj2) {
+		if (_trialSearchMustStop) {
+			return;
+		}
+		
 		if ('success' == status) {
 			
 			// the run is done, get results
@@ -96,6 +114,10 @@ function _getTrialResults(run_id) {
 		'dataType': 'json'
 	})
 	.always(function(obj1, status, obj2) {
+		if (_trialSearchMustStop) {
+			return;
+		}
+		
 		if ('success' == status) {
 			_showTrialStatus('Found ' + obj1.length + ' trials, filtering by demographics...');
 			_filterTrialsByDemographics(run_id);
@@ -113,6 +135,10 @@ function _filterTrialsByDemographics(run_id) {
 		'dataType': 'json'
 	})
 	.always(function(obj1, status, obj2) {
+		if (_trialSearchMustStop) {
+			return;
+		}
+		
 		if ('success' == status) {
 			_showTrialStatus('Filtering by problem list...');
 			_filterTrialsByProblems(run_id);
@@ -130,6 +156,10 @@ function _filterTrialsByProblems(run_id) {
 		'dataType': 'json'
 	})
 	.always(function(obj1, status, obj2) {
+		if (_trialSearchMustStop) {
+			return;
+		}
+		
 		if ('success' == status) {
 			loadTrialsAfterLocatingPatient(obj1);
 		}
@@ -195,6 +225,9 @@ function _loadTrials(trial_tuples) {
 			'context': {'reason': reason}
 		})
 		.always(function(obj1, status, obj2) {
+			if (_trialSearchMustStop) {
+				return;
+			}
 			
 			// update status
 			_trialNumDone++;
