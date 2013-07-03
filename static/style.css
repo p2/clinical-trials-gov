@@ -27,6 +27,8 @@ td:last-child { padding-right: 0; }
 
 #g_map { display: none; width: 100%; height: 400px; }
 
+#g_map_toggle { display: none; font-size: 0.9em; }
+
 /** Patient Styles */
 .patient_portrait { float: left; width: 4em; height: 5.5em; margin: 0 2em 1em 0; text-align: center; background: center center no-repeat url("portrait_default.png") transparent; background-size: 4em 5.5em; box-shadow: inset 0 1px 2em rgba(0, 0, 0, 0.2); }
 
@@ -56,7 +58,7 @@ ul#problem_list li #refresh_trials, ul#problem_list li #cancel_trials { float: r
 ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 
 /** Styles for trial data */
-#trials { margin-top: 3em; }
+#trial_selectors, #trials { margin: 3em 0; }
 
 .trial_opt_selector { margin-top: 1.5em; line-height: 1.6; }
 .trial_opt_selector a { display: inline-block; margin-right: 1.5em; font-size: 1.2em; }
@@ -67,7 +69,7 @@ ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 .trial_opt_selector a span.num_matches:before, .trial_opt_selector a span.num_matches::before { content: "("; }
 .trial_opt_selector a span.num_matches:after, .trial_opt_selector a span.num_matches::after { content: ")"; }
 
-ul.trial_list { margin-top: 3em; padding: 0; list-style-type: none; }
+ul.trial_list { margin-top: 1em; padding: 0; list-style-type: none; }
 ul.trial_list li { margin-bottom: 1em; padding-top: 1em; line-height: 1.4; border-top: 1px solid #c8c8c8; }
 ul.trial_list li:first-child { border-top: none; }
 

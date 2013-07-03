@@ -464,7 +464,7 @@ def trial_filter_demo(run_id, filter_by):
 	# demographics - get age and gender
 	if 'demographics' == filter_by:
 		f_gender = run_data.get('gender')
-		f_age = int(run_data.get('age'))
+		f_age = int(run_data.get('age', ''))
 		
 		keep = []
 		for tpl in ncts:

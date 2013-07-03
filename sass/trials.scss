@@ -2,8 +2,8 @@
  *  Styles for trial data
  */
 
-#trials {
-	margin-top: 3em;
+#trial_selectors, #trials {
+	margin: 3em 0;
 }
 
 .trial_opt_selector {
@@ -44,7 +44,7 @@
 }
 
 ul.trial_list {
-	margin-top: 3em; padding: 0;
+	margin-top: 1em; padding: 0;
 	list-style-type: none;
 	
 	li {

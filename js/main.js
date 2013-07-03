@@ -146,9 +146,12 @@ function didClickProblem(problem_id, is_reload) {
 		$('#cancel_trials').remove();
 		prob_elem.removeClass('active');
 		$('#selected_trial').empty();
+		$('#trial_selectors').empty();
 		$('#trials').empty();
+		
 		clearAllPins();
 		hideMap();
+		$('#g_map_toggle').hide();
 	}
 }
 
