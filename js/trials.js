@@ -221,7 +221,7 @@ function _loadTrials(trial_tuples) {
 			num_good++;
 		}
 		
-		// fetch trial details
+		// fetch trial details (can potentially send colon-separated NCT list to batch requests, implement that at one point!)
 		$.ajax({
 			'url': 'trials/' + nct,
 			'dataType': 'json',
@@ -232,73 +232,79 @@ function _loadTrials(trial_tuples) {
 				return;
 			}
 			
-			// update status
-			_trialNumDone++;
-			if (_trialNumDone >= _trialNumExpected) {
-				_showTrialStatus();
-			}
-			else {
-				_showTrialStatus("Loading, " + Math.round(_trialNumDone / _trialNumExpected * 100) + "% done...");
-			}
-			
+			// got trials
 			if ('success' == status) {
-				obj1.reason = this.reason;
-				_geocodeTrial(obj1);
-				
-				// pull out intervention types
-				var types = [];
-				if ('intervention' in obj1) {
-					for (var j = 0; j < obj1.intervention.length; j++) {
-						if ('intervention_type' in obj1.intervention[j]) {
-							types.push(obj1.intervention[j].intervention_type);
+				var trials = 'trials' in obj1 ? obj1.trials : [];
+				for (var i = 0; i < trials.length; i++) {
+					var trial = trials[i];
+					
+					// update status
+					_trialNumDone++;
+					if (_trialNumDone >= _trialNumExpected) {
+						_showTrialStatus();
+					}
+					else {
+						_showTrialStatus("Loading, " + Math.round(_trialNumDone / _trialNumExpected * 100) + "% done...");
+					}
+					
+					trial.reason = this.reason;
+					_geocodeTrial(trial);
+					
+					// pull out intervention types
+					var types = [];
+					if ('intervention' in trial) {
+						for (var j = 0; j < trial.intervention.length; j++) {
+							if ('intervention_type' in trial.intervention[j]) {
+								types.push(trial.intervention[j].intervention_type);
+							}
 						}
+						types = types.uniqueArray();
 					}
-					types = types.uniqueArray();
+					
+					if (types.length < 1) {
+						types = ['N/A'];
+					}
+					
+					// update types selector
+					var existing = $.map(opt_type.children('a'), function(elem) {
+						var my_type = $(elem).data('intervention-type');
+						if (!trial.reason && types.contains(my_type)) {		// initial display is good trials only, so only count if we are a good trial
+							var span = $(elem).find('.num_matches');
+							span.text(span.text()*1 + 1);
+						}
+						return my_type;
+					});
+					
+					// add the new ones
+					for (var i = 0; i < types.length; i++) {
+						var type = types[i];
+						if (!existing.contains(type)) {
+							var elem = _getOptTabElement(type, trial.reason ? 0 : 1, _toggleInterventionType);
+							elem.data('intervention-type', type);
+							opt_type.append(elem);
+						}
+					};
+					
+					// sort types alphabetically
+					sortChildren(opt_type, 'a', function(a, b) {
+						return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
+					});
+					
+					// add to list
+					var li = $('<li/>').html('templates/trial_item.ejs', {'trial': trial});
+					li.hide();
+					li.data('trial', trial);
+					li.data('good', !this.reason);
+					li.data('distance', trial.closest);
+					li.data('intervention-types', types);
+					
+					trial_list.append(li);
+					
+					// sort the list continuously by distance
+					sortChildren(trial_list, 'li', function(a, b) {
+						return $(a).data('distance') - $(b).data('distance');
+					});
 				}
-				
-				if (types.length < 1) {
-					types = ['N/A'];
-				}
-				
-				// update types selector
-				var existing = $.map(opt_type.children('a'), function(elem) {
-					var my_type = $(elem).data('intervention-type');
-					if (!obj1.reason && types.contains(my_type)) {		// initial display is good trials only, so only count if we are a good trial
-						var span = $(elem).find('.num_matches');
-						span.text(span.text()*1 + 1);
-					}
-					return my_type;
-				});
-				
-				// add the new ones
-				for (var i = 0; i < types.length; i++) {
-					var type = types[i];
-					if (!existing.contains(type)) {
-						var elem = _getOptTabElement(type, obj1.reason ? 0 : 1, _toggleInterventionType);
-						elem.data('intervention-type', type);
-						opt_type.append(elem);
-					}
-				};
-				
-				// sort types alphabetically
-				sortChildren(opt_type, 'a', function(a, b) {
-					return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
-				});
-				
-				// add to list
-				var li = $('<li/>').html('templates/trial_item.ejs', {'trial': obj1});
-				li.hide();
-				li.data('trial', obj1);
-				li.data('good', !this.reason);
-				li.data('distance', obj1.closest);
-				li.data('intervention-types', types);
-				
-				trial_list.append(li);
-				
-				// sort the list continuously by distance
-				sortChildren(trial_list, 'li', function(a, b) {
-					return $(a).data('distance') - $(b).data('distance');
-				});
 			}
 			else {
 				console.error("Failed loading NCT:", nct, "obj1:", obj1, "obj2:", obj2);

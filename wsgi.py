@@ -361,14 +361,19 @@ def problems():
 
 
 # ------------------------------------------------------------------------------ Trials
-@bottle.get('/trials/<nct>')
-def get_trial(nct):
-	""" Returns one trial. """
+@bottle.get('/trials/<nct_list>')
+def get_trial(nct_list):
+	""" Returns one or more trials, multiple NCTs can be separated by colon. """
+	trials = []
 	
-	trial = Study(nct)
-	trial.load()
+	if nct_list:
+		ncts = nct_list.split(':')
+		for nct in ncts:
+			trial = Study(nct)
+			trial.load()
+			trials.append(trial.json(['brief_summary', 'location', 'intervention', 'study_design']))
 	
-	return trial.json(['brief_summary', 'location', 'intervention', 'study_design'])
+	return {'trials': trials}
 
 
 @bottle.get('/trial_runs')
