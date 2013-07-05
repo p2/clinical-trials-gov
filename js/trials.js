@@ -417,7 +417,7 @@ function _showPinsForTrial(trial, animated) {
 				var lat = trial.location[i].geodata.latitude;
 				var lng = trial.location[i].geodata.longitude;
 				
-				addPinToMap(lat, lng, trial.title, this.reason ? 'AA2200' : '33CC22', animated, function(e) {
+				addPinToMap(lat, lng, trial.title, trial.reason ? 'AA2200' : '33CC22', animated, function(e) {
 					highlightPin(this);
 					$('#selected_trial').html('templates/trial_item.ejs', {'trial': trial}).children(":first").addClass('active');
 				});
