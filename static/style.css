@@ -1,6 +1,8 @@
 html, body { height: 100%; margin: 0; padding: 0; font: 11pt "Helvetica-Neue", Helvetica, sans-serif; line-height: 1.3; background-color: #f6f6f6; }
 
-h2 { margin-bottom: 0.3em; }
+h1 { font-weight: 300; }
+
+h2 { margin: 2em 0 0.3em; font-weight: 300; }
 
 h3:first-child { margin-top: 0.3em; }
 
@@ -32,7 +34,6 @@ td:last-child { padding-right: 0; }
 /** Patient Styles */
 .patient_portrait { float: left; width: 4em; height: 5.5em; margin: 0 2em 1em 0; text-align: center; background: center center no-repeat url("portrait_default.png") transparent; background-size: 4em 5.5em; box-shadow: inset 0 1px 2em rgba(0, 0, 0, 0.2); }
 
-.demographics h1 { font-size: 1.6em; }
 .demographics .demo_row { margin-top: 1em; font-size: 1.2em; }
 .demographics #demo_location, .demographics #demo_age { margin: 0; padding: 0.2em 0.4em; font-size: 1em; border: 1px solid #969632; background-color: rgba(200, 200, 0, 0.5); }
 .demographics #demo_location { width: 13.15em; }
@@ -94,6 +95,8 @@ ul.trial_list li:first-child { border-top: none; }
 .trial .trial_locations .trial_location .loc_status, .trial .trial_locations .trial_location .loc_distance { color: rgba(0, 0, 0, 0.4); font-size: 0.9em; }
 .trial .trial_locations .trial_location .loc_city { font-weight: bold; }
 .trial .trial_locations .trial_location .loc_country { font-size: 1.2em; font-weight: bold; }
+.trial .trial_locations .trial_location .loc_contact { position: absolute; display: none; bottom: 2em; left: 0; padding: 1em; color: black; background-color: #ffffc8; border: 1px solid rgba(0, 0, 0, 0.2); }
+.trial .trial_locations .trial_location .loc_contact div { white-space: nowrap; }
 .trial .formatted_criteria { clear: right; display: none; margin: 0.5em 0 1em; padding: 1em; font-size: 10pt; white-space: pre-wrap; border: 1px solid #b4b4b4; background-color: whitesmoke; }
 
 /** Launch page and SMART specific styles */

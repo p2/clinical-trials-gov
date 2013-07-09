@@ -133,6 +133,19 @@ ul.trial_list {
 			.loc_country {
 				font-size: 1.2em; font-weight: bold;
 			}
+			
+			.loc_contact {
+				position: absolute; display: none;
+				bottom: 2em; left: 0;
+				padding: 1em;
+				color: black;
+				background-color: $col-note;
+				border: 1px solid rgba(0,0,0,0.2);
+				
+				div {
+					white-space: nowrap;
+				}
+			}
 		}
 	}
 	

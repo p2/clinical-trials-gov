@@ -31,6 +31,7 @@ from ClinicalTrials.umls import SNOMEDLookup
 # bottle, beaker and Jinja setup
 session_opts = {
     'session.type': 'file',
+    'session.timeout': 300,
     'session.cookie_expires': 300,
     'session.data_dir': './session_data',
     'session.auto': True

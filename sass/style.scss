@@ -19,6 +19,7 @@ $col-bg:				rgb(246,246,246);
 $col-boxbg:				rgb(230,230,230);
 $col-redbg:				rgb(200,30,20);
 $col-greenbg:			rgb(160,255,110);
+$col-note:				rgb(255,255,200);
 
 
 html, body {
@@ -27,8 +28,13 @@ html, body {
 	background-color: $col-bg;
 }
 
+h1 {
+	font-weight: 300;
+}
+
 h2 {
-	margin-bottom: 0.3em;
+	margin: 2em 0 0.3em;
+	font-weight: 300;
 }
 
 h3 {

@@ -274,7 +274,7 @@ function _loadTrials(trial_tuples) {
 					
 					// pull out intervention types
 					var types = [];
-					if ('intervention' in trial) {
+					if ('intervention' in trial && trial.intervention) {
 						for (var j = 0; j < trial.intervention.length; j++) {
 							if ('intervention_type' in trial.intervention[j]) {
 								types.push(trial.intervention[j].intervention_type);

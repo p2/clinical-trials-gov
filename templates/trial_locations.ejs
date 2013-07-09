@@ -1,0 +1,102 @@
+<%
+var by_country = {};
+var country_dist = {};
+var n_countries = 0;
+for (var i = 0; i < trial.location.length; i++) {
+	var loc = trial.location[i];
+	var loc_parts = ('formatted' in loc.geodata && loc.geodata.formatted.length > 0) ? loc.geodata.formatted.split(/,\s+/) : ["Unknown"];
+	var loc_country = loc_parts.pop();
+	var loc_stat_m_recr = loc.status ? loc.status.match(/recruiting/i) : null;
+	var loc_stat_m_not = loc.status ? loc.status.match(/not\s+[\w\s]*\s+recruiting/i) : null;
+	
+	var loc_dict = {
+		'name': ('facility' in loc && loc.facility.name) ? loc.facility.name : '',
+		'city': (loc_parts.length > 0) ? loc_parts.join(', ') : '',
+		'country': loc_country,
+		'distance': loc.distance,
+		'status': loc.status,
+		'status_color': loc_stat_m_not ? 'orange' : (loc_stat_m_recr ? 'green' : 'red'),
+		'contact': 'contact' in loc ? loc['contact'] : null
+	}
+	
+	if (loc_country in by_country) {
+		by_country[loc_country].push(loc_dict);
+		country_dist[loc_country] = Math.min(loc.distance, country_dist[loc_country]);
+	}
+	else {
+		by_country[loc_country] = [loc_dict];
+		country_dist[loc_country] = loc.distance;
+		n_countries++;
+	}
+}
+
+// sort by distance
+var sorted_countries = [];
+for (var c in country_dist) {
+	sorted_countries.push([c, country_dist[c]]);
+};
+sorted_countries.sort(function(a, b) { return a[1] - b[1]; });
+
+// hide trial sites if we have 2 or more countries or 1 country but 3 or more locations
+var hide_full = true;
+if (n_countries < 2) {
+	for (var c in by_country) {
+		if (by_country[c].length < 3) {
+			hide_full = false;
+		}
+	}
+}
+%>
+	
+<div class="trial_countries" style="<%= hide_full ? '' : 'display:none;' %>">
+<% for (var j = 0; j < sorted_countries.length; j++) {
+	var loc_country = sorted_countries[j][0]; %>
+	<a href="javascript:void(0);" onclick="$(this).parent().parent().find('.trials_in_<%= loc_country.replace(/[^\w]/g, '') %>').toggle()"><%= loc_country %> <span class="faded">(<%= by_country[loc_country].length %>)</span></a>
+<% } %>
+</div>
+
+<div class="trial_locations">
+<% for (var j = 0; j < sorted_countries.length; j++) {
+	var loc_country = sorted_countries[j][0];
+	var arr = by_country[loc_country]; %>
+	
+	<div class="trials_in_<%= loc_country.replace(/[^\w]/g, '') %>" style="<%= hide_full ? '' : 'display:block;' %>">
+	<%
+	arr.sort(function(a, b) { return a.distance - b.distance; });
+	for (var i = 0; i < arr.length; i++) {
+		var loc = arr[i]; %>
+		
+		<div class="trial_location">
+			<div class="loc_status">
+				<span style="color:<%= loc.status_color %>;"><%= loc.status %></span>
+				<% if ('contact' in loc && loc.contact && (loc.contact.email || loc.contact.phone)) { %>
+				–
+				<a href="javascript:void(0);" onclick="$(this).find('.loc_contact').toggle()" style="position:relative;">contact
+					<div class="loc_contact">
+						<div class="cont_name">
+							<%= loc.contact.first_name ? loc.contact.first_name : '' %>
+							<%= loc.contact.middle_name ? loc.contact.middle_name : '' %>
+							<%= loc.contact.last_name ? loc.contact.last_name : '' %>
+							<%= loc.contact.degrees ? loc.contact.degrees : '' %>
+						</div>
+						<div class="cont_email"><%= loc.contact.email ? loc.contact.email : '' %></div>
+						<div class="cont_phone"><%= (loc.contact.phone ? loc.contact.phone : '') + (loc.contact.phone_ext ? ' (' + loc.contact.phone_ext + ')' : '') %></div>
+					</div>
+				</a>
+				<% } %>
+			</div>
+			<% if (loc.name) { %>
+			<div class="loc_name"><%= loc.name %></div>
+			<% } %>
+			<% if (loc.city) { %>
+			<div class="loc_city"><%= loc.city %></div>
+			<% } %>
+			<div class="loc_country"><%= loc.country %></div>
+			<% if (loc.distance) { %>
+			<div class="loc_distance"><%= Math.round(loc.distance * 0.621371 / 10) * 10 %> Miles</div>
+			<% } %>
+		</div>
+	<% } %>
+	</div>
+<% } %>
+</div>
