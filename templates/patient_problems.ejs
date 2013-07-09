@@ -1,7 +1,9 @@
 <ul id="problem_list">
 	<li id="prob_manual">
-		<form method="get" action="" onsubmit="didClickProblem('prob_manual'); return false;">
-			<input type="text" size="40" class="problem_name" id="manual_problem" placeholder="Enter disorder" value="<%= last_manual_condition %>" /><button id="manual_submit" type="submit">Go</button>
+		<form method="get" action="" onsubmit="hideProblemsAndStartTrialSearch('prob_manual'); return false;">
+			<input type="text" size="40" class="problem_name" id="manual_problem" placeholder="Enter disorder" value="<%= last_manual_condition %>" />
+			<button id="manual_cancel" type="button" onclick="window.event.stopPropagation(); cancelTrialSearchAndShowProblemList('prob_manual');">Cancel</button>
+			<button id="manual_submit" type="submit">Go</button>
 		</form>
 	</li>
 <% 

@@ -57,6 +57,8 @@ ul#problem_list li.active { padding: 0.5em; border: 1px solid #969632; backgroun
 ul#problem_list li #refresh_trials, ul#problem_list li #cancel_trials { float: right; font-size: 1.2em; }
 ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 
+#manual_cancel { display: none; }
+
 /** Styles for trial data */
 #trial_selectors, #trials { margin: 3em 0; }
 
