@@ -53,10 +53,11 @@ td {
 	&:last-child { padding-right: 0; }
 }
 
-#back_to_patient_select {
-	margin-bottom: 2em;
-	a {
-		text-decoration: none;
+.back_to_select {
+	margin: 1em 0 2em;
+	
+	#back_to_patient {
+		margin-right: 2em;
 	}
 }
 

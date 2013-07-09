@@ -8,12 +8,19 @@
 	<div id="container">
 		<div id="content">
 			<h1>Trial Eligibility</h1>
+			<h2>Determine manually</h2>
+			<ul class="list_select">
+				<li><a href="index.html?api_base=none">Enter patient information manually
+						<div class="supplement">You can specify age, gender and the patient's location in order to get tailored trial matches.</div>
+				</a></li>
+			</ul>
+			
 			<h2>Choose a SMART container</h2>
-			<ul id="endpoints">
+			<ul id="endpoints" class="list_select">
 				{% for ep in endpoints %}
 				<li><a href="{{ callback }}api_base={{ ep.url }}">
 					{{ ep.name }}
-					<span class="supplement">{{ ep.url }}</span>
+					<div class="supplement">{{ ep.url }}</div>
 				</a></li>
 				{% else %}
 				<span>No SMART containers have been defined</span>

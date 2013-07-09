@@ -13,7 +13,7 @@ var _reportCtrl = null;
 function initApp() {
 	// hide the patient selector if in an iframe
 	if (window != window.top) {
-		$('#back_to_patient_select').hide();
+		$('#back_to_patient').hide();
 	}
 	
 	// load patient data

@@ -183,7 +183,16 @@ function _filterTrialsByProblems(run_id) {
 
 
 function loadTrialsAfterLocatingPatient(trial_tuples) {
-	locatePatient(function(success, location) {
+	var adr = $('#demo_location').val();
+	if (!adr) {
+		console.warn("No patient location information, loading trials without distance information");
+		_patient_loc = null;
+		_loadTrials(trial_tuples);
+		return;
+	}
+	
+	// locate (asynchronously)
+	locatePatient(adr, function(success, location) {
 		if (success) {
 			_patient_loc = location;
 		}
@@ -337,7 +346,7 @@ function _loadTrials(trial_tuples) {
 	
 	var opt = $('#trial_selectors');
 	opt.append(opt_goodbad);
-	opt.append('<div class="trial_opt_header"><b>Intervention types</b> <span class="supplement">(A trial can have more than one intervention type)</span></div>');
+	opt.append('<div class="trial_opt_header"><b>Intervention types</b> <span class="supplement">(Trials can have more than one intervention type)</span></div>');
 	opt.append(opt_type);
 	
 	$('#trials').append(trial_list);

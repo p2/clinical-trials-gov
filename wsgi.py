@@ -57,6 +57,10 @@ def _get_smart():
 		logging.info("No api_base is set")
 		return None
 	
+	# we're not using SMART
+	if 'none' == api_base:
+		return None
+	
 	# find server credentials and store in session
 	cons_key = sess.get('consumer_key')
 	cons_sec = sess.get('consumer_secret')
@@ -172,34 +176,38 @@ def index():
 	else:
 		record_id = sess.get('record_id')
 	
+	# try to connect to SMART
 	smart = _get_smart()
-	if smart is None:
+	if smart is None and 'none' != api_base:
 		return "Cannot connect to SMART sandbox"
 	
-	# no record id, call launch page
-	if record_id is None:
-		launch = smart.launch_url
-		if launch is None:
-			return "Unknown app start URL, cannot launch"
+	# using SMART, make sure we have a patient id
+	if smart is not None:
 		
-		logging.debug('redirecting to app launch page')
-		bottle.redirect(launch)
-		return
-	
-	# still here, test the token
-	if not _test_record_token():
-		smart.token = None
-		try:
-			sess['token'] = smart.fetch_request_token()
-		except Exception, e:
-			_reset_session()
-			logging.error("Failed getting request token. %s" % e)
-			return "Failed to obtain access permissions, please reload"
+		# no record id, call launch page
+		if record_id is None:
+			launch = smart.launch_url
+			if launch is None:
+				return "Unknown app start URL, cannot launch"
+			
+			logging.debug('redirecting to app launch page')
+			bottle.redirect(launch)
+			return
 		
-		# now go and authorize the token
-		logging.debug("Have request token, redirecting to authorize token")
-		bottle.redirect(smart.auth_redirect_url)
-		return
+		# still here, test the token
+		if not _test_record_token():
+			smart.token = None
+			try:
+				sess['token'] = smart.fetch_request_token()
+			except Exception, e:
+				_reset_session()
+				logging.error("Failed getting request token. %s" % e)
+				return "Failed to obtain access permissions, please reload"
+			
+			# now go and authorize the token
+			logging.debug("Have request token, redirecting to authorize token")
+			bottle.redirect(smart.auth_redirect_url)
+			return
 	
 	# everything in order, render index
 	template = _jinja_templates.get_template('index.html')
@@ -208,7 +216,7 @@ def index():
 		'google_api_key': GOOGLE_API_KEY
 	}
 	
-	return template.render(defs=defs, has_chrome=False, api_base=api_base, last_manual_condition=sess.get('last_manual_condition', ''))
+	return template.render(defs=defs, api_base=api_base, last_manual_condition=sess.get('last_manual_condition', ''))
 
 
 @bottle.get('/authorize')
@@ -303,7 +311,7 @@ def demographics():
 	# SMART 0.6+
 	else:
 		smart = _get_smart()
-		if not smart:
+		if smart is None:
 			return d
 		
 		ret = smart.get_demographics()
@@ -346,6 +354,9 @@ def problems():
 	# SMART 0.6+
 	else:
 		smart = _get_smart()
+		if smart is None:
+			return {'problems': []}
+		
 		ret = smart.get_problems()
 		if 200 == int(ret.response.status):
 			prob_ld = json.loads(ret.graph.serialize(format='json-ld')) if ret.graph is not None else None
@@ -490,18 +501,20 @@ def trial_filter_demo(run_id, filter_by):
 				trial.load()
 				
 				# filter gender
-				if 'male' == f_gender:
-					if trial.gender == 2:
-						reason = "Limited to women"
-				else:
-					if trial.gender == 1:
-						reason = "Limited to men"
+				if f_gender:
+					if 'male' == f_gender:
+						if trial.gender == 2:
+							reason = "Limited to women"
+					else:
+						if trial.gender == 1:
+							reason = "Limited to men"
 				
 				# filter age
-				if trial.min_age > f_age:
-					reason = "Patient is too young (min age %d)" % trial.min_age
-				elif trial.max_age < f_age:
-					reason = "Patient is too old (max age %d)" % trial.max_age
+				if f_age > 0:
+					if trial.min_age > f_age:
+						reason = "Patient is too young (min age %d)" % trial.min_age
+					elif trial.max_age < f_age:
+						reason = "Patient is too old (max age %d)" % trial.max_age
 			
 			if reason:
 				keep.append((nct, reason))

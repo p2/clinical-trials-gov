@@ -36,13 +36,15 @@
 			deathdate = moment(demo['vcard:deathdate']);
 		} %>
 		
-		<input type="number" id="demo_age" name="demo_age" value="<%= (age_int > 0) ? age_int : '' %>" /> y
+		<input type="number" id="demo_age" name="demo_age" placeholder="Age" value="<%= (age_int > 0) ? age_int : '' %>" /> y
+		<% if (bday) { %>
 		<span class="demo_birthday">
-		(<%= bday ? (deathdate ? '' : "born ") + bday.format('ll') : "no birthday" %>
+		(<%= (deathdate ? '' : "born ") + bday.format('ll') %>
 		<% if (deathdate) { %>
 			– <%= deathdate.format('ll') %>
 		<% } %>)
 		</span>
+		<% } %>
 	</div>
 	
 	<div class="demo_row">
@@ -62,7 +64,7 @@
 			}
 		} %>
 		
-		<input type="text" id="demo_location" placeholder="City, State" value="<%= parts.join(', ') %>" />
+		<input type="text" id="demo_location" placeholder="City, State" value="<%= parts ? parts.join(', ') : '' %>" />
 		<!--button onclick="locatePatient()">Locate</button-->
 	</div>
 	

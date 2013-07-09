@@ -7,14 +7,15 @@
 <body>
 	<div id="container">
 		<div id="content">
-			{% if not has_chrome %}
-			<div id="back_to_patient_select">
-				<a href="index.html?api_base={{ api_base }}&amp;record_id=0">« Select patient</a>
+			<div class="back_to_select">
+				{% if 'none' != api_base %}
+				<a id="back_to_patient" href="index.html?api_base={{ api_base }}&amp;record_id=0">« Change patient</a>
+				{% endif %}
+				<a href="index.html?api_base=">« Start over</a>
 			</div>
-			{% endif %}
 			
 			<div id="patient_overview">
-				Loading patient...
+				Loading...
 			</div>
 			<div id="patient_problems"></div>
 			<div id="trial_selectors"></div>

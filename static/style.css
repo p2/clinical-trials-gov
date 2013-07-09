@@ -15,8 +15,8 @@ table { border-collapse: collapse; }
 td:first-child { padding-left: 0; }
 td:last-child { padding-right: 0; }
 
-#back_to_patient_select { margin-bottom: 2em; }
-#back_to_patient_select a { text-decoration: none; }
+.back_to_select { margin: 1em 0 2em; }
+.back_to_select #back_to_patient { margin-right: 2em; }
 
 #container { max-width: 70em; min-height: 100%; margin: 0 auto; }
 
@@ -96,13 +96,13 @@ ul.trial_list li:first-child { border-top: none; }
 .trial .trial_locations .trial_location .loc_country { font-size: 1.2em; font-weight: bold; }
 .trial .formatted_criteria { clear: right; display: none; margin: 0.5em 0 1em; padding: 1em; font-size: 10pt; white-space: pre-wrap; border: 1px solid #b4b4b4; background-color: whitesmoke; }
 
-/** SMART specific styles */
-#endpoints { overflow: hidden; background-color: white; border: 1px solid #afafaf; border-radius: 5px; padding-left: 0; }
-#endpoints li { list-style-type: none; border-bottom: 1px solid #afafaf; }
-#endpoints li:last-child { border-bottom: none; }
-#endpoints a { display: block; padding: 0.5em 1em; text-decoration: none; color: black; }
-#endpoints a:hover { color: #0014be; background-color: #f6f6f6; }
-#endpoints a span { display: block; color: #505050; }
+/** Launch page and SMART specific styles */
+.list_select { overflow: hidden; background-color: white; border: 1px solid #afafaf; border-radius: 2pt; padding-left: 0; }
+.list_select li { list-style-type: none; border-bottom: 1px solid #afafaf; }
+.list_select li:last-child { border-bottom: none; }
+.list_select a { display: block; padding: 0.5em 1em; text-decoration: none; color: black; }
+.list_select a:hover { color: #0014be; background-color: #f6f6f6; }
+.list_select a span { display: block; color: #505050; }
 
 .green { color: #090; }
 

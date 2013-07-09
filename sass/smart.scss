@@ -1,11 +1,11 @@
 /**
- *  SMART specific styles
+ *  Launch page and SMART specific styles
  */
 
-#endpoints {
+.list_select {
 	overflow: hidden;
 	background-color: white;
-	border: 1px solid darken($col-border, 10%); border-radius: 5px;
+	border: 1px solid darken($col-border, 10%); border-radius: 2pt;
 	
 	padding-left: 0;
 	li {

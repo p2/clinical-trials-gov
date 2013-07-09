@@ -5,10 +5,10 @@
 var g_map = null;
 var g_geocoder = null;
 
-var g_patient_pin = null;
-var g_patient_location = null;
 var g_pins = [];
 var g_highlighted_pin = null;
+var g_patient_pin = null;
+var g_patient_location = null;
 
 
 
@@ -60,30 +60,28 @@ function hideMap() {
 /**
  *  Pulls out the location text from the "#demo_location" field and geocodes the location, passing it into the callback.
  */
-function locatePatient(callback) {
-	var adr = $('#demo_location').val();
-	if (adr) {
-		geocodeAddress(adr, function(success, location) {
-			g_patient_location = location;
-			
-			// set marker and center map
-			if (g_map && location) {
-				zoomToPatient();
-			}
-			
-			// callback
-			if (callback) {
-				callback(success, location);
-			}
-		});
-		return;
+function locatePatient(address, callback) {
+	if (!address) {
+		console.warn("Cannot locate patient, no address given");
+		g_patient_location = null;
+		if (callback) {
+			callback(false, null);
+		}
 	}
 	
-	console.warn("Cannot locate patient, no address given");
-	g_patient_location = null;
-	if (callback) {
-		callback(false, null);
-	}
+	geocodeAddress(address, function(success, location) {
+		g_patient_location = location;
+		
+		// set marker and center map
+		if (g_map && location) {
+			zoomToPatient();
+		}
+		
+		// callback
+		if (callback) {
+			callback(success, location);
+		}
+	});
 }
 
 
