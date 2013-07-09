@@ -6,6 +6,17 @@
 	margin: 3em 0;
 }
 
+.trial_opt_header {
+	margin: 2em 0 -1em;
+	
+	b {
+		font-size: 1.2em;
+	}
+	.supplement {
+		margin-left: 1em;
+	}
+}
+
 .trial_opt_selector {
 	margin-top: 1.5em;
 	line-height: 1.6;
@@ -57,6 +68,16 @@ ul.trial_list {
 		}
 	}
 }
+
+#selected_trial {
+	position: relative;
+	
+	.dismiss_link {
+		position: absolute; top: 3pt; right: 4pt;
+		font-size: 0.9em;
+	}
+}
+
 
 .trial {
 	&.active {

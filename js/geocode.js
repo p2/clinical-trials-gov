@@ -52,12 +52,7 @@ function showMap() {
  */
 function hideMap() {
 	$('#g_map').hide();
-	
-	// stop highlighting pin
-	if (g_highlighted_pin) {
-		g_highlighted_pin.setAnimation();
-		g_highlighted_pin = null;
-	}
+	unhighlightPin();
 }
 
 
@@ -183,6 +178,17 @@ function highlightPin(pin) {
 	pin.setAnimation(google.maps.Animation.BOUNCE);
 	g_highlighted_pin = pin;
 }
+
+/**
+ *  Unhighlight the currently highlighted pin, if any.
+ */
+function unhighlightPin() {
+	if (g_highlighted_pin) {
+		g_highlighted_pin.setAnimation();
+		g_highlighted_pin = null;
+	}
+}
+
 
 /**
  *  Zooms the map to show the current position marker and at least some pins (if there are any)

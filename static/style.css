@@ -62,6 +62,10 @@ ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 /** Styles for trial data */
 #trial_selectors, #trials { margin: 3em 0; }
 
+.trial_opt_header { margin: 2em 0 -1em; }
+.trial_opt_header b { font-size: 1.2em; }
+.trial_opt_header .supplement { margin-left: 1em; }
+
 .trial_opt_selector { margin-top: 1.5em; line-height: 1.6; }
 .trial_opt_selector a { display: inline-block; margin-right: 1.5em; font-size: 1.2em; }
 .trial_opt_selector a.active { padding: 0 0.4em; color: black; border: 1px solid #969632; background-color: rgba(200, 200, 0, 0.5); }
@@ -74,6 +78,9 @@ ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 ul.trial_list { margin-top: 1em; padding: 0; list-style-type: none; }
 ul.trial_list li { margin-bottom: 1em; padding-top: 1em; line-height: 1.4; border-top: 1px solid #c8c8c8; }
 ul.trial_list li:first-child { border-top: none; }
+
+#selected_trial { position: relative; }
+#selected_trial .dismiss_link { position: absolute; top: 3pt; right: 4pt; font-size: 0.9em; }
 
 .trial.active { padding: 1em; border: 1px solid #969632; background-color: rgba(200, 200, 0, 0.5); }
 .trial > a:first-child { margin-right: 1em; }
@@ -103,6 +110,8 @@ ul.trial_list li:first-child { border-top: none; }
 
 .faded { color: #505050; }
 
-.supplement { margin-top: 0.5em; font-size: 0.9em; color: #505050; }
+.supplement { font-size: 0.9em; color: #505050; }
+
+div.supplement { margin-top: 0.5em; }
 
 .small { font-size: 0.85em; }

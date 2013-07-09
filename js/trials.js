@@ -51,7 +51,7 @@ function _initTrialSearch(problem_name, gender, age, remember_cond) {
 			'cond': problem_name,
 			'gender': gender,
 			'age': age,
-			'remember_cond': remember_cond
+			'remember_cond': remember_cond ? true : false
 		}
 	})
 	.always(function(obj1, status, obj2) {
@@ -337,8 +337,8 @@ function _loadTrials(trial_tuples) {
 	
 	var opt = $('#trial_selectors');
 	opt.append(opt_goodbad);
+	opt.append('<div class="trial_opt_header"><b>Intervention types</b> <span class="supplement">(A trial can have more than one intervention type)</span></div>');
 	opt.append(opt_type);
-	opt.append('<div class="supplement">A trial can have more than one intervention type.</div>');
 	
 	$('#trials').append(trial_list);
 }
@@ -361,7 +361,6 @@ function toggleTrialMap() {
 	else {
 		showMap();
 		$('#g_map_toggle').text('Hide Map');
-		$('#selected_trial').show();
 		
 		// pins
 		if (_shouldShowPinsForTrials.length > 0) {
@@ -432,11 +431,21 @@ function _showPinsForTrial(trial, animated) {
 				
 				addPinToMap(lat, lng, trial.title, trial.reason ? 'AA2200' : '33CC22', animated, function(e) {
 					highlightPin(this);
-					$('#selected_trial').html('templates/trial_item.ejs', {'trial': trial}).children(":first").addClass('active');
+					showSelectedTrial(trial);
 				});
 			}
 		}
 	}
+}
+
+function showSelectedTrial(trial) {
+	$('#selected_trial').show().html('templates/trial_item.ejs', {'trial': trial}).children(":first").addClass('active');
+	$('#selected_trial').append('<a class="dismiss_link" href="javascript:void(0);" onclick="unloadSelectedTrial()">dismiss</a>');
+}
+
+function unloadSelectedTrial() {
+	$('#selected_trial').slideUp('fast', function() { $(this).empty(); });
+	unhighlightPin();
 }
 
 

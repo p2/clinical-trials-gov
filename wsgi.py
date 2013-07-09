@@ -208,7 +208,7 @@ def index():
 		'google_api_key': GOOGLE_API_KEY
 	}
 	
-	return template.render(defs=defs, has_chrome=False, api_base=api_base, last_manual_condition=sess.get('last_manual_condition'))
+	return template.render(defs=defs, has_chrome=False, api_base=api_base, last_manual_condition=sess.get('last_manual_condition', ''))
 
 
 @bottle.get('/authorize')
