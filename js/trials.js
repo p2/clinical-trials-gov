@@ -17,9 +17,9 @@ var _shouldShowPinsForTrials = [];
 /**
  *  Entry function to trial search
  */
-function searchTrials(prob_name, gender, age) {
+function searchTrials(prob_name, gender, age, remember_cond) {
 	_trialSearchMustStop = false;
-	_initTrialSearch(prob_name, gender, age);
+	_initTrialSearch(prob_name, gender, age, remember_cond);
 }
 
 function cancelTrialSearch() {
@@ -32,23 +32,26 @@ function cancelTrialSearch() {
 }
 
 
-function _initTrialSearch(problem_name, gender, age) {
+function _initTrialSearch(problem_name, gender, age, remember_cond) {
 	if (_trialSearchInterval) {
 		console.warn('Already searching');
 		return;
 	}
 	
+	// prepare map and DOM
 	clearAllPins();
 	$('#trial_selectors').empty();
 	$('#trials').empty();
 	_showTrialStatus('Starting...');
 	
+	// fire off AJAX call
 	$.ajax({
 		'url': 'trial_runs',
 		'data': {
 			'cond': problem_name,
 			'gender': gender,
-			'age': age
+			'age': age,
+			'remember_cond': remember_cond
 		}
 	})
 	.always(function(obj1, status, obj2) {
@@ -66,6 +69,11 @@ function _initTrialSearch(problem_name, gender, age) {
 			_showTrialStatus('Error, see console');
 		}
 	});
+	
+	// never forget
+	if (remember_cond) {
+		_last_manual_condition = problem_name;
+	}
 }
 
 
@@ -192,7 +200,12 @@ function loadTrialsAfterLocatingPatient(trial_tuples) {
 
 
 function _loadTrials(trial_tuples) {
-	_showTrialStatus("Loading " + trial_tuples.length + "trial" + (1 == trial_tuples.length ? "s" : '') + "...");
+	if (!trial_tuples || trial_tuples.length < 1) {
+		_showTrialStatus("There are no such trials");
+		return;
+	}
+	
+	_showTrialStatus("Loading " + trial_tuples.length + " trial" + (1 == trial_tuples.length ? "s" : '') + "...");
 	$('#g_map_toggle').show();
 	
 	var num_good = 0;

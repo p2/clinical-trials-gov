@@ -22,6 +22,8 @@ function initApp() {
 }
 
 
+
+
 /**
  *  Load patient demographics.
  */
@@ -43,116 +45,6 @@ function loadDemographics() {
 		// display demographics
 		$('#patient_overview').html('templates/patient_demographics.ejs', {'demo': demo});
 	});
-}
-
-/**
- *  Load problem list.
- */
-function loadProblemList() {
-	$.ajax({
-		'url': 'problems',
-		'dataType': 'json'
-	})
-	.always(function(obj1, status, obj2) {
-		var json = ('success' == status) ? obj1 : (('parsererror' == status) ? {} : null);		// empty JSON generates "parsererror"
-		
-		// display problem list
-		if (json) {
-			$('#patient_problems').html('templates/patient_problems.ejs', {'data': json});
-		}
-		else {
-			$('#patient_problems').text('Could not load the problem list, see the console for details');
-			console.warn('No good response for problems', obj1, obj2);
-		}
-	});
-}
-
-
-/**
- *  Functions for testing purposes.
- */
-function didClickProblem(problem_id, is_reload) {
-	var prob_list = $('#problem_list');
-	var prob_elem = $('#' + problem_id);
-	if (!prob_elem.is('*')) {
-		alert('Error');
-		return;
-	}
-	
-	// problem selected, hide all other and search for trials
-	if (is_reload || !prob_elem.hasClass('active')) {
-		var is_manual_problem = ('prob_manual' == problem_id);
-		prob_elem.addClass('active');
-		
-		// hide other problems
-		prob_list.find('li').each(function(idx, elem) {
-			if (problem_id != elem.getAttribute('id')) {
-				$(elem).slideUp('fast');
-			}
-		});
-		
-		// add refresh and cancel buttons
-		if (!is_manual_problem) {
-			var canc = $('#cancel_trials');
-			if (!canc.is('*')) {
-				canc = $('<button/>', {'type': 'clear', 'id': 'cancel_trials'}).text("Cancel");
-			}
-			prob_elem.prepend(canc);
-		}
-		
-		var refr = $('#refresh_trials');
-		if (!refr.is('*')) {
-			refr = $('<button/>', {'type': 'button', 'id': 'refresh_trials'}).text("Refresh");
-		}
-		refr.click(function(e) {
-			didClickProblem(problem_id, true);
-			e.stopPropagation();
-		});
-		prob_elem.prepend(refr);
-		
-		// search by problem name
-		var prob_name = $('#' + problem_id).find('div.problem_name').text();
-		if (is_manual_problem) {
-			prob_name = $('#manual_problem').val();
-			$('#manual_submit').text('Cancel');
-		}
-		if (!prob_name) {
-			prob_name = "diabetic cardiomyopathy";
-			$('#manual_problem').val(prob_name);
-		}
-		
-		// extract demographics and start searching
-		var gender = $('#select_female').is(':checked') ? 'female' : 'male';		// TODO: should we be able to not specify gender?
-		var age = 1* $('#demo_age').val();
-		
-		searchTrials(prob_name, gender, age);
-	}
-	
-	// cleanup and show all problems again
-	else {
-		cancelTrialSearch();
-		prob_list.find('li').each(function(idx, elem) {
-			$(elem).slideDown('fast');
-		});
-		
-		// reset manual field
-		if ('prob_manual' == problem_id) {
-			$('#manual_problem').val('');
-			$('#manual_submit').text('Go');
-		}
-		
-		// reset UI
-		$('#refresh_trials').remove();
-		$('#cancel_trials').remove();
-		prob_elem.removeClass('active');
-		$('#selected_trial').empty();
-		$('#trial_selectors').empty();
-		$('#trials').empty();
-		
-		clearAllPins();
-		hideMap();
-		$('#g_map_toggle').hide();
-	}
 }
 
 
@@ -222,6 +114,7 @@ function sortChildren(parent, selector, sortFunc) {
 
 
 
+
 /*
  *	-----------------
  *	Text manipulation
@@ -237,6 +130,8 @@ function text2html(string) {
 	
 	return conv;
 }
+
+
 
 
 /**

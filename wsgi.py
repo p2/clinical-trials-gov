@@ -207,7 +207,8 @@ def index():
 		'smart_v05': USE_SMART_05,
 		'google_api_key': GOOGLE_API_KEY
 	}
-	return template.render(defs=defs, has_chrome=False, api_base=api_base)
+	
+	return template.render(defs=defs, has_chrome=False, api_base=api_base, last_manual_condition=sess.get('last_manual_condition'))
 
 
 @bottle.get('/authorize')
@@ -379,9 +380,11 @@ def get_trial(nct_list):
 @bottle.get('/trial_runs')
 def find_trials():
 	""" Initiates the chain to find trials for the given condition or search-
-	term. Supply with parameters "cond" or "term", the prior taking precedence.
-	Additional parameters are "gender" ('male' or 'female') and "age" (in
-	years).
+	term. Supply with parameters:
+	- "cond" or "term", the prior taking precedence
+	- "gender" ('male' or 'female')
+	- "age" (in years)
+	- "remember_cond" if the condition should be stored in the session
 	
 	This method forks off and prints the status to a file which can be read by
 	calling /trials_status/<run-id>. "run-id" is returned from this call.
@@ -418,7 +421,13 @@ def find_trials():
 		'gender': bottle.request.query.get('gender'),
 		'age': int(bottle.request.query.get('age'))
 	}
-	sess['runs'] = runs;
+	sess['runs'] = runs
+	
+	if bottle.request.query.get('remember_cond'):
+		if cond:
+			sess['last_manual_condition'] = cond
+		elif 'last_manual_condition' in sess:
+			del sess['last_manual_condition']
 	
 	# launch and return id
 	runner.run(['id', 'acronym', 'brief_title', 'official_title', 'brief_summary', 'eligibility', 'location', 'attributes', 'intervention', 'intervention_browse', 'phase', 'study_design'])
