@@ -1,0 +1,30 @@
+*.pyc
+elig.py
+report.html
+run-*/*
+
+# non-minified files
+js/*
+sass/*
+
+# NLP
+ctakes*/*
+metamap/*
+*.sh
+databases/*
+ClinicalTrials/databases/*
+
+# old files no longer needed
+Grabber.js
+
+# doc files
+README.md
+CompElig.md
+
+# control files
+clinical-trials-gov.sublime-*
+manifest*
+session_data/*
+settings.py.default
+setup.py
+

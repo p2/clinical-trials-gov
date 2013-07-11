@@ -1,0 +1,17 @@
+--- 
+applications: 
+  .: 
+    services: 
+      mongodb-d01a0: 
+        type: mongodb
+    name: clinical-trials
+    framework: 
+      name: wsgi
+      info: 
+        description: Python WSGI Application
+        mem: 64M
+        exec: 
+    mem: 64M
+    infra: aws
+    instances: 1
+    url: ${name}.${target-base}
