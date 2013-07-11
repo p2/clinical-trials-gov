@@ -6,6 +6,7 @@ var _patient_loc = null;
 var _trialSearchInterval = null;
 var _trialSearchMustStop = false;
 
+var _trialBatchSize = 25;
 var _trialNumExpected = 0;
 var _trialNumDone = 0;
 var _showGoodTrials = true;
@@ -228,7 +229,9 @@ function _loadTrials(trial_tuples) {
 	_showGoodTrials = true;
 	_activeInterventionTypes = [];
 	
-	// loop all trials
+	// batch the trials
+	var batch = {};
+	var batches = [];
 	for (var i = 0; i < trial_tuples.length; i++) {
 		var tpl = trial_tuples[i];
 		var nct = tpl[0];
@@ -243,11 +246,32 @@ function _loadTrials(trial_tuples) {
 			num_good++;
 		}
 		
-		// fetch trial details (can potentially send colon-separated NCT list to batch requests, implement that at one point!)
+		// manage the batch
+		batch[nct] = reason;
+		if (0 == (i + 1) % _trialBatchSize || i == trial_tuples.length - 1) {
+			batches.push(batch);
+			batch = {};
+		}
+	}
+	
+	// fetch trial details
+	for (var i = 0; i < batches.length; i++) {
+		var batch = batches[i];
+		var ncts = [];
+		for (var nct in batch) {
+			ncts.push(nct);
+		}
+		
+		if (0 == ncts.length) {
+			console.warn("There are no studies in this batch");
+			continue;
+		}
+		
+		// fetch
 		$.ajax({
-			'url': 'trials/' + nct,
+			'url': 'trials/' + ncts.join(':'),
 			'dataType': 'json',
-			'context': {'reason': reason}
+			'context': {'reasons': batch}
 		})
 		.always(function(obj1, status, obj2) {
 			if (_trialSearchMustStop) {
@@ -256,6 +280,8 @@ function _loadTrials(trial_tuples) {
 			
 			// got trials
 			if ('success' == status) {
+				var type_dict = {};
+				
 				var trials = 'trials' in obj1 ? obj1.trials : [];
 				for (var i = 0; i < trials.length; i++) {
 					var trial = trials[i];
@@ -269,7 +295,7 @@ function _loadTrials(trial_tuples) {
 						_showTrialStatus("Loading, " + Math.round(_trialNumDone / _trialNumExpected * 100) + "% done...");
 					}
 					
-					trial.reason = this.reason;
+					trial.reason = this.reasons[trial.nct];
 					_geocodeTrial(trial);
 					
 					// pull out intervention types
@@ -287,49 +313,63 @@ function _loadTrials(trial_tuples) {
 						types = ['N/A'];
 					}
 					
-					// update types selector
-					var existing = $.map(opt_type.children('a'), function(elem) {
-						var my_type = $(elem).data('intervention-type');
-						if (!trial.reason && types.contains(my_type)) {		// initial display is good trials only, so only count if we are a good trial
-							var span = $(elem).find('.num_matches');
-							span.text(span.text()*1 + 1);
+					// collect all types (initially we only show the "good" trials, so don't count the bad ones in the dict)
+					for (var j = 0; j < types.length; j++) {
+						var type = types[j];
+						if (type in type_dict) {
+							type_dict[type] = type_dict[type] + (this.reason ? 0 : 1);
 						}
-						return my_type;
-					});
-					
-					// add the new ones
-					for (var i = 0; i < types.length; i++) {
-						var type = types[i];
-						if (!existing.contains(type)) {
-							var elem = _getOptTabElement(type, trial.reason ? 0 : 1, _toggleInterventionType);
-							elem.data('intervention-type', type);
-							opt_type.append(elem);
+						else {
+							type_dict[type] = (this.reason ? 0 : 1);
 						}
-					};
-					
-					// sort types alphabetically
-					sortChildren(opt_type, 'a', function(a, b) {
-						return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
-					});
+					}
 					
 					// add to list
 					var li = $('<li/>').html('templates/trial_item.ejs', {'trial': trial});
-					li.hide();
 					li.data('trial', trial);
 					li.data('good', !this.reason);
 					li.data('distance', trial.closest);
 					li.data('intervention-types', types);
 					
 					trial_list.append(li);
-					
-					// sort the list continuously by distance
-					sortChildren(trial_list, 'li', function(a, b) {
-						return $(a).data('distance') - $(b).data('distance');
-					});
 				}
+				
+				// get the existing types and add the new ones
+				var existing = $.map(opt_type.children('a'), function(elem) {
+					var child_type = $(elem).data('intervention-type');
+					if (child_type in type_dict) {		
+						var span = $(elem).find('.num_matches');
+						span.text(span.text()*1 + type_dict[child_type]);
+					}
+					return child_type;
+				});
+				
+				for (var type in type_dict) {
+					if (!existing.contains(type)) {
+						var elem = _getOptTabElement(type, type_dict[type], _toggleInterventionType);
+						elem.data('intervention-type', type);
+						opt_type.append(elem);
+					}
+				}
+				
+				// sort types alphabetically
+				sortChildren(opt_type, 'a', function(a, b) {
+					return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
+				});
+				
+				// sort the trial list by distance
+				sortChildren(trial_list, 'li', function(a, b) {
+					return $(a).data('distance') - $(b).data('distance');
+				});
 			}
+			
+			// error, make sure the counter is still accurate and log a warning
 			else {
-				console.error("Failed loading NCT:", nct, "obj1:", obj1, "obj2:", obj2);
+				_trialNumDone += this.reasons.length;
+				if (_trialNumDone >= _trialNumExpected) {
+					_showTrialStatus();
+				}
+				console.error("Failed loading NCTs:", ncts.join(', '), "obj1:", obj1, "obj2:", obj2);
 			}
 		});
 	}

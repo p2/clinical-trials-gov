@@ -59,6 +59,7 @@ ul.trial_list {
 	list-style-type: none;
 	
 	li {
+		display: none;
 		margin-bottom: 1em; padding-top: 1em;
 		line-height: 1.4;
 		border-top: 1px solid $col-border;

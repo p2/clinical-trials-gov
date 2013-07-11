@@ -31,8 +31,8 @@ from ClinicalTrials.umls import SNOMEDLookup
 # bottle, beaker and Jinja setup
 session_opts = {
     'session.type': 'file',
-    'session.timeout': 300,
-    'session.cookie_expires': 300,
+    'session.timeout': 3600,
+    'session.cookie_expires': 3600,
     'session.data_dir': './session_data',
     'session.auto': True
 }
@@ -375,15 +375,15 @@ def problems():
 
 # ------------------------------------------------------------------------------ Trials
 @bottle.get('/trials/<nct_list>')
-def get_trial(nct_list):
+def get_trials(nct_list):
 	""" Returns one or more trials, multiple NCTs can be separated by colon. """
 	trials = []
 	
 	if nct_list:
 		ncts = nct_list.split(':')
-		for nct in ncts:
-			trial = Study(nct)
-			trial.load()
+		found = Study.retrieve(ncts)
+		
+		for trial in found:
 			trials.append(trial.json(['brief_summary', 'location', 'intervention', 'study_design', 'overall_contact']))
 	
 	return {'trials': trials}
