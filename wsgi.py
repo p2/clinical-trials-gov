@@ -512,9 +512,9 @@ def trial_filter_demo(run_id, filter_by):
 				
 				# filter age
 				if f_age > 0:
-					if trial.min_age > f_age:
+					if trial.min_age and trial.min_age > f_age:
 						reason = "Patient is too young (min age %d)" % trial.min_age
-					elif trial.max_age < f_age:
+					elif trial.max_age and trial.max_age < f_age:
 						reason = "Patient is too old (max age %d)" % trial.max_age
 			
 			if reason:

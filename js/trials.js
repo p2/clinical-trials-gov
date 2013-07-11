@@ -317,17 +317,17 @@ function _loadTrials(trial_tuples) {
 					for (var j = 0; j < types.length; j++) {
 						var type = types[j];
 						if (type in type_dict) {
-							type_dict[type] = type_dict[type] + (this.reason ? 0 : 1);
+							type_dict[type] = type_dict[type] + (trial.reason ? 0 : 1);
 						}
 						else {
-							type_dict[type] = (this.reason ? 0 : 1);
+							type_dict[type] = (trial.reason ? 0 : 1);
 						}
 					}
 					
 					// add to list
 					var li = $('<li/>').html('templates/trial_item.ejs', {'trial': trial});
 					li.data('trial', trial);
-					li.data('good', !this.reason);
+					li.data('good', !trial.reason);
 					li.data('distance', trial.closest);
 					li.data('intervention-types', types);
 					
@@ -441,9 +441,6 @@ function _geocodeTrial(trial) {
 					var dist = kmDistanceBetweenLocationsLatLng(_patient_loc.lat(), _patient_loc.lng(), trial.location[i].geodata.latitude, trial.location[i].geodata.longitude);
 					distances.push(dist);
 					trial.location[i].distance = dist;
-				}
-				else {
-					console.warn("Patient location is not yet available");
 				}
 			}
 			else {
