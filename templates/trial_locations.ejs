@@ -16,7 +16,7 @@ for (var i = 0; i < trial.location.length; i++) {
 		'distance': loc.distance,
 		'status': loc.status,
 		'status_color': loc_stat_m_not ? 'orange' : (loc_stat_m_recr ? 'green' : 'red'),
-		'contact': 'contact' in loc ? loc['contact'] : null
+		'contact': 'contact' in loc ? loc.contact : (trial.overall_contact ? trial.overall_contact : null)
 	}
 	
 	if (loc_country in by_country) {

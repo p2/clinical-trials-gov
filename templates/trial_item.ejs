@@ -1,7 +1,7 @@
 <div id="<%= trial.nct %>" class="trial">
 	<% if ('location' in trial && trial.location.length > 0) { %>
 	<%==  view('templates/trial_locations.ejs', {'trial': trial})  %>
-	<% } %>
+	<% }  %>
 	
 	<div class="trial_info">
 		<%= trial.title ? trial.title : 'Unnamed trial' %><br />
@@ -16,5 +16,5 @@
 	</div>
 	
 	<div style="clear: right;"> </div>
-	<pre class="formatted_criteria"><%= 'formatted' in trial.criteria ? trial.criteria.formatted.replace(/ +/g, ' ') : "(unknown criteria)" %></pre>
+	<pre class="formatted_criteria"><%= 'criteria_formatted' in trial ? trial.criteria_formatted.replace(/ +/g, ' ') : "(unknown criteria)" %></pre>
 </div>

@@ -384,7 +384,7 @@ def get_trial(nct_list):
 		for nct in ncts:
 			trial = Study(nct)
 			trial.load()
-			trials.append(trial.json(['brief_summary', 'location', 'intervention', 'study_design']))
+			trials.append(trial.json(['brief_summary', 'location', 'intervention', 'study_design', 'overall_contact']))
 	
 	return {'trials': trials}
 
@@ -442,7 +442,7 @@ def find_trials():
 			del sess['last_manual_condition']
 	
 	# launch and return id
-	runner.run(['id', 'acronym', 'brief_title', 'official_title', 'brief_summary', 'eligibility', 'location', 'attributes', 'intervention', 'intervention_browse', 'phase', 'study_design'])
+	runner.run(['id', 'acronym', 'brief_title', 'official_title', 'brief_summary', 'overall_contact', 'eligibility', 'location', 'attributes', 'intervention', 'intervention_browse', 'phase', 'study_design'])
 	
 	return run_id
 
@@ -597,7 +597,7 @@ def ejs(ejs_name):
 
 
 # start the server
-if __name__ == '__main__':
+if '__main__' == __name__:
 	if DEBUG:
 		logging.basicConfig(level=logging.DEBUG)
 		bottle.run(app=app, host='0.0.0.0', port=8008, reloader=True)
