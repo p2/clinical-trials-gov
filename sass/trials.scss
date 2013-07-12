@@ -87,8 +87,24 @@ ul.trial_list {
 		background-color: $col-input-active;
 	}
 	
+	&.trial_hidden {
+		color: $col-trans-faded;
+		
+		a {
+			color: lighten($col-link, 35%);
+		}
+		
+		.trial_countries, .trial_locations, .show_elig_toggle {
+			display: none;
+		}
+	}
+	
 	& > a:first-child {
 		margin-right: 1em;
+	}
+	
+	.hide_trial {
+		float: right;
 	}
 	
 	.trial_info {

@@ -6,7 +6,7 @@ var _patient_loc = null;
 var _trialSearchInterval = null;
 var _trialSearchMustStop = false;
 
-var _trialBatchSize = 25;
+var _trialBatchSize = 10;		// 25 might be too much for some computers
 var _trialNumExpected = 0;
 var _trialNumDone = 0;
 var _showGoodTrials = true;

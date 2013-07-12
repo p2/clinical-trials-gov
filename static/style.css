@@ -84,7 +84,11 @@ ul.trial_list li:first-child { border-top: none; }
 #selected_trial .dismiss_link { position: absolute; top: 3pt; right: 4pt; font-size: 0.9em; }
 
 .trial.active { padding: 1em; border: 1px solid #969632; background-color: rgba(200, 200, 0, 0.5); }
+.trial.trial_hidden { color: rgba(0, 0, 0, 0.4); }
+.trial.trial_hidden a { color: #7280ff; }
+.trial.trial_hidden .trial_countries, .trial.trial_hidden .trial_locations, .trial.trial_hidden .show_elig_toggle { display: none; }
 .trial > a:first-child { margin-right: 1em; }
+.trial .hide_trial { float: right; }
 .trial .trial_info { width: 35%; }
 .trial .trial_info .exclusion_reason { display: block; margin-top: 0.3em; font-size: 10pt; color: #A00; }
 .trial .trial_countries { float: right; width: 65%; margin-bottom: 1em; line-height: 1.6; }

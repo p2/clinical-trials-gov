@@ -1,4 +1,6 @@
 <div id="<%= trial.nct %>" class="trial">
+	<input type="checkbox" class="hide_trial" onchange="$(this).parent().toggleClass('trial_hidden')" checked="checked" />
+	
 	<% if ('location' in trial && trial.location.length > 0) { %>
 	<%==  view('templates/trial_locations.ejs', {'trial': trial})  %>
 	<% }  %>
@@ -6,7 +8,7 @@
 	<div class="trial_info">
 		<%= trial.title ? trial.title : 'Unnamed trial' %><br />
 		<a href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank"><%= trial.nct %></a>
-		<div class="supplement">
+		<div class="show_elig_toggle supplement">
 			<a href="javascript:void(0);" onclick="$(this).parent().parent().siblings('.formatted_criteria').toggle()">show eligibility criteria</a>
 		</div>
 		
