@@ -23,6 +23,7 @@ if not USE_SMART_05:
 from rdflib.graph import Graph
 
 # App
+from ClinicalTrials.mngobject import MNGObject
 from ClinicalTrials.study import Study
 from ClinicalTrials.runner import Runner
 from ClinicalTrials.umls import SNOMEDLookup
@@ -30,11 +31,11 @@ from ClinicalTrials.umls import SNOMEDLookup
 
 # bottle, beaker and Jinja setup
 session_opts = {
-    'session.type': 'file',
-    'session.timeout': 3600,
-    'session.cookie_expires': 3600,
-    'session.data_dir': './session_data',
-    'session.auto': True
+	'session.type': 'file',
+	'session.timeout': 3600,
+	'session.cookie_expires': 3600,
+	'session.data_dir': './session_data',
+	'session.auto': True
 }
 app = application = SessionMiddleware(bottle.app(), session_opts)		# "application" is needed for some services like AppFog
 _jinja_templates = Environment(loader=PackageLoader('wsgi', 'templates'), trim_blocks=True)
@@ -594,6 +595,39 @@ def static(filename):
 def ejs(ejs_name):
 	return _serve_static('%s.ejs' % ejs_name, 'templates')
 
+
+# ------------------------------------------------------------------------------ MongoDB
+@bottle.get('/mongo')
+def mongotest():
+	from pymongo import Connection
+	
+	uri = mongodb_uri()
+	conn = Connection(uri)
+	coll = conn.db['ts']
+	coll.insert(dict(now=int(time.time())))
+	last_few = [str(x['now']) for x in coll.find(sort=[("_id", -1)], limit=10)]
+	body = "\n".join(last_few)
+	
+	return body
+
+def mongodb_uri():
+	services = json.loads(os.getenv("VCAP_SERVICES", "{}"))
+	if services:
+		creds = services['mongodb-1.8'][0]['credentials']
+		uri = "mongodb://%s:%s@%s:%d/%s" % (
+			creds['username'],
+			creds['password'],
+			creds['hostname'],
+			creds['port'],
+			creds['db'])
+		print >> sys.stderr, uri
+		return uri
+	else:
+		return "mongodb://localhost:27017"
+
+
+# remaining setup
+MNGObject.database_uri = mongodb_uri()
 
 
 # start the server
