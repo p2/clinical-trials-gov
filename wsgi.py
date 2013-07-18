@@ -385,7 +385,7 @@ def get_trials(nct_list):
 		found = Study.retrieve(ncts)
 		
 		for trial in found:
-			trials.append(trial.json(['brief_summary', 'location', 'intervention', 'study_design', 'overall_contact']))
+			trials.append(trial.json(['brief_summary', 'location', 'phase', 'intervention', 'study_design', 'overall_contact']))
 	
 	return {'trials': trials}
 
