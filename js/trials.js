@@ -221,9 +221,20 @@ function _loadTrials(trial_tuples) {
 	
 	var num_good = 0;
 	var num_bad = 0;
-	var opt_goodbad = $('<div/>', {'id': 'selector_goodbad'}).addClass('trial_opt_selector');
-	var opt_phase = $('<div/>', {'id': 'selector_inv_phase'}).addClass('trial_opt_selector');
-	var opt_type = $('<div/>', {'id': 'selector_inv_type'}).addClass('trial_opt_selector');
+	var opt_goodbad = $('<div/>', {'id': 'selector_goodbad'}).addClass('trial_selector');
+	
+	// phase selector
+	var opt_phase_main = $('<div/>').addClass('trial_opt_selector')
+	var opt_phase = $('<ul/>', {'id': 'selector_inv_phase'});
+	opt_phase_main.append('<div class="trial_opt_header"><b>1: Trial phase</b></div>');
+	opt_phase_main.append(opt_phase);
+	
+	// type selector
+	var opt_type_main = $('<div/>').addClass('trial_opt_selector');
+	var opt_type = $('<ul/>', {'id': 'selector_inv_type'});
+	opt_type_main.append('<div class="trial_opt_header"><b>2: Intervention types</b></div>');
+	opt_type_main.append(opt_type);
+	opt_type_main.append('<div class="supplement">(Trials can have more than one intervention type)</div>');
 	var trial_list = $('<ul/>', {'id': 'trial_list'}).addClass('trial_list');
 	
 	_trialNumExpected = trial_tuples.length;
@@ -356,7 +367,7 @@ function _loadTrials(trial_tuples) {
 				}
 				
 				// get the existing phases and add the new one
-				var existing = $.map(opt_phase.children('a'), function(elem) {
+				var existing = $.map(opt_phase.children(), function(elem) {
 					var child_type = $(elem).data('phase');
 					if (child_type in phase_dict) {		
 						var span = $(elem).find('.num_matches');
@@ -367,20 +378,19 @@ function _loadTrials(trial_tuples) {
 				
 				for (var phase in phase_dict) {
 					if (!existing.contains(phase)) {
-						var elem = _getOptTabElement(phase, phase_dict[phase], _togglePhase);
-						elem.addClass('active');
+						var elem = _getOptTabListElement(phase, phase_dict[phase], true, _togglePhase);
 						elem.data('phase', phase);
 						opt_phase.append(elem);
 					}
 				}
 				
 				// sort phases alphabetically
-				sortChildren(opt_phase, 'a', function(a, b) {
+				sortChildren(opt_phase, 'li', function(a, b) {
 					return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
 				});
 				
 				// get the existing types and add the new ones
-				existing = $.map(opt_type.children('a'), function(elem) {
+				existing = $.map(opt_type.children(), function(elem) {
 					var child_type = $(elem).data('intervention-type');
 					if (child_type in type_dict) {		
 						var span = $(elem).find('.num_matches');
@@ -391,14 +401,14 @@ function _loadTrials(trial_tuples) {
 				
 				for (var type in type_dict) {
 					if (!existing.contains(type)) {
-						var elem = _getOptTabElement(type, type_dict[type], _toggleInterventionType);
+						var elem = _getOptTabListElement(type, type_dict[type], false, _toggleInterventionType);
 						elem.data('intervention-type', type);
 						opt_type.append(elem);
 					}
 				}
 				
 				// sort types alphabetically
-				sortChildren(opt_type, 'a', function(a, b) {
+				sortChildren(opt_type, 'li', function(a, b) {
 					return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
 				});
 				
@@ -422,24 +432,17 @@ function _loadTrials(trial_tuples) {
 	// compose DOM - trial type selector first
 	var opt = $('#trial_selectors');
 	
-	var good_trials = _getOptTabElement('Potential Trials', num_good + ' of ' + trial_tuples.length, _toggleShowGoodTrials);
-	good_trials.addClass('active');
+	var good_trials = _getOptTabElement('Potential Trials', num_good + ' of ' + trial_tuples.length, true, _toggleShowGoodTrials);
 	good_trials.data('is-good', true);
 	opt_goodbad.append(good_trials);
 	
-	var bad_trials = _getOptTabElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length, _toggleShowGoodTrials);
+	var bad_trials = _getOptTabElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length, false, _toggleShowGoodTrials);
 	bad_trials.data('is-good', false);
 	opt_goodbad.append(bad_trials);
 	
 	opt.append(opt_goodbad);
-	
-	// phase
-	opt.append('<div class="trial_opt_header"><b>Trial phase</b></div>');
-	opt.append(opt_phase);
-	
-	// intervention types
-	opt.append('<div class="trial_opt_header"><b>Intervention types</b> <span class="supplement">(Trials can have more than one intervention type)</span></div>');
-	opt.append(opt_type);
+	opt.append(opt_phase_main);
+	opt.append(opt_type_main);
 	
 	// and add all the trials
 	$('#trials').append(trial_list);
@@ -565,12 +568,33 @@ function _showTrialStatus(status) {
 	stat.text(status);
 }
 
-function _getOptTabElement(main, accessory, click) {
+function _getOptTabElement(main, accessory, active, action) {
 	var elem = $('<a/>', {'href': 'javascript:void(0)'});
 	elem.append($('<span/>').text(main));
 	elem.append($('<span/>').addClass('num_matches').text(accessory));
-	if (click) {
-		elem.click(click);
+	if (action) {
+		elem.click(action);
+	}
+	if (active) {
+		elem.addClass('active');
+	}
+	
+	return elem;
+}
+
+function _getOptTabListElement(main, accessory, active, action) {
+	var elem = $('<li/>', {'href': 'javascript:void(0)'});
+	var uuid = newUUID();
+	var input = $('<input/>', {'id': uuid, 'type': 'checkbox'});
+	elem.append(input);
+	elem.append($('<label/>', {'for': uuid}).text(main));
+	elem.append($('<span/>').addClass('num_matches').text(accessory));
+	if (action) {
+		input.change(action);
+	}
+	if (active) {
+		elem.addClass('active');
+		input.attr('checked', true);
 	}
 	
 	return elem;
@@ -583,7 +607,7 @@ function _toggleShowGoodTrials(evt) {
 }
 
 function _togglePhase(evt) {
-	var phase = $(this).data('phase');
+	var phase = $(this).parent().data('phase');
 	if (!phase) {
 		console.error("No phase supplied to _togglePhase()");
 		return;
@@ -602,7 +626,7 @@ function _togglePhase(evt) {
 }
 
 function _toggleInterventionType(evt) {
-	var type = $(this).data('intervention-type');
+	var type = $(this).parent().data('intervention-type');
 	if (!type) {
 		console.error("No type supplied to _toggleInterventionType()");
 		return;
@@ -694,7 +718,7 @@ function _updateShownHiddenTrials() {
 	});
 	
 	// update phase type selector
-	$('#selector_inv_phase').children('a').each(function(idx, item) {
+	$('#selector_inv_phase').children('li').each(function(idx, item) {
 		var elem = $(item);
 		var phase = elem.data('phase');
 		elem.find('.num_matches').text(phase in per_phase ? per_phase[phase] : 0);
@@ -706,7 +730,7 @@ function _updateShownHiddenTrials() {
 	});
 	
 	// update intervention type selector
-	$('#selector_inv_type').children('a').each(function(idx, item) {
+	$('#selector_inv_type').children('li').each(function(idx, item) {
 		var elem = $(item);
 		var type = elem.data('intervention-type');
 		elem.find('.num_matches').text(type in per_type ? per_type[type] : 0);
