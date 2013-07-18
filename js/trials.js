@@ -67,7 +67,7 @@ function _initTrialSearch(problem_name, gender, age, remember_cond) {
 		}
 		else {
 			console.error(obj1, ' -- ', status, ' -- ', obj2);
-			_showTrialStatus('Error, see console');
+			_showTrialStatus('Error searching for trials: ' + status + ', see console');
 		}
 	});
 	
@@ -215,7 +215,7 @@ function _loadTrials(trial_tuples) {
 		return;
 	}
 	
-	_showTrialStatus("Loading " + trial_tuples.length + " trial" + (1 == trial_tuples.length ? "s" : '') + "...");
+	_showTrialStatus("Loading " + trial_tuples.length + " trial" + (1 == trial_tuples.length ? "" : "s") + "...");
 	$('#g_map_toggle').show();
 	
 	var num_good = 0;
