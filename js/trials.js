@@ -25,12 +25,27 @@ function searchTrials(prob_name, gender, age, remember_cond) {
 }
 
 function cancelTrialSearch() {
-	_showTrialStatus('Stopping...');
 	_trialSearchMustStop = true;
 	if (_trialSearchInterval) {
 		window.clearInterval(_trialSearchInterval);
 		_trialSearchInterval = null;
 	}
+	
+	_showTrialStatus();
+	resetUI();
+}
+
+function resetUI() {
+	_hideNoTrialsHint()
+	
+	$('#trial_selectors').find('.trial_selector').empty();
+	$('#trial_selectors').find('.trial_opt_selector > ul').empty();
+	$('#trial_selectors').hide();
+	$('#trial_list').empty();
+	
+	clearAllPins();
+	hideMap();
+	$('#g_map_toggle').hide();
 }
 
 
@@ -40,10 +55,8 @@ function _initTrialSearch(problem_name, gender, age, remember_cond) {
 		return;
 	}
 	
-	// prepare map and DOM
-	clearAllPins();
-	$('#trial_selectors').empty();
-	$('#trials').empty();
+	// reset UI
+	resetUI();
 	_showTrialStatus('Starting...');
 	
 	// fire off AJAX call
@@ -219,24 +232,6 @@ function _loadTrials(trial_tuples) {
 	_showTrialStatus("Loading " + trial_tuples.length + " trial" + (1 == trial_tuples.length ? "" : "s") + "...");
 	$('#g_map_toggle').show();
 	
-	var num_good = 0;
-	var num_bad = 0;
-	var opt_goodbad = $('<div/>', {'id': 'selector_goodbad'}).addClass('trial_selector');
-	
-	// phase selector
-	var opt_phase_main = $('<div/>').addClass('trial_opt_selector')
-	var opt_phase = $('<ul/>', {'id': 'selector_inv_phase'});
-	opt_phase_main.append('<div class="trial_opt_header"><b>1: Trial phase</b></div>');
-	opt_phase_main.append(opt_phase);
-	
-	// type selector
-	var opt_type_main = $('<div/>').addClass('trial_opt_selector');
-	var opt_type = $('<ul/>', {'id': 'selector_inv_type'});
-	opt_type_main.append('<div class="trial_opt_header"><b>2: Intervention types</b></div>');
-	opt_type_main.append(opt_type);
-	opt_type_main.append('<div class="supplement">(Trials can have more than one intervention type)</div>');
-	var trial_list = $('<ul/>', {'id': 'trial_list'}).addClass('trial_list');
-	
 	_trialNumExpected = trial_tuples.length;
 	_trialNumDone = 0;
 	_showGoodTrials = true;
@@ -246,6 +241,10 @@ function _loadTrials(trial_tuples) {
 	// batch the trials
 	var batch = {};
 	var batches = [];
+	
+	var num_good = 0;
+	var num_bad = 0;
+	
 	for (var i = 0; i < trial_tuples.length; i++) {
 		var tpl = trial_tuples[i];
 		var nct = tpl[0];
@@ -268,170 +267,8 @@ function _loadTrials(trial_tuples) {
 		}
 	}
 	
-	// fetch trial details
-	for (var i = 0; i < batches.length; i++) {
-		var batch = batches[i];
-		var ncts = [];
-		for (var nct in batch) {
-			ncts.push(nct);
-		}
-		
-		if (0 == ncts.length) {
-			console.warn("There are no studies in this batch");
-			continue;
-		}
-		
-		// fetch
-		$.ajax({
-			'url': 'trials/' + ncts.join(':'),
-			'dataType': 'json',
-			'context': {'reasons': batch}
-		})
-		.always(function(obj1, status, obj2) {
-			if (_trialSearchMustStop) {
-				return;
-			}
-			
-			// got trials
-			if ('success' == status) {
-				var phase_dict = {};
-				var type_dict = {};
-				
-				var trials = 'trials' in obj1 ? obj1.trials : [];
-				for (var i = 0; i < trials.length; i++) {
-					var trial = trials[i];
-					
-					// update status
-					_trialNumDone++;
-					if (_trialNumDone >= _trialNumExpected) {
-						_showTrialStatus();
-					}
-					else {
-						_showTrialStatus("Loading, " + Math.round(_trialNumDone / _trialNumExpected * 100) + "% done...");
-					}
-					
-					trial.reason = this.reasons[trial.nct];
-					_geocodeTrial(trial);
-					
-					// pull out trial phase (only count "good" trials initially)
-					if (!'phase' in trial || !trial.phase) {
-						trial.phase = 'N/A';
-					}
-					if (trial.phase in phase_dict) {
-						phase_dict[trial.phase] = phase_dict[trial.phase] + (trial.reason ? 0 : 1);
-					}
-					else {
-						phase_dict[trial.phase] = (trial.reason ? 0 : 1);
-						
-						// phases are active by default
-						if (!_activeTrialPhases.contains(trial.phase)) {
-							_activeTrialPhases.push(trial.phase);
-						}
-					}
-					
-					// pull out intervention types
-					var types = [];
-					if ('intervention' in trial && trial.intervention) {
-						for (var j = 0; j < trial.intervention.length; j++) {
-							if ('intervention_type' in trial.intervention[j]) {
-								types.push(trial.intervention[j].intervention_type);
-							}
-						}
-						types = types.uniqueArray();
-					}
-					
-					if (types.length < 1) {
-						types = ['N/A'];
-					}
-					
-					// collect all types (initially we only show the "good" trials, so don't count the bad ones in the dict)
-					for (var j = 0; j < types.length; j++) {
-						var type = types[j];
-						if (type in type_dict) {
-							type_dict[type] = type_dict[type] + (trial.reason ? 0 : 1);
-						}
-						else {
-							type_dict[type] = (trial.reason ? 0 : 1);
-						}
-					}
-					
-					// add to list
-					var li = $('<li/>').html('templates/trial_item.ejs', {'trial': trial});
-					li.data('trial', trial);
-					li.data('good', !trial.reason);
-					li.data('distance', trial.closest);
-					li.data('phase', trial.phase);
-					li.data('intervention-types', types);
-					
-					trial_list.append(li);
-				}
-				
-				// get the existing phases and add the new one
-				var existing = $.map(opt_phase.children(), function(elem) {
-					var child_type = $(elem).data('phase');
-					if (child_type in phase_dict) {		
-						var span = $(elem).find('.num_matches');
-						span.text(span.text()*1 + phase_dict[child_type]);
-					}
-					return child_type;
-				});
-				
-				for (var phase in phase_dict) {
-					if (!existing.contains(phase)) {
-						var elem = _getOptTabListElement(phase, phase_dict[phase], true, _togglePhase);
-						elem.data('phase', phase);
-						opt_phase.append(elem);
-					}
-				}
-				
-				// sort phases alphabetically
-				sortChildren(opt_phase, 'li', function(a, b) {
-					return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
-				});
-				
-				// get the existing types and add the new ones
-				existing = $.map(opt_type.children(), function(elem) {
-					var child_type = $(elem).data('intervention-type');
-					if (child_type in type_dict) {		
-						var span = $(elem).find('.num_matches');
-						span.text(span.text()*1 + type_dict[child_type]);
-					}
-					return child_type;
-				});
-				
-				for (var type in type_dict) {
-					if (!existing.contains(type)) {
-						var elem = _getOptTabListElement(type, type_dict[type], false, _toggleInterventionType);
-						elem.data('intervention-type', type);
-						opt_type.append(elem);
-					}
-				}
-				
-				// sort types alphabetically
-				sortChildren(opt_type, 'li', function(a, b) {
-					return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
-				});
-				
-				// sort the trial list by distance
-				sortChildren(trial_list, 'li', function(a, b) {
-					return $(a).data('distance') - $(b).data('distance');
-				});
-			}
-			
-			// error, make sure the counter is still accurate and log a warning
-			else {
-				_trialNumDone += this.reasons.length;
-				if (_trialNumDone >= _trialNumExpected) {
-					_showTrialStatus();
-				}
-				console.error("Failed loading NCTs:", ncts.join(', '), "obj1:", obj1, "obj2:", obj2);
-			}
-		});
-	}
-	
-	// compose DOM - trial type selector first
-	var opt = $('#trial_selectors');
-	
+	// add the trial type selector
+	var opt_goodbad = $('#selector_goodbad');
 	var good_trials = _getOptTabElement('Potential Trials', num_good + ' of ' + trial_tuples.length, true, _toggleShowGoodTrials);
 	good_trials.data('is-good', true);
 	opt_goodbad.append(good_trials);
@@ -440,13 +277,369 @@ function _loadTrials(trial_tuples) {
 	bad_trials.data('is-good', false);
 	opt_goodbad.append(bad_trials);
 	
-	opt.append(opt_goodbad);
-	opt.append(opt_phase_main);
-	opt.append(opt_type_main);
-	
-	// and add all the trials
-	$('#trials').append(trial_list);
+	// fire off!
+	_loadTrialBatchContinuing(batches, -1, []);
 }
+
+
+/**
+ *  Fetches the given batch of studies, does all the magic and calls itself until all batches have been loaded
+ */
+function _loadTrialBatchContinuing(batches, previous, intervention_types) {
+	var current = previous + 1;
+	if (!batches || current >= batches.length) {
+		console.warn("We should have stopped, there's no batch number " + current + " in these batches: ", batches);
+		return;
+	}
+	if (_trialSearchMustStop) {
+		return;
+	}
+	
+	if (!intervention_types) {
+		intervention_types = [];
+	}
+	
+	var batch = batches[current];
+	var ncts = [];
+	for (var nct in batch) {
+		ncts.push(nct);
+	}
+	
+	// fetch
+	$.ajax({
+		'url': 'trials/' + ncts.join(':'),
+		'dataType': 'json',
+		'context': {'reasons': batch}
+	})
+	.always(function(obj1, status, obj2) {
+		if (_trialSearchMustStop) {
+			return;
+		}
+		var cont = true;
+		
+		// got trials
+		if ('success' == status) {
+			var trial_list = $('#trial_list');
+			var type_arr = [];
+			
+			// loop trials
+			var trials = 'trials' in obj1 ? obj1.trials : [];
+			for (var i = 0; i < trials.length; i++) {
+				var trial = trials[i];
+				
+				// update status
+				_trialNumDone++;
+				if (_trialNumDone >= _trialNumExpected) {
+					cont = false;
+					_showTrialStatus();
+				}
+				else {
+					var percent = Math.round(_trialNumDone / _trialNumExpected * 100);
+					if (percent >= 99) {
+						_showTrialStatus("Almost there...");
+					}
+					else {
+						_showTrialStatus("Loading, " + percent + "% done...");
+					}
+				}
+				
+				trial.reason = this.reasons[trial.nct];
+				_geocodeTrial(trial);
+				
+				// pull out trial phase
+				if (!'phase' in trial || !trial.phase) {
+					trial.phase = 'N/A';
+				}	
+				if (!_activeTrialPhases.contains(trial.phase)) {
+					_activeTrialPhases.push(trial.phase);
+				}
+				
+				// pull out intervention types
+				var types = [];
+				if ('intervention' in trial && trial.intervention) {
+					for (var j = 0; j < trial.intervention.length; j++) {
+						if ('intervention_type' in trial.intervention[j]) {
+							types.push(trial.intervention[j].intervention_type);
+						}
+					}
+					types = types.uniqueArray();
+				}
+				
+				if (types.length < 1) {
+					types = ['N/A'];
+				}
+				intervention_types = intervention_types.concat(types);
+				
+				// add the trial to the list
+				var li = $('<li/>').html('templates/trial_item.ejs', {'trial': trial});
+				li.data('trial', trial);
+				li.data('good', !trial.reason);
+				li.data('distance', trial.closest);
+				li.data('phase', trial.phase);
+				li.data('intervention-types', types);
+				
+				trial_list.append(li);
+			}
+			
+			intervention_types = intervention_types.uniqueArray();
+		}
+		
+		// error, make sure the counter is still accurate and log a warning
+		else {
+			_trialNumDone += this.reasons.length;
+			if (_trialNumDone >= _trialNumExpected) {
+				_showTrialStatus();
+			}
+			console.error("Failed loading NCTs:", ncts.join(', '), "obj1:", obj1, "obj2:", obj2);
+		}
+		
+		// finish or fetch next
+		if (cont) {
+			_loadTrialBatchContinuing(batches, current, intervention_types);
+		}
+		else {
+			_didLoadTrialBatches(batches, intervention_types);
+		}
+	});
+}
+
+
+function _didLoadTrialBatches(batches, intervention_types) {
+	_showNoTrialsHint();
+	
+	// add phases to the phase list
+	var opt_phase = $('#selector_inv_phase');
+	
+	for (var i = 0; i < _activeTrialPhases.length; i++) {
+		var phase = _activeTrialPhases[i];
+		var elem = _getOptTabListElement(phase, 0, true, _togglePhase);
+		elem.data('phase', phase);
+		opt_phase.append(elem);
+	}
+	
+	// sort phases alphabetically
+	sortChildren(opt_phase, 'li', function(a, b) {
+		return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
+	});
+	
+	// add all intervention types
+	if (intervention_types) {
+		intervention_types = intervention_types.uniqueArray();
+		var opt_type = $('#selector_inv_type');
+		
+		for (var i = 0; i < intervention_types.length; i++) {
+			var type = intervention_types[i];
+			var elem = _getOptTabListElement(type, 0, false, _toggleInterventionType);
+			elem.data('intervention-type', type);
+			opt_type.append(elem);
+		}
+		
+		// sort types alphabetically
+		sortChildren(opt_type, 'li', function(a, b) {
+			return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
+		});
+	}
+	
+	// sort the trial list by distance
+	sortChildren($('#trial_list'), 'li', function(a, b) {
+		return $(a).data('distance') - $(b).data('distance');
+	});
+	
+	$('#trial_selectors').show();
+	$('#trials').show();
+	_updateShownHiddenTrials();
+	_showTrialStatus();
+}
+
+
+function _getOptTabElement(main, accessory, active, action) {
+	var elem = $('<a/>', {'href': 'javascript:void(0)'});
+	elem.append($('<span/>').text(main));
+	elem.append($('<span/>').addClass('num_matches').text(accessory));
+	if (action) {
+		elem.click(action);
+	}
+	if (active) {
+		elem.addClass('active');
+	}
+	
+	return elem;
+}
+
+function _getOptTabListElement(main, accessory, active, action) {
+	var elem = $('<li/>', {'href': 'javascript:void(0)'});
+	var uuid = newUUID();
+	var input = $('<input/>', {'id': uuid, 'type': 'checkbox'});
+	elem.append(input);
+	elem.append($('<label/>', {'for': uuid}).text(main));
+	elem.append($('<span/>').addClass('num_matches').text(accessory));
+	if (action) {
+		input.change(action);
+	}
+	if (active) {
+		elem.addClass('active');
+		input.attr('checked', true);
+	}
+	
+	return elem;
+}
+
+
+
+function _toggleShowGoodTrials(evt) {
+	_showGoodTrials = !_showGoodTrials;
+	_updateShownHiddenTrials();
+}
+
+function _togglePhase(evt) {
+	var phase = $(this).parent().data('phase');
+	if (!phase) {
+		console.error("No phase supplied to _togglePhase()");
+		return;
+	}
+	
+	// toggle
+	var idx = _activeTrialPhases.indexOf(phase);
+	if (idx >= 0) {
+		_activeTrialPhases.splice(idx, 1);
+	}
+	else {
+		_activeTrialPhases.push(phase);
+	}
+	
+	_updateShownHiddenTrials();
+}
+
+function _toggleInterventionType(evt) {
+	var type = $(this).parent().data('intervention-type');
+	if (!type) {
+		console.error("No type supplied to _toggleInterventionType()");
+		return;
+	}
+	
+	// toggle
+	var idx = _activeInterventionTypes.indexOf(type);
+	if (idx >= 0) {
+		_activeInterventionTypes.splice(idx, 1);
+	}
+	else {
+		_activeInterventionTypes.push(type);
+	}
+	
+	_updateShownHiddenTrials();
+}
+
+
+/**
+ *  Loops all trials and shows or hides according to our globals.
+ */
+function _updateShownHiddenTrials() {
+	var hasMap = $('#g_map').is(':visible');
+	
+	// clean up pins
+	clearAllPins();
+	_shouldShowPinsForTrials = [];
+	$('#selected_trial').empty();
+	
+	// loop all trials and show or hide them accordingly
+	var num_shown = 0;
+	var per_phase = {};
+	var per_type = {};
+	$('#trial_list').children('li').each(function(idx, item) {
+		var elem = $(item);
+		
+		// good or bad
+		var show = (_showGoodTrials == elem.data('good'));
+		
+		// trial phase
+		if (show) {
+			var phase = elem.data('phase');
+			show = _activeTrialPhases.contains(phase);
+			
+			if (phase in per_phase) {
+				per_phase[phase]++;
+			}
+			else {
+				per_phase[phase] = 1;
+			}
+		}
+		
+		// intervention type
+		if (show) {
+			var types = elem.data('intervention-types');
+			show = _activeInterventionTypes.intersects(types);
+			for (var i = 0; i < types.length; i++) {
+				if (types[i] in per_type) {
+					per_type[types[i]]++;
+				}
+				else {
+					per_type[types[i]] = 1;
+				}
+			}
+		}
+		
+		// apply
+		if (show) {
+			if (hasMap) {
+				_showPinsForTrial(elem.data('trial'), !elem.is(':visible'));
+			}
+			else {
+				_shouldShowPinsForTrials.push(elem.data('trial'));
+			}
+			// elem.slideDown('fast');
+			elem.show();
+			num_shown++;
+		}
+		else {
+			// elem.slideUp('fast');
+			elem.hide();
+		}
+	});
+	
+	// nothing shown? Show hints
+	if (0 == num_shown) {
+		_showNoTrialsHint();
+	}
+	else {
+		_hideNoTrialsHint();
+	}
+	
+	window.setTimeout(zoomToPins, 100);
+	
+	// update good/bad selector
+	$('#selector_goodbad').children('a').each(function(idx, item) {
+		var elem = $(item);
+		elem.removeClass('active');
+		if (_showGoodTrials == elem.data('is-good')) {
+			elem.addClass('active');
+		}
+	});
+	
+	// update phase type selector
+	$('#selector_inv_phase').children('li').each(function(idx, item) {
+		var elem = $(item);
+		var phase = elem.data('phase');
+		elem.find('.num_matches').text(phase in per_phase ? per_phase[phase] : 0);
+		
+		elem.removeClass('active');
+		if (_activeTrialPhases.contains(phase)) {
+			elem.addClass('active');
+		}
+	});
+	
+	// update intervention type selector
+	$('#selector_inv_type').children('li').each(function(idx, item) {
+		var elem = $(item);
+		var type = elem.data('intervention-type');
+		elem.find('.num_matches').text(type in per_type ? per_type[type] : 0);
+		
+		elem.removeClass('active');
+		if (_activeInterventionTypes.contains(type)) {
+			elem.addClass('active');
+		}
+	});
+}
+
 
 
 
@@ -557,188 +750,32 @@ function unloadSelectedTrial() {
 function _showTrialStatus(status) {
 	var stat = $('#trial_status');
 	if (!status) {
-		stat.remove();
+		stat.hide();
 		return;
 	}
 	
-	if (!stat.is('*')) {
-		stat = $('<div/>', {'id': 'trial_status'});
-		$('#trial_selectors').append(stat);
-	}
-	stat.text(status);
+	stat.show().text(status);
 }
 
-function _getOptTabElement(main, accessory, active, action) {
-	var elem = $('<a/>', {'href': 'javascript:void(0)'});
-	elem.append($('<span/>').text(main));
-	elem.append($('<span/>').addClass('num_matches').text(accessory));
-	if (action) {
-		elem.click(action);
-	}
-	if (active) {
-		elem.addClass('active');
+
+
+function _showNoTrialsHint() {
+	var hint = $('#no_trials_hint');
+	if (!hint.is('*')) {
+		hint = $('<h3/>', {'id': 'no_trials_hint'});
 	}
 	
-	return elem;
-}
-
-function _getOptTabListElement(main, accessory, active, action) {
-	var elem = $('<li/>', {'href': 'javascript:void(0)'});
-	var uuid = newUUID();
-	var input = $('<input/>', {'id': uuid, 'type': 'checkbox'});
-	elem.append(input);
-	elem.append($('<label/>', {'for': uuid}).text(main));
-	elem.append($('<span/>').addClass('num_matches').text(accessory));
-	if (action) {
-		input.change(action);
-	}
-	if (active) {
-		elem.addClass('active');
-		input.attr('checked', true);
-	}
-	
-	return elem;
-}
-
-
-function _toggleShowGoodTrials(evt) {
-	_showGoodTrials = !_showGoodTrials;
-	_updateShownHiddenTrials();
-}
-
-function _togglePhase(evt) {
-	var phase = $(this).parent().data('phase');
-	if (!phase) {
-		console.error("No phase supplied to _togglePhase()");
-		return;
-	}
-	
-	// toggle
-	var idx = _activeTrialPhases.indexOf(phase);
-	if (idx >= 0) {
-		_activeTrialPhases.splice(idx, 1);
+	if (_activeTrialPhases.length > 0 && _activeInterventionTypes.length > 0) {
+		hint.text("It seems no trials match your criteria");
 	}
 	else {
-		_activeTrialPhases.push(phase);
+		hint.text("Please select at least one trial phase and one intervention type");
 	}
-	
-	_updateShownHiddenTrials();
+	$('#trials').append(hint);
 }
 
-function _toggleInterventionType(evt) {
-	var type = $(this).parent().data('intervention-type');
-	if (!type) {
-		console.error("No type supplied to _toggleInterventionType()");
-		return;
-	}
-	
-	// toggle
-	var idx = _activeInterventionTypes.indexOf(type);
-	if (idx >= 0) {
-		_activeInterventionTypes.splice(idx, 1);
-	}
-	else {
-		_activeInterventionTypes.push(type);
-	}
-	
-	_updateShownHiddenTrials();
+function _hideNoTrialsHint() {
+	$('#no_trials_hint').remove();
 }
 
-/**
- *  Loops all trials and shows or hides according to our globals.
- */
-function _updateShownHiddenTrials() {
-	var hasMap = $('#g_map').is(':visible');
-	
-	// clean up pins
-	clearAllPins();
-	_shouldShowPinsForTrials = [];
-	$('#selected_trial').empty();
-	
-	// loop all trials and show or hide them accordingly
-	var per_phase = {};
-	var per_type = {};
-	$('#trial_list').children('li').each(function(idx, item) {
-		var elem = $(item);
-		
-		// good or bad
-		var show = (_showGoodTrials == elem.data('good'));
-		
-		// trial phase
-		if (show) {
-			var phase = elem.data('phase');
-			show = _activeTrialPhases.contains(phase);
-			
-			if (phase in per_phase) {
-				per_phase[phase]++;
-			}
-			else {
-				per_phase[phase] = 1;
-			}
-		}
-		
-		// intervention type
-		if (show) {
-			var types = elem.data('intervention-types');
-			show = _activeInterventionTypes.intersects(types);
-			for (var i = 0; i < types.length; i++) {
-				if (types[i] in per_type) {
-					per_type[types[i]]++;
-				}
-				else {
-					per_type[types[i]] = 1;
-				}
-			}
-		}
-		
-		// apply
-		if (show) {
-			if (hasMap) {
-				_showPinsForTrial(elem.data('trial'), !elem.is(':visible'));
-			}
-			else {
-				_shouldShowPinsForTrials.push(elem.data('trial'));
-			}
-			elem.slideDown('fast');
-		}
-		else {
-			elem.slideUp('fast');
-		}
-	});
-	
-	window.setTimeout(zoomToPins, 100);
-	
-	// update good/bad selector
-	$('#selector_goodbad').children('a').each(function(idx, item) {
-		var elem = $(item);
-		elem.removeClass('active');
-		if (_showGoodTrials == elem.data('is-good')) {
-			elem.addClass('active');
-		}
-	});
-	
-	// update phase type selector
-	$('#selector_inv_phase').children('li').each(function(idx, item) {
-		var elem = $(item);
-		var phase = elem.data('phase');
-		elem.find('.num_matches').text(phase in per_phase ? per_phase[phase] : 0);
-		
-		elem.removeClass('active');
-		if (_activeTrialPhases.contains(phase)) {
-			elem.addClass('active');
-		}
-	});
-	
-	// update intervention type selector
-	$('#selector_inv_type').children('li').each(function(idx, item) {
-		var elem = $(item);
-		var type = elem.data('intervention-type');
-		elem.find('.num_matches').text(type in per_type ? per_type[type] : 0);
-		
-		elem.removeClass('active');
-		if (_activeInterventionTypes.contains(type)) {
-			elem.addClass('active');
-		}
-	});
-}
 

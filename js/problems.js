@@ -123,12 +123,4 @@ function cancelTrialSearchAndShowProblemList(problem_id) {
 	if (problem_id) {
 		$('#' + problem_id).removeClass('active');
 	}
-	
-	$('#selected_trial').empty();
-	$('#trial_selectors').empty();
-	$('#trials').empty();
-	
-	clearAllPins();
-	hideMap();
-	$('#g_map_toggle').hide();
 }

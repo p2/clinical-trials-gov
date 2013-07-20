@@ -18,14 +18,29 @@
 				Loading...
 			</div>
 			<div id="patient_problems"></div>
-			<div id="trial_selectors"></div>
-			<div style="clear:left;"> </div>
-			<ul id="selected_trial" class="trial_list"></ul>
 			
+			<div id="trial_status"></div>
+			<div id="trial_selectors">
+				<div id="selector_goodbad" class="trial_selector"></div>
+				<div class="trial_opt_selector">
+					<h2>1: Trial phase</h2>
+					<ul id="selector_inv_phase"></ul>
+				</div>
+				<div class="trial_opt_selector">
+					<h2>2: Intervention types</h2>
+					<ul id="selector_inv_type"></ul>
+					<div class="supplement">(Trials can have more than one intervention type)</div>
+				</div>
+			</div>
+			<div style="clear:left;"> </div>
+			
+			<ul id="selected_trial" class="trial_list"></ul>
 			<div id="g_map"></div>
 			<a id="g_map_toggle" href="javascript:void(0)" onclick="toggleTrialMap()">Show Map</a>
 			
-			<div id="trials"></div>
+			<div id="trials">
+				<ul id="trial_list" class="trial_list"></ul>
+			</div>
 		</div>
 	</div>
 </body>

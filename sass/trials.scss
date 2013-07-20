@@ -2,7 +2,8 @@
  *  Styles for trial data
  */
 
-#trial_selectors, #trials {
+#trial_status, #trial_selectors, #trials {
+	display: none;
 	margin: 3em 0;
 }
 
@@ -49,12 +50,8 @@
 	margin-top: 1.5em;
 	line-height: 1.6;
 	
-	.trial_opt_header {
-		margin: 2em 0 0.5em;
-		
-		b {
-			font-size: 1.2em;
-		}
+	h2 {
+		margin: 1em 0 0.5em;
 	}
 	
 	ul {
@@ -73,7 +70,6 @@
 			input {
 				vertical-align: 15%;
 				margin-right: 0.75em;
-				-webkit-transform: scale(1.3, 1.3);
 			}
 			
 			span {

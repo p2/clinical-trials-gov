@@ -60,13 +60,15 @@ Array.prototype.contains = function(obj) {
 	return (this.indexOf(obj) >= 0);
 }
 
-Array.prototype.indexOf = function(obj) {
-	for(var i = 0; i < this.length; i++) {
-		if (this[i] == obj)
-			return i;
+if ( ! ('indexOf' in Array.prototype)) {
+	Array.prototype.indexOf = function(obj) {
+		for(var i = 0; i < this.length; i++) {
+			if (this[i] == obj)
+				return i;
+		}
+		
+		return -1;
 	}
-	
-	return -1;
 }
 
 Array.prototype.uniqueArray = function() {
