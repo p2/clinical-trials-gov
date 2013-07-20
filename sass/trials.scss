@@ -47,48 +47,48 @@
 .trial_opt_selector {
 	float: left;
 	width: 50%;
-	margin-top: 1.5em;
 	line-height: 1.6;
 	
 	h2 {
 		margin: 1em 0 0.5em;
 	}
+}
+
+ul.trial_selector, .trial_opt_selector ul {
+	padding-left: 0;
+	list-style-type: none;
+	line-height: 1.8;
 	
-	ul {
-		padding-left: 0;
-		list-style-type: none;
-		line-height: 1.8;
+	li {
+		font-size: 1.1em;
+		color: $col-link;
 		
-		li {
-			font-size: 1.1em;
-			color: $col-link;
+		&.active {
+			font-weight: bold;
+		}
+		
+		input {
+			vertical-align: 15%;
+			margin-right: 0.75em;
+		}
+		
+		span {
+			white-space: nowrap;
 			
-			&.active {
-				font-weight: bold;
-			}
-			
-			input {
-				vertical-align: 15%;
-				margin-right: 0.75em;
-			}
-			
-			span {
-				white-space: nowrap;
+			&.num_matches {
+				margin-left: 0.4em;
 				
-				&.num_matches {
-					margin-left: 0.4em;
-					
-					&:before, &::before {
-						content: "(";
-					}
-					&:after, &::after {
-						content: ")";
-					}
+				&:before, &::before {
+					content: "(";
+				}
+				&:after, &::after {
+					content: ")";
 				}
 			}
 		}
 	}
 }
+
 
 ul.trial_list {
 	margin-top: 1em; padding: 0;

@@ -269,11 +269,11 @@ function _loadTrials(trial_tuples) {
 	
 	// add the trial type selector
 	var opt_goodbad = $('#selector_goodbad');
-	var good_trials = _getOptTabElement('Potential Trials', num_good + ' of ' + trial_tuples.length, true, _toggleShowGoodTrials);
+	var good_trials = _getOptTabRadioElement('Potential Trials', num_good + ' of ' + trial_tuples.length, true, _toggleShowGoodTrials);
 	good_trials.data('is-good', true);
 	opt_goodbad.append(good_trials);
 	
-	var bad_trials = _getOptTabElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length, false, _toggleShowGoodTrials);
+	var bad_trials = _getOptTabRadioElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length, false, _toggleShowGoodTrials);
 	bad_trials.data('is-good', false);
 	opt_goodbad.append(bad_trials);
 	
@@ -412,7 +412,7 @@ function _didLoadTrialBatches(batches, intervention_types) {
 	
 	for (var i = 0; i < _activeTrialPhases.length; i++) {
 		var phase = _activeTrialPhases[i];
-		var elem = _getOptTabListElement(phase, 0, true, _togglePhase);
+		var elem = _getOptTabCheckElement(phase, 0, true, _togglePhase);
 		elem.data('phase', phase);
 		opt_phase.append(elem);
 	}
@@ -429,7 +429,7 @@ function _didLoadTrialBatches(batches, intervention_types) {
 		
 		for (var i = 0; i < intervention_types.length; i++) {
 			var type = intervention_types[i];
-			var elem = _getOptTabListElement(type, 0, false, _toggleInterventionType);
+			var elem = _getOptTabCheckElement(type, 0, false, _toggleInterventionType);
 			elem.data('intervention-type', type);
 			opt_type.append(elem);
 		}
@@ -452,21 +452,25 @@ function _didLoadTrialBatches(batches, intervention_types) {
 }
 
 
-function _getOptTabElement(main, accessory, active, action) {
-	var elem = $('<a/>', {'href': 'javascript:void(0)'});
-	elem.append($('<span/>').text(main));
+function _getOptTabRadioElement(main, accessory, active, action) {
+	var elem = $('<li/>', {'href': 'javascript:void(0)'});
+	var uuid = newUUID();
+	var input = $('<input/>', {'id': uuid, 'type': 'radio', 'name': 'ugly_hack'});
+	elem.append(input);
+	elem.append($('<label/>', {'for': uuid}).text(main));
 	elem.append($('<span/>').addClass('num_matches').text(accessory));
 	if (action) {
-		elem.click(action);
+		input.change(action);
 	}
 	if (active) {
 		elem.addClass('active');
+		input.attr('checked', true);
 	}
 	
 	return elem;
 }
 
-function _getOptTabListElement(main, accessory, active, action) {
+function _getOptTabCheckElement(main, accessory, active, action) {
 	var elem = $('<li/>', {'href': 'javascript:void(0)'});
 	var uuid = newUUID();
 	var input = $('<input/>', {'id': uuid, 'type': 'checkbox'});
@@ -607,7 +611,7 @@ function _updateShownHiddenTrials() {
 	window.setTimeout(zoomToPins, 100);
 	
 	// update good/bad selector
-	$('#selector_goodbad').children('a').each(function(idx, item) {
+	$('#selector_goodbad').children('li').each(function(idx, item) {
 		var elem = $(item);
 		elem.removeClass('active');
 		if (_showGoodTrials == elem.data('is-good')) {

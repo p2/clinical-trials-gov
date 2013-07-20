@@ -73,16 +73,17 @@ ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 .trial_selector a span.num_matches:before, .trial_selector a span.num_matches::before { content: "("; }
 .trial_selector a span.num_matches:after, .trial_selector a span.num_matches::after { content: ")"; }
 
-.trial_opt_selector { float: left; width: 50%; margin-top: 1.5em; line-height: 1.6; }
+.trial_opt_selector { float: left; width: 50%; line-height: 1.6; }
 .trial_opt_selector h2 { margin: 1em 0 0.5em; }
-.trial_opt_selector ul { padding-left: 0; list-style-type: none; line-height: 1.8; }
-.trial_opt_selector ul li { font-size: 1.1em; color: #0014be; }
-.trial_opt_selector ul li.active { font-weight: bold; }
-.trial_opt_selector ul li input { vertical-align: 15%; margin-right: 0.75em; }
-.trial_opt_selector ul li span { white-space: nowrap; }
-.trial_opt_selector ul li span.num_matches { margin-left: 0.4em; }
-.trial_opt_selector ul li span.num_matches:before, .trial_opt_selector ul li span.num_matches::before { content: "("; }
-.trial_opt_selector ul li span.num_matches:after, .trial_opt_selector ul li span.num_matches::after { content: ")"; }
+
+ul.trial_selector, .trial_opt_selector ul { padding-left: 0; list-style-type: none; line-height: 1.8; }
+ul.trial_selector li, .trial_opt_selector ul li { font-size: 1.1em; color: #0014be; }
+ul.trial_selector li.active, .trial_opt_selector ul li.active { font-weight: bold; }
+ul.trial_selector li input, .trial_opt_selector ul li input { vertical-align: 15%; margin-right: 0.75em; }
+ul.trial_selector li span, .trial_opt_selector ul li span { white-space: nowrap; }
+ul.trial_selector li span.num_matches, .trial_opt_selector ul li span.num_matches { margin-left: 0.4em; }
+ul.trial_selector li span.num_matches:before, ul.trial_selector li span.num_matches::before, .trial_opt_selector ul li span.num_matches:before, .trial_opt_selector ul li span.num_matches::before { content: "("; }
+ul.trial_selector li span.num_matches:after, ul.trial_selector li span.num_matches::after, .trial_opt_selector ul li span.num_matches:after, .trial_opt_selector ul li span.num_matches::after { content: ")"; }
 
 ul.trial_list { margin-top: 1em; padding: 0; list-style-type: none; }
 ul.trial_list li { display: none; margin-bottom: 1em; padding-top: 1em; line-height: 1.4; border-top: 1px solid #c8c8c8; }
