@@ -17,10 +17,11 @@ from beaker.middleware import SessionMiddleware
 from jinja2 import Template, Environment, PackageLoader
 
 # SMART
-from settings import USE_APP_ID, USE_SMART_05, USE_NLP, GOOGLE_API_KEY, DEBUG, ENDPOINTS
-if not USE_SMART_05:
+from settings import USE_APP_ID, USE_SMART, USE_SMART_05, USE_NLP, GOOGLE_API_KEY, DEBUG, ENDPOINTS
+if USE_SMART and not USE_SMART_05:
 	from smart_client_python.client import SMARTClient
-from rdflib.graph import Graph
+if USE_SMART:
+	from rdflib.graph import Graph
 
 # App
 from ClinicalTrials.mngobject import MNGObject
@@ -48,6 +49,9 @@ def _get_session():
 
 # only used for SMART v0.6+
 def _get_smart():
+	if not USE_SMART:
+		return None
+	
 	sess = _get_session()
 	if sess is None:
 		logging.info("There is no session")
@@ -149,7 +153,7 @@ def index():
 	sess = _get_session()
 	
 	# look at URL params first, if they are there store them in the session
-	api_base = bottle.request.query.get('api_base')
+	api_base = bottle.request.query.get('api_base') if USE_SMART else 'none'
 	if api_base is not None:
 		sess['api_base'] = api_base
 	else:
@@ -214,6 +218,7 @@ def index():
 	# everything in order, render index
 	template = _jinja_templates.get_template('index.html')
 	defs = {
+		'use_smart': USE_SMART,
 		'smart_v05': USE_SMART_05,
 		'google_api_key': GOOGLE_API_KEY
 	}

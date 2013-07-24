@@ -1,6 +1,7 @@
 # example settings file, copy to "settings.py" and adjust to your needs
 
 USE_APP_ID = "clinical-trials-localhost@apps.chip.org"
+USE_SMART = True
 USE_SMART_05 = False
 USE_NLP = True
 

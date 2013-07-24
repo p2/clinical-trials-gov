@@ -7,12 +7,14 @@
 <body>
 	<div id="container">
 		<div id="content">
+			{% if defs.use_smart %}
 			<div class="back_to_select">
 				{% if 'none' != api_base %}
 				<a id="back_to_patient" href="index.html?api_base={{ api_base }}&amp;record_id=0">« Change patient</a>
 				{% endif %}
 				<a href="index.html?api_base=">« Start over</a>
 			</div>
+			{% endif %}
 			
 			<div id="patient_overview">
 				Loading...
