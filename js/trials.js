@@ -228,7 +228,7 @@ function _loadTrials(trial_tuples) {
 	}
 	
 	_showTrialStatus("Loading " + trial_tuples.length + " trial" + (1 == trial_tuples.length ? "" : "s") + "...");
-	$('#g_map_toggle').show();
+	$('#g_map_toggle').text('Show Map').show();
 	
 	_trialNumExpected = trial_tuples.length;
 	_trialNumDone = 0;
@@ -801,9 +801,25 @@ function _showNoTrialsHint() {
 			return false;
 		}
 	});
-	 
+	
+	// if there is a type, make sure we have selected at least one phase
 	if (has_type) {
-		hint.text("It seems no trials match your criteria");
+		var has_phase = false;
+		if ($('#').is(':visible')) {
+			$('#selector_inv_phase').children('li').each(function(idx, item) {
+				if ($(item).find('input').prop('checked')) {
+					has_phase = true;
+					return false;
+				}
+			});
+		}
+		
+		if (!has_phase) {
+			hint.text("Please select at least one trial phase");
+		}
+		else {
+			hint.text("It seems no trials match your criteria");
+		}
 	}
 	else {
 		hint.text("Please select at least one study type");
