@@ -43,7 +43,7 @@ function resetUI() {
 	
 	clearAllPins();
 	hideMap();
-	$('#g_map_toggle').hide();
+	$('#g_map_toggle').text('Show Map').hide();
 }
 
 
@@ -228,7 +228,7 @@ function _loadTrials(trial_tuples) {
 	}
 	
 	_showTrialStatus("Loading " + trial_tuples.length + " trial" + (1 == trial_tuples.length ? "" : "s") + "...");
-	$('#g_map_toggle').text('Show Map').show();
+	$('#g_map_toggle').show();
 	
 	_trialNumExpected = trial_tuples.length;
 	_trialNumDone = 0;
