@@ -10,8 +10,6 @@ var _trialBatchSize = 10;		// 25 might be too much for some computers
 var _trialNumExpected = 0;
 var _trialNumDone = 0;
 var _showGoodTrials = true;
-var _activeTrialPhases = [];
-var _activeInterventionTypes = [];
 
 var _shouldShowPinsForTrials = [];
 
@@ -235,8 +233,6 @@ function _loadTrials(trial_tuples) {
 	_trialNumExpected = trial_tuples.length;
 	_trialNumDone = 0;
 	_showGoodTrials = true;
-	_activeTrialPhases = [];
-	_activeInterventionTypes = [];
 	
 	// batch the trials
 	var batch = {};
@@ -269,11 +265,11 @@ function _loadTrials(trial_tuples) {
 	
 	// add the trial type selector
 	var opt_goodbad = $('#selector_goodbad');
-	var good_trials = _getOptTabRadioElement('Potential Trials', num_good + ' of ' + trial_tuples.length, true, _toggleShowGoodTrials);
+	var good_trials = _getOptRadioElement('Potential Trials', num_good + ' of ' + trial_tuples.length, true);
 	good_trials.data('is-good', true);
 	opt_goodbad.append(good_trials);
 	
-	var bad_trials = _getOptTabRadioElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length, false, _toggleShowGoodTrials);
+	var bad_trials = _getOptRadioElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length, false);
 	bad_trials.data('is-good', false);
 	opt_goodbad.append(bad_trials);
 	
@@ -285,7 +281,7 @@ function _loadTrials(trial_tuples) {
 /**
  *  Fetches the given batch of studies, does all the magic and calls itself until all batches have been loaded
  */
-function _loadTrialBatchContinuing(batches, previous, intervention_types) {
+function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_phases) {
 	var current = previous + 1;
 	if (!batches || current >= batches.length) {
 		console.warn("We should have stopped, there's no batch number " + current + " in these batches: ", batches);
@@ -297,6 +293,9 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types) {
 	
 	if (!intervention_types) {
 		intervention_types = [];
+	}
+	if (!drug_phases) {
+		drug_phases = [];
 	}
 	
 	var batch = batches[current];
@@ -346,14 +345,6 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types) {
 				trial.reason = this.reasons[trial.nct];
 				_geocodeTrial(trial);
 				
-				// pull out trial phase
-				if (!'phase' in trial || !trial.phase) {
-					trial.phase = 'N/A';
-				}	
-				if (!_activeTrialPhases.contains(trial.phase)) {
-					_activeTrialPhases.push(trial.phase);
-				}
-				
 				// pull out intervention types
 				var types = [];
 				if ('intervention' in trial && trial.intervention) {
@@ -366,22 +357,30 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types) {
 				}
 				
 				if (types.length < 1) {
-					types = ['N/A'];
+					types = ['Observational'];
 				}
 				intervention_types = intervention_types.concat(types);
+				
+				// pull out trial phase
+				if (!'phase' in trial || !trial.phase) {
+					trial.phase = 'N/A';
+				}
+				var phases = ['N/A'];
+				if ('N/A' != trial.phase) {
+					phases = trial.phase.split('/');
+				}
+				drug_phases = drug_phases.concat(phases);
 				
 				// add the trial to the list
 				var li = $('<li/>').html('templates/trial_item.ejs', {'trial': trial});
 				li.data('trial', trial);
 				li.data('good', !trial.reason);
 				li.data('distance', trial.closest);
-				li.data('phase', trial.phase);
 				li.data('intervention-types', types);
+				li.data('phases', phases);
 				
 				trial_list.append(li);
 			}
-			
-			intervention_types = intervention_types.uniqueArray();
 		}
 		
 		// error, make sure the counter is still accurate and log a warning
@@ -395,32 +394,22 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types) {
 		
 		// finish or fetch next
 		if (cont) {
-			_loadTrialBatchContinuing(batches, current, intervention_types);
+			_loadTrialBatchContinuing(batches, current, intervention_types, drug_phases);
 		}
 		else {
-			_didLoadTrialBatches(batches, intervention_types);
+			_didLoadTrialBatches(batches, intervention_types, drug_phases);
 		}
 	});
 }
 
 
-function _didLoadTrialBatches(batches, intervention_types) {
+/**
+ *  Called when the last batch has been loaded.
+ *
+ *  Note that intervention_types and drug_phases possibly contains many duplicates.
+ */
+function _didLoadTrialBatches(batches, intervention_types, drug_phases) {
 	_showNoTrialsHint();
-	
-	// add phases to the phase list
-	var opt_phase = $('#selector_inv_phase');
-	
-	for (var i = 0; i < _activeTrialPhases.length; i++) {
-		var phase = _activeTrialPhases[i];
-		var elem = _getOptTabCheckElement(phase, 0, true, _togglePhase);
-		elem.data('phase', phase);
-		opt_phase.append(elem);
-	}
-	
-	// sort phases alphabetically
-	sortChildren(opt_phase, 'li', function(a, b) {
-		return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
-	});
 	
 	// add all intervention types
 	if (intervention_types) {
@@ -429,13 +418,31 @@ function _didLoadTrialBatches(batches, intervention_types) {
 		
 		for (var i = 0; i < intervention_types.length; i++) {
 			var type = intervention_types[i];
-			var elem = _getOptTabCheckElement(type, 0, false, _toggleInterventionType);
+			var elem = _getOptCheckElement(type, 0, false);
 			elem.data('intervention-type', type);
 			opt_type.append(elem);
 		}
 		
 		// sort types alphabetically
 		sortChildren(opt_type, 'li', function(a, b) {
+			return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
+		});
+	}
+	
+	// add phases to the phase list
+	if (drug_phases) {
+		drug_phases = drug_phases.uniqueArray();
+		var opt_phase = $('#selector_inv_phase');
+		
+		for (var i = 0; i < drug_phases.length; i++) {
+			var phase = drug_phases[i];
+			var elem = _getOptCheckElement(phase, 0, true);
+			elem.data('phase', phase);
+			opt_phase.append(elem);
+		}
+		
+		// sort phases alphabetically
+		sortChildren(opt_phase, 'li', function(a, b) {
 			return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
 		});
 	}
@@ -452,16 +459,16 @@ function _didLoadTrialBatches(batches, intervention_types) {
 }
 
 
-function _getOptTabRadioElement(main, accessory, active, action) {
+function _getOptRadioElement(main, accessory, active) {
 	var elem = $('<li/>', {'href': 'javascript:void(0)'});
 	var uuid = newUUID();
 	var input = $('<input/>', {'id': uuid, 'type': 'radio', 'name': 'ugly_hack'});
+	input.change(_toggleShowGoodTrials);
+	
 	elem.append(input);
 	elem.append($('<label/>', {'for': uuid}).text(main));
 	elem.append($('<span/>').addClass('num_matches').text(accessory));
-	if (action) {
-		input.change(action);
-	}
+	
 	if (active) {
 		elem.addClass('active');
 		input.attr('checked', true);
@@ -470,16 +477,16 @@ function _getOptTabRadioElement(main, accessory, active, action) {
 	return elem;
 }
 
-function _getOptTabCheckElement(main, accessory, active, action) {
+function _getOptCheckElement(main, accessory, active) {
 	var elem = $('<li/>', {'href': 'javascript:void(0)'});
 	var uuid = newUUID();
 	var input = $('<input/>', {'id': uuid, 'type': 'checkbox'});
 	elem.append(input);
 	elem.append($('<label/>', {'for': uuid}).text(main));
 	elem.append($('<span/>').addClass('num_matches').text(accessory));
-	if (action) {
-		input.change(action);
-	}
+	
+	input.change(_toggleOptCheckElement);
+	
 	if (active) {
 		elem.addClass('active');
 		input.attr('checked', true);
@@ -495,39 +502,16 @@ function _toggleShowGoodTrials(evt) {
 	_updateShownHiddenTrials();
 }
 
-function _togglePhase(evt) {
-	var phase = $(this).parent().data('phase');
-	if (!phase) {
-		console.error("No phase supplied to _togglePhase()");
-		return;
-	}
-	
-	// toggle
-	var idx = _activeTrialPhases.indexOf(phase);
-	if (idx >= 0) {
-		_activeTrialPhases.splice(idx, 1);
-	}
-	else {
-		_activeTrialPhases.push(phase);
-	}
-	
-	_updateShownHiddenTrials();
-}
 
-function _toggleInterventionType(evt) {
-	var type = $(this).parent().data('intervention-type');
-	if (!type) {
-		console.error("No type supplied to _toggleInterventionType()");
-		return;
-	}
+function _toggleOptCheckElement(evt) {
+	var elem = $(this).parent();
 	
-	// toggle
-	var idx = _activeInterventionTypes.indexOf(type);
-	if (idx >= 0) {
-		_activeInterventionTypes.splice(idx, 1);
+	// toggle class by input checked status
+	if (elem.find('input').prop('checked')) {
+		elem.addClass('active');
 	}
 	else {
-		_activeInterventionTypes.push(type);
+		elem.removeClass('active');
 	}
 	
 	_updateShownHiddenTrials();
@@ -545,39 +529,74 @@ function _updateShownHiddenTrials() {
 	_shouldShowPinsForTrials = [];
 	$('#selected_trial').empty();
 	
+	// get active intervention types
+	var active_types = [];
+	$('#selector_inv_type').children('li').each(function(idx, item) {
+		var elem = $(item);
+		if (elem.hasClass('active')) {
+			active_types.push(elem.data('intervention-type'));
+		}
+	});
+	
+	// get active phases
+	var active_phases = [];
+	$('#selector_inv_phase').children('li').each(function(idx, item) {
+		var elem = $(item);
+		if (elem.hasClass('active')) {
+			active_phases.push(elem.data('phase'));
+		}
+	});
+	
 	// loop all trials and show or hide them accordingly
 	var num_shown = 0;
-	var per_phase = {};
+	var num_w_phase = 0;
 	var per_type = {};
+	var per_phase = {};
 	$('#trial_list').children('li').each(function(idx, item) {
 		var elem = $(item);
 		
 		// good or bad
 		var show = (_showGoodTrials == elem.data('good'));
 		
-		// trial phase
-		if (show) {
-			var phase = elem.data('phase');
-			show = _activeTrialPhases.contains(phase);
-			
-			if (phase in per_phase) {
-				per_phase[phase]++;
-			}
-			else {
-				per_phase[phase] = 1;
-			}
-		}
-		
 		// intervention type
 		if (show) {
 			var types = elem.data('intervention-types');
-			show = _activeInterventionTypes.intersects(types);
+			show = active_types.intersects(types);
+			
+			// count
 			for (var i = 0; i < types.length; i++) {
 				if (types[i] in per_type) {
 					per_type[types[i]]++;
 				}
 				else {
 					per_type[types[i]] = 1;
+				}
+			}
+		}
+		
+		// trial phase
+		if (show) {
+			var phases = elem.data('phases');
+			if (phases.length > 0) {
+				show = active_phases.intersects(phases);
+				var has_non_na_phase = false;
+				
+				// count
+				for (var i = 0; i < phases.length; i++) {
+					var phase = phases[i];
+					if (phase in per_phase) {
+						per_phase[phase]++;
+					}
+					else {
+						per_phase[phase] = 1;
+					}
+					if ('N/A' != phase) {
+						has_non_na_phase = true;
+					}
+				}
+				
+				if (has_non_na_phase) {
+					num_w_phase++;
 				}
 			}
 		}
@@ -619,29 +638,34 @@ function _updateShownHiddenTrials() {
 		}
 	});
 	
-	// update phase type selector
-	$('#selector_inv_phase').children('li').each(function(idx, item) {
-		var elem = $(item);
-		var phase = elem.data('phase');
-		elem.find('.num_matches').text(phase in per_phase ? per_phase[phase] : 0);
-		
-		elem.removeClass('active');
-		if (_activeTrialPhases.contains(phase)) {
-			elem.addClass('active');
-		}
-	});
-	
 	// update intervention type selector
 	$('#selector_inv_type').children('li').each(function(idx, item) {
 		var elem = $(item);
 		var type = elem.data('intervention-type');
-		elem.find('.num_matches').text(type in per_type ? per_type[type] : 0);
 		
-		elem.removeClass('active');
-		if (_activeInterventionTypes.contains(type)) {
-			elem.addClass('active');
-		}
+		elem.find('.num_matches').text(type in per_type ? per_type[type] : 0);
 	});
+	
+	// update phase type selector
+	if (num_w_phase > 0) {
+		$('#selector_inv_phase_parent').show();
+		$('#selector_inv_phase').children('li').each(function(idx, item) {
+			var elem = $(item);
+			var phase = elem.data('phase');
+			var num = phase in per_phase ? per_phase[phase] : 0;
+			
+			if (num > 0) {
+				elem.find('.num_matches').text(num);
+				elem.show();
+			}
+			else {
+				elem.hide();
+			}
+		});
+	}
+	else {
+		$('#selector_inv_phase_parent').hide();
+	}
 }
 
 
@@ -769,11 +793,20 @@ function _showNoTrialsHint() {
 		hint = $('<h3/>', {'id': 'no_trials_hint'});
 	}
 	
-	if (_activeTrialPhases.length > 0 && _activeInterventionTypes.length > 0) {
+	// check if at least one study type has been selected
+	var has_type = false;
+	$('#selector_inv_type').children('li').each(function(idx, item) {
+		if ($(item).find('input').prop('checked')) {
+			has_type = true;
+			return false;
+		}
+	});
+	 
+	if (has_type) {
 		hint.text("It seems no trials match your criteria");
 	}
 	else {
-		hint.text("Please select at least one trial phase and one intervention type");
+		hint.text("Please select at least one study type");
 	}
 	$('#trials').append(hint);
 }
