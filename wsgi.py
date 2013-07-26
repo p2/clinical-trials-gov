@@ -420,15 +420,16 @@ def find_trials():
 	
 	# configure
 	cond = bottle.request.query.get('cond')
-	if cond is not None:
+	if cond:
 		cond = re.sub(r'\s+\((disorder|finding)\)', '', cond)
 		runner.condition = cond
 	else:
 		term = bottle.request.query.get('term')
-		if term is None:
+		if not term:
 			bottle.abort(400, 'You need to specify "cond" or "term"')
 		else:
-			term = re.sub(r'\s+\((disorder|finding)\)', '', term)
+			term = re.sub(r'\s*-(\w+)', r' NOT \1', term)
+			term = re.sub(r'\s*([^\w\d])\s+([^-])', r' AND \2', term)
 			runner.term = term
 	
 	# store in session

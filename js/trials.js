@@ -15,12 +15,21 @@ var _shouldShowPinsForTrials = [];
 
 
 /**
- *  Entry function to trial search
+ *  Entry function to trial search (by term)
  */
-function searchTrials(prob_name, gender, age, remember_cond) {
+function searchTrialsByTerm(prob_term, gender, age, remember_cond) {
 	_trialSearchMustStop = false;
-	_initTrialSearch(prob_name, gender, age, remember_cond);
+	_initTrialSearch(prob_term, null, gender, age, remember_cond);
 }
+
+/**
+ *  Alternative seacrh function, searching by medical condition
+ */
+function searchTrialsByCondition(prob_name, gender, age, remember_cond) {
+	_trialSearchMustStop = false;
+	_initTrialSearch(null, prob_name, gender, age, remember_cond);
+}
+
 
 function cancelTrialSearch() {
 	_trialSearchMustStop = true;
@@ -47,7 +56,12 @@ function resetUI() {
 }
 
 
-function _initTrialSearch(problem_name, gender, age, remember_cond) {
+/**
+ *  Kicks off trial search.
+ *
+ *  "term" takes precedence over "condition", only one is ever being used.
+ */
+function _initTrialSearch(term, condition, gender, age, remember_cond) {
 	if (_trialSearchInterval) {
 		console.warn('Already searching');
 		return;
@@ -57,15 +71,19 @@ function _initTrialSearch(problem_name, gender, age, remember_cond) {
 	resetUI();
 	_showTrialStatus('Starting...');
 	
+	// determine term or condition
+	var data = {
+		'gender': gender,
+		'age': age,
+		'remember_cond': remember_cond ? true : false
+	};
+	var term_or_cond = term ? term : condition;
+	data[term ? 'term' : 'cond'] = term_or_cond;
+	
 	// fire off AJAX call
 	$.ajax({
 		'url': 'trial_runs',
-		'data': {
-			'cond': problem_name,
-			'gender': gender,
-			'age': age,
-			'remember_cond': remember_cond ? true : false
-		}
+		'data': data
 	})
 	.always(function(obj1, status, obj2) {
 		if (_trialSearchMustStop) {
@@ -85,7 +103,7 @@ function _initTrialSearch(problem_name, gender, age, remember_cond) {
 	
 	// never forget
 	if (remember_cond) {
-		_last_manual_condition = problem_name;
+		_last_manual_condition = term_or_cond;
 	}
 }
 

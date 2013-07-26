@@ -99,7 +99,12 @@ function hideProblemsAndStartTrialSearch(problem_id) {
 	var gender = $('#select_female').is(':checked') ? 'female' : 'male';		// TODO: should we be able to not specify gender?
 	var age = 1* $('#demo_age').val();
 	
-	searchTrials(prob_name, gender, age, ('prob_manual' == problem_id));
+	if (is_manual_problem) {
+		searchTrialsByTerm(prob_name, gender, age, true);
+	}
+	else {
+		searchTrialsByCondition(prob_name, gender, age, false);
+	}
 }
 
 
