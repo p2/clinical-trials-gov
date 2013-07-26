@@ -8,6 +8,7 @@
 	margin: 0 2em 1em 0;
 	text-align: center;
 	
+	border-radius: $border-radius;
 	background: center center no-repeat url("portrait_default.png") transparent; background-size: 4em 5.5em;
 	box-shadow: inset 0 1px 2em rgba(0,0,0,0.2);
 }
@@ -21,7 +22,7 @@
 	#demo_location, #demo_age {
 		margin: 0; padding: 0.2em 0.4em;
 		font-size: 1em;
-		border: 1px solid $col-border-active;
+		border: 1px solid $col-border-active; border-radius: $border-radius;
 		background-color: $col-input-active;
 	}
 	#demo_location {
@@ -54,9 +55,11 @@
 	}
 	#select_female_label {
 		border-right-color: $col-border-active;
+		border-radius: $border-radius 0 0 $border-radius;
 	}
 	#select_male_label {
 		border-left: none;
+		border-radius: 0 $border-radius $border-radius 0;
 	}
 }
 
@@ -96,7 +99,7 @@ ul#problem_list {
 		
 		&.active {
 			padding: 0.5em;
-			border: 1px solid $col-border-active;
+			border: 1px solid $col-border-active; border-radius: $border-radius;
 			background-color: $col-input-active;
 		}
 		

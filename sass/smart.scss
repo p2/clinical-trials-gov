@@ -5,7 +5,7 @@
 .list_select {
 	overflow: hidden;
 	background-color: white;
-	border: 1px solid darken($col-border, 10%); border-radius: 2pt;
+	border: 1px solid darken($col-border, 10%); border-radius: $border-radius;
 	
 	padding-left: 0;
 	li {
