@@ -6,6 +6,33 @@ Extracting and codifying study eligibility criteria from [ClinicalTrials.gov][ct
 > This project relies on a private cTAKES module for the time being.
 
 
+Requirements
+------------
+
+### Python
+
+Python 2.7 (probably), with these modules:
+
+- bottle
+- beaker
+- oauth2
+- rdflib >= 3.2.0
+- pyparsing == 1.5.7  
+  rdfextras needs pyparsing, but pyparsing > 1.5.7 targets Python 3.0, so we need to request 1.5.7 specifically
+- rdfextras
+- pymongo >= 2.4
+- jinja2
+- requests
+
+### MongoDB
+
+We're using mongo to cache trial data locally.
+
+### SMART Container
+
+If you want to connect to a SMART container, a SMART 0.6+ container is suggested, though there are hacks to support SMART 0.5.
+
+
 Setup
 -----
 
