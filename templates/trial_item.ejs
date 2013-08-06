@@ -1,6 +1,4 @@
 <div id="<%= trial.nct %>" class="trial">
-	<input type="checkbox" class="hide_trial" onchange="$(this).parent().toggleClass('trial_hidden')" checked="checked" />
-	
 	<% if ('location' in trial && trial.location.length > 0) { %>
 	<%==  view('templates/trial_locations.ejs', {'trial': trial})  %>
 	<% }  %>

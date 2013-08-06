@@ -36,14 +36,18 @@ td:last-child { padding-right: 0; }
 .patient_portrait { float: left; width: 4em; height: 5.5em; margin: 0 2em 1em 0; text-align: center; border-radius: 2pt; background: center center no-repeat url("portrait_default.png") transparent; background-size: 4em 5.5em; box-shadow: inset 0 1px 2em rgba(0, 0, 0, 0.2); }
 
 .demographics .demo_row { margin-top: 1em; font-size: 1.2em; }
-.demographics #demo_location, .demographics #demo_age { margin: 0; padding: 0.2em 0.4em; font-size: 1em; border: 1px solid #969632; border-radius: 2pt; background-color: rgba(200, 200, 0, 0.5); }
+.demographics #demo_location, .demographics #demo_age { margin: 0; padding: 0.2em 0.4em; font-size: 1em; border: 1px solid #000d22; border-radius: 2pt; background-color: #88b5ff; }
+.demographics #demo_location::-webkit-input-placeholder, .demographics #demo_age::-webkit-input-placeholder { color: #0050d5; }
+.demographics #demo_location:-moz-placeholder, .demographics #demo_age:-moz-placeholder { color: #0050d5; }
+.demographics #demo_location::-moz-placeholder, .demographics #demo_age::-moz-placeholder { color: #0050d5; }
+.demographics #demo_location:-ms-input-placeholder, .demographics #demo_age:-ms-input-placeholder { color: #0050d5; }
 .demographics #demo_location { width: 13.15em; }
 .demographics #demo_age { margin-left: 2em; width: 3.5em; text-align: right; }
 .demographics .demo_birthday { margin-left: 1em; font-size: 0.833em; }
 .demographics #select_female, .demographics #select_male { display: none; }
 .demographics .demo_gender { padding: 0.2em 0.4em; text-align: center; color: rgba(0, 0, 0, 0.4); border: 1px solid #b9b9b9; cursor: pointer; }
-.demographics input:checked + .demo_gender { color: black; border-color: #969632; background-color: rgba(200, 200, 0, 0.5); }
-.demographics #select_female_label { border-right-color: #969632; border-radius: 2pt 0 0 2pt; }
+.demographics input:checked + .demo_gender { color: black; border-color: #000d22; background-color: #88b5ff; }
+.demographics #select_female_label { border-right-color: #000d22; border-radius: 2pt 0 0 2pt; }
 .demographics #select_male_label { border-left: none; border-radius: 0 2pt 2pt 0; }
 
 #patient_problems { clear: left; padding-top: 1em; }
@@ -55,7 +59,7 @@ ul#problem_list li#prob_manual { cursor: default; }
 ul#problem_list li#prob_manual input { margin: 0 0.5em 0 0; }
 ul#problem_list li#prob_manual button { font-size: 1.1em; }
 ul#problem_list li:hover { background-color: #e6e6e6; }
-ul#problem_list li.active { padding: 0.5em; border: 1px solid #969632; border-radius: 2pt; background-color: rgba(200, 200, 0, 0.5); }
+ul#problem_list li.active { padding: 0.5em; border: 1px solid #000d22; border-radius: 2pt; background-color: #88b5ff; }
 ul#problem_list li #refresh_trials, ul#problem_list li #cancel_trials { float: right; font-size: 1.2em; }
 ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 
@@ -66,7 +70,7 @@ ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 
 .trial_selector { margin-top: 1.5em; line-height: 1.6; }
 .trial_selector a { display: inline-block; margin-right: 1.5em; font-size: 1.2em; }
-.trial_selector a.active { padding: 0 0.4em; color: black; border: 1px solid #969632; background-color: rgba(200, 200, 0, 0.5); }
+.trial_selector a.active { padding: 0 0.4em; color: black; border: 1px solid #000d22; background-color: #88b5ff; }
 .trial_selector a:last-child { margin-right: 0; }
 .trial_selector a span { white-space: nowrap; }
 .trial_selector a span.num_matches { margin-left: 0.4em; }
@@ -93,14 +97,9 @@ ul.trial_list li:first-child { border-top: none; }
 
 #selected_trial { position: relative; }
 #selected_trial .dismiss_link { position: absolute; top: 3pt; right: 4pt; font-size: 0.9em; }
-#selected_trial .hide_trial { display: none; }
 
-.trial.active { padding: 1em; border: 1px solid #969632; background-color: rgba(200, 200, 0, 0.5); }
-.trial.trial_hidden { color: rgba(0, 0, 0, 0.4); }
-.trial.trial_hidden a { color: #7280ff; }
-.trial.trial_hidden .trial_countries, .trial.trial_hidden .trial_locations, .trial.trial_hidden .show_elig_toggle { display: none; }
+.trial.active { padding: 1em; border: 1px solid #000d22; border-radius: 2pt; background-color: #88b5ff; }
 .trial > a:first-child { margin-right: 1em; }
-.trial .hide_trial { float: right; }
 .trial .trial_info { width: 35%; }
 .trial .trial_info .exclusion_reason { display: block; margin-top: 0.3em; font-size: 10pt; color: #A00; }
 .trial .trial_countries { float: right; width: 65%; margin-bottom: 1em; line-height: 1.6; }

@@ -22,8 +22,11 @@
 	#demo_location, #demo_age {
 		margin: 0; padding: 0.2em 0.4em;
 		font-size: 1em;
-		border: 1px solid $col-border-active; border-radius: $border-radius;
-		background-color: $col-input-active;
+		border: 1px solid $col-main-fg; border-radius: $border-radius;
+		background-color: $col-main-bg;
+		@include placeholder {
+			color: lighten($col-main, 15%);
+		}
 	}
 	#demo_location {
 		width: 13.15em;
@@ -50,11 +53,11 @@
 	}
 	input:checked + .demo_gender {
 		color: black;
-		border-color: $col-border-active;
-		background-color: $col-input-active;
+		border-color: $col-main-fg;
+		background-color: $col-main-bg;
 	}
 	#select_female_label {
-		border-right-color: $col-border-active;
+		border-right-color: $col-main-fg;
 		border-radius: $border-radius 0 0 $border-radius;
 	}
 	#select_male_label {
@@ -99,8 +102,8 @@ ul#problem_list {
 		
 		&.active {
 			padding: 0.5em;
-			border: 1px solid $col-border-active; border-radius: $border-radius;
-			background-color: $col-input-active;
+			border: 1px solid $col-main-fg; border-radius: $border-radius;
+			background-color: $col-main-bg;
 		}
 		
 		#refresh_trials, #cancel_trials {

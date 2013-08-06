@@ -5,15 +5,17 @@
 
 @import "bourbon";
 
+$col-main:				#038;
+$col-main-fg:			darken($col-main, 20%);
+$col-main-bg:			lighten($col-main, 50%);
+
 $col-title:				rgb(30,30,30);
 $col-link:				rgb(0,20,190);
 $col-linkglow:			rgb(0,64,128);
 $col-faded:				rgb(80,80,80);
 $col-trans-faded:		rgba(0,0,0,0.4);
 $col-border:			rgb(200,200,200);
-$col-border-active:		rgb(150,150,50);
 $col-border-inactive:	rgb(185,185,185);
-$col-input-active:		rgba(200,200,0,0.5);
 
 $col-bg:				rgb(246,246,246);
 $col-boxbg:				rgb(230,230,230);

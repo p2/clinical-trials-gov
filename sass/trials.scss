@@ -19,8 +19,8 @@
 		&.active {
 			padding: 0 0.4em;
 			color: black;
-			border: 1px solid $col-border-active;
-			background-color: $col-input-active;
+			border: 1px solid $col-main-fg;
+			background-color: $col-main-bg;
 		}
 		
 		&:last-child {
@@ -117,37 +117,18 @@ ul.trial_list {
 		position: absolute; top: 3pt; right: 4pt;
 		font-size: 0.9em;
 	}
-	.hide_trial {
-		display: none;
-	}
 }
 
 
 .trial {
 	&.active {
 		padding: 1em;
-		border: 1px solid $col-border-active;
-		background-color: $col-input-active;
-	}
-	
-	&.trial_hidden {
-		color: $col-trans-faded;
-		
-		a {
-			color: lighten($col-link, 35%);
-		}
-		
-		.trial_countries, .trial_locations, .show_elig_toggle {
-			display: none;
-		}
+		border: 1px solid $col-main-fg; border-radius: $border-radius;
+		background-color: $col-main-bg;
 	}
 	
 	& > a:first-child {
 		margin-right: 1em;
-	}
-	
-	.hide_trial {
-		float: right;
 	}
 	
 	.trial_info {
