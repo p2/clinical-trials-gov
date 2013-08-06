@@ -606,13 +606,15 @@ function _updateShownHiddenTrials() {
 			else {
 				_shouldShowPinsForTrials.push(elem.data('trial'));
 			}
-			// elem.slideDown('fast');
-			elem.show();
+			
+			// show trial locations
 			var trial = elem.data('trial');
-			if (trial) {
-				trial.showClosestLocations(elem, 3);
+			if (!elem.is(':visible') && trial) {
+				trial.showClosestLocations(elem, 0, 3);
 			}
 			
+			// elem.slideDown('fast');
+			elem.show();
 			num_shown++;
 		}
 		else {
@@ -784,7 +786,7 @@ function _showNoTrialsHint() {
 		}
 	}
 	else {
-		hint.text("Please select at least one study type");
+		hint.text("Please select at least one intervention or observation");
 	}
 	$('#trials').append(hint);
 }

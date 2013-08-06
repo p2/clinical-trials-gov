@@ -142,18 +142,62 @@ var Trial = can.Construct({
 	},
 	
 	
-	showClosestLocations: function(elem, num) {
+	/**
+	 *  Adds the next x locations to the trial view.
+	 *  @param elem The trial view element, locations will be added to a child div
+	 *  @param start The start index, can be used to incrementally add locations
+	 *  @param num The number of locations to add, will round up if less than 3 are left
+	 *  @param animated Whether to animate blend-in, DOES NOT YET WORK
+	 */
+	showClosestLocations: function(elem, start, num, animated) {
 		var loc_elem = elem.find('.trial_locations');
 		var locs = this.locationsByDistance();
 		
+		// add locations
 		if (locs && locs.length > 0) {
-			var i = 0;
-			for (; i < Math.min(locs.length, 3); i++) {
-				var loc = locs[i][1];			// the list has tuples, distance and the location object
-				loc_elem.append(can.view('templates/trial_location.ejs', {'loc': loc}));
+			loc_elem.find('.show_more_locations').remove();
+			
+			// determine max number (if we're within 2 of the maximum we show all)
+			var max = Math.min(locs.length - start, num);
+			if (locs.length - start - max < 3) {
+				max = locs.length - start;
 			}
+			max += start;
+			
+			// show desired ones
+			var i = start;
+			for (; i < max; i++) {
+				var loc = locs[i][1];			// the list has tuples, distance and the location object
+				var fragment = can.view('templates/trial_location.ejs', {'loc': loc});
+				loc_elem.append(fragment);
+			}
+			
+			// show link to show the next batch
 			if (i < locs.length) {
-				loc_elem.append('<div class="trial_location"><h3>' + (locs.length - i) + ' more</h3></div>');
+				var next = Math.min(10, locs.length - i);
+				
+				var link = $('<a/>', {'href': 'javascript:void(0)'})
+				.text('Show ' + ((next < locs.length - i) ? 'next ' + next : ' all'))
+				.click(function(evt) {
+					var trial = elem.data('trial');
+					if (trial) {
+						trial.showClosestLocations(elem, i, next, true);
+					}
+				});
+				
+				var div = $('<div/>').addClass('trial_location').addClass('show_more_locations');
+				var h3 = $('<h3/>').html('There are ' + (locs.length - i) + ' more locations<br />');
+				h3.append(link);
+				div.append(h3);
+				
+				if (animated) {
+					div.hide();
+					loc_elem.append(div);
+					div.fadeIn('fast');
+				}
+				else {
+					loc_elem.append(div);
+				}
 			}
 		}
 	}
