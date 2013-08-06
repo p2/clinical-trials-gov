@@ -342,7 +342,6 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_p
 			// loop trials
 			var trials = 'trials' in obj1 ? obj1.trials : [];
 			for (var i = 0; i < trials.length; i++) {
-				var trial = trials[i];
 				
 				// update status
 				_trialNumDone++;
@@ -360,42 +359,22 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_p
 					}
 				}
 				
+				// trial
+				var trial = new Trial(trials[i]);
 				trial.reason = this.reasons[trial.nct];
-				_geocodeTrial(trial);
+				trial.geocode(_patient_loc);
 				
-				// pull out intervention types
-				var types = [];
-				if ('intervention' in trial && trial.intervention) {
-					for (var j = 0; j < trial.intervention.length; j++) {
-						if ('intervention_type' in trial.intervention[j]) {
-							types.push(trial.intervention[j].intervention_type);
-						}
-					}
-					types = types.uniqueArray();
-				}
-				
-				if (types.length < 1) {
-					types = ['Observational'];
-				}
-				intervention_types = intervention_types.concat(types);
-				
-				// pull out trial phase
-				if (!'phase' in trial || !trial.phase) {
-					trial.phase = 'N/A';
-				}
-				var phases = ['N/A'];
-				if ('N/A' != trial.phase) {
-					phases = trial.phase.split('/');
-				}
-				drug_phases = drug_phases.concat(phases);
+				// pull out intervention types and phases
+				intervention_types = intervention_types.concat(trial.interventionTypes());
+				drug_phases = drug_phases.concat(trial.trialPhases());
 				
 				// add the trial to the list
-				var li = $('<li/>').html('templates/trial_item.ejs', {'trial': trial});
+				var li = $('<li/>').append(can.view('templates/trial_item.ejs', {'trial': trial}));
 				li.data('trial', trial);
 				li.data('good', !trial.reason);
 				li.data('distance', trial.closest);
-				li.data('intervention-types', types);
-				li.data('phases', phases);
+				li.data('intervention-types', trial.interventionTypes());
+				li.data('phases', trial.trialPhases());
 				
 				trial_list.append(li);
 			}
@@ -629,11 +608,16 @@ function _updateShownHiddenTrials() {
 			}
 			// elem.slideDown('fast');
 			elem.show();
+			var trial = elem.data('trial');
+			if (trial) {
+				trial.showClosestLocations(elem, 3);
+			}
+			
 			num_shown++;
 		}
 		else {
 			// elem.slideUp('fast');
-			elem.hide();
+			elem.hide().find('.trial_locations').empty();
 		}
 	});
 	
@@ -716,47 +700,6 @@ function toggleTrialMap() {
 	}
 }
 
-/**
- *  Geocodes one trial (if not already done)
- */
-function _geocodeTrial(trial) {
-	if ('closest' in trial) {
-		// already coded
-		return;
-	}
-	
-	// need location information to geo-code
-	if ('location' in trial) {
-		var distances = [];
-		for (var i = 0; i < trial.location.length; i++) {
-			if ('geodata' in trial.location[i]) {
-				
-				// distance
-				if (_patient_loc) {
-					var dist = kmDistanceBetweenLocationsLatLng(_patient_loc.lat(), _patient_loc.lng(), trial.location[i].geodata.latitude, trial.location[i].geodata.longitude);
-					distances.push(dist);
-					trial.location[i].distance = dist;
-				}
-			}
-			else {
-				console.warn("No geodata for trial location: ", trial.location[i]);
-			}
-		}
-		
-		// get closest trial location
-		if (distances.length > 0) {
-			distances.sort(function(a, b) {
-				return a - b;
-			});
-			
-			trial.closest = distances[0];
-		}
-	}
-	else {
-		console.warn("No geodata for trial " + trial.nct);
-	}
-}
-
 
 function _showPinsForTrial(trial, animated) {
 	if (!trial) {
@@ -780,8 +723,9 @@ function _showPinsForTrial(trial, animated) {
 }
 
 function showSelectedTrial(trial) {
-	$('#selected_trial').show().html('templates/trial_item.ejs', {'trial': trial}).children(":first").addClass('active');
-	$('#selected_trial').append('<a class="dismiss_link" href="javascript:void(0);" onclick="unloadSelectedTrial()">dismiss</a>');
+	$('#selected_trial').show().empty()
+	.append(can.view('templates/trial_item.ejs', {'trial': trial}).children(":first").addClass('active'))
+	.append('<a class="dismiss_link" href="javascript:void(0);" onclick="unloadSelectedTrial()">dismiss</a>');
 }
 
 function unloadSelectedTrial() {

@@ -43,7 +43,7 @@ function loadDemographics() {
 		}
 		
 		// display demographics
-		$('#patient_overview').html('templates/patient_demographics.ejs', {'demo': demo});
+		$('#patient_overview').html(can.view('templates/patient_demographics.ejs', {'demo': demo}));
 	});
 }
 

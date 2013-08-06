@@ -1,7 +1,5 @@
-<div id="<%= trial.nct %>" class="trial">
-	<% if ('location' in trial && trial.location.length > 0) { %>
-	<%==  view('templates/trial_locations.ejs', {'trial': trial})  %>
-	<% }  %>
+<div id="<%= trial.nct %>" class="trial" <%= (el) -> can.data(el, 'trial', trial) %>>
+	<div class="trial_locations"></div>
 	
 	<div class="trial_info">
 		<%= trial.title ? trial.title : 'Unnamed trial' %>

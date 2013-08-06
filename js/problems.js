@@ -16,7 +16,7 @@ function loadProblemList() {
 		
 		// display problem list
 		if (json) {
-			$('#patient_problems').html('templates/patient_problems.ejs', {'data': json, 'last_manual_condition': _last_manual_condition});
+			$('#patient_problems').html(can.view('templates/patient_problems.ejs', {'data': json, 'last_manual_condition': _last_manual_condition}));
 		}
 		else {
 			$('#patient_problems').text('Could not load the problem list, see the console for details');
