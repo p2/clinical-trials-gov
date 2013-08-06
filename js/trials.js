@@ -370,7 +370,6 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_p
 				
 				// add the trial to the list
 				var li = $('<li/>').append(can.view('templates/trial_item.ejs', {'trial': trial}));
-				li.data('trial', trial);
 				li.data('good', !trial.reason);
 				li.data('distance', trial.closest);
 				li.data('intervention-types', trial.interventionTypes());
@@ -600,15 +599,16 @@ function _updateShownHiddenTrials() {
 		
 		// apply
 		if (show) {
+			var trial = elem.find('.trial').data('trial');
+			
 			if (hasMap) {
-				_showPinsForTrial(elem.data('trial'), !elem.is(':visible'));
+				_showPinsForTrial(trial, !elem.is(':visible'));
 			}
 			else {
-				_shouldShowPinsForTrials.push(elem.data('trial'));
+				_shouldShowPinsForTrials.push(trial);
 			}
 			
 			// show trial locations
-			var trial = elem.data('trial');
 			if (!elem.is(':visible') && trial) {
 				trial.showClosestLocations(elem, 0, 3);
 			}
@@ -725,9 +725,18 @@ function _showPinsForTrial(trial, animated) {
 }
 
 function showSelectedTrial(trial) {
+	var fragment = can.view('templates/trial_item.ejs', {'trial': trial});
+	
+	// append
 	$('#selected_trial').show().empty()
-	.append(can.view('templates/trial_item.ejs', {'trial': trial}).children(":first").addClass('active'))
+	.append(fragment)
 	.append('<a class="dismiss_link" href="javascript:void(0);" onclick="unloadSelectedTrial()">dismiss</a>');
+	
+	// need to re-fetch to manipulate
+	var div = $('#selected_trial').find('.trial');
+	div.addClass('active');
+	
+	trial.showClosestLocations(div, 0, 3);
 }
 
 function unloadSelectedTrial() {
