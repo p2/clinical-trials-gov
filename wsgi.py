@@ -325,7 +325,7 @@ def demographics():
 		if 200 == int(ret.response.status):
 			demo_ld = json.loads(ret.graph.serialize(format='json-ld')) if ret.graph is not None else None
 		else:
-			logging.error("Failed to get demographics: %d" % ret.response.status)
+			logging.error("Failed to get demographics: %d" % int(ret.response.status))
 	
 	# extract interesting pieces
 	if demo_ld is not None:
@@ -368,7 +368,7 @@ def problems():
 		if 200 == int(ret.response.status):
 			prob_ld = json.loads(ret.graph.serialize(format='json-ld')) if ret.graph is not None else None
 		else:
-			logging.error("Failed to get problems: %d" % ret.response.status)
+			logging.error("Failed to get problems: %d" % int(ret.response.status))
 	
 	# pick out the individual problems
 	problems = []
@@ -559,9 +559,9 @@ def trial_filter_demo(run_id, filter_by):
 					for crit in trial.criteria:
 						
 						# check exclusion criteria
-						if not crit.is_inclusion and crit.snomed is not None:
+						if not crit.get('is_inclusion') and crit.get('snomed') is not None:
 							match = None
-							for snomed_c in crit.snomed:
+							for snomed_c in crit.get('snomed'):
 								if '-' != snomed_c[0:1]:		# SNOMED codes starting with a minus were negated
 									match = snomed_c if snomed_c in exclusion_codes else None
 							
