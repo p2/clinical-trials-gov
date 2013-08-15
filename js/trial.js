@@ -91,6 +91,7 @@ var Trial = can.Construct({
 				}
 				
 				var loc_dict = {
+					'trial': this,
 					'name': ('facility' in loc && loc.facility.name) ? loc.facility.name : '',
 					'city': (loc_parts.length > 0) ? loc_parts.join(', ') : '',
 					'country': loc_country,

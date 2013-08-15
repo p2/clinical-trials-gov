@@ -165,11 +165,12 @@ ul.trial_list {
 			
 			.loc_contact {
 				position: absolute; display: none;
-				bottom: 2em; left: 0;
+				top: 1.5em; left: 0;
 				padding: 1em;
 				color: black;
 				background-color: $col-note;
-				border: 1px solid rgba(0,0,0,0.2);
+				border: 1em solid rgba(0,0,0,0.2); border-radius: 1em;
+				z-index: 2;
 				
 				div {
 					white-space: nowrap;

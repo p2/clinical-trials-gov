@@ -30,3 +30,23 @@ var TrialLocation = can.Construct({
 		return this.distance;
 	}
 });
+
+
+/**
+ *  Shows or hides the contact info for one trial location.
+ */
+function _toggleTrialLocationContact(elem) {
+	var link = $(elem);
+	var loc = link.siblings('.loc_contact');
+	
+	// hide
+	if (loc.is(':visible')) {
+		loc.fadeOut('fast');
+	}
+	
+	// show (and align)
+	else {
+		loc.show();
+		loc.css('left', (link.outerWidth() - loc.outerWidth()) / 2 + link.position().left);
+	}
+}

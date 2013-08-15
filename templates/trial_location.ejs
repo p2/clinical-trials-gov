@@ -1,20 +1,23 @@
 <div class="trial_location">
-	<div class="loc_status">
+	<div class="loc_status" style="position:relative;">
 		<span style="color:<%= loc.status_color %>;"><%= loc.status %></span>
 		<% if ('contact' in loc && loc.contact && (loc.contact.email || loc.contact.phone)) { %>
 		–
-		<a href="javascript:void(0);" onclick="$(this).find('.loc_contact').toggle()" style="position:relative;">contact
-			<div class="loc_contact">
-				<div class="cont_name">
-					<%= loc.contact.first_name ? loc.contact.first_name : '' %>
-					<%= loc.contact.middle_name ? loc.contact.middle_name : '' %>
-					<%= loc.contact.last_name ? loc.contact.last_name : '' %>
-					<%= loc.contact.degrees ? loc.contact.degrees : '' %>
-				</div>
-				<div class="cont_email"><%= loc.contact.email ? loc.contact.email : '' %></div>
-				<div class="cont_phone"><%= (loc.contact.phone ? loc.contact.phone : '') + (loc.contact.phone_ext ? ' (' + loc.contact.phone_ext + ')' : '') %></div>
+		<a href="javascript:void(0);" onclick="_toggleTrialLocationContact(this)">contact</a>
+		<div class="loc_contact">
+			<div class="cont_name">
+				<%= loc.contact.first_name ? loc.contact.first_name : '' %>
+				<%= loc.contact.middle_name ? loc.contact.middle_name : '' %>
+				<%= loc.contact.last_name ? loc.contact.last_name : '' %>
+				<%= loc.contact.degrees ? loc.contact.degrees : '' %>
 			</div>
-		</a>
+			<% if (loc.contact.email) { %>
+			<div class="cont_email"><a href="mailto:<%= loc.contact.email %>?subject=Trial+<%= loc.trial.nct %>"><%= loc.contact.email %></a></div>
+			<% }
+			if (loc.contact.phone) { %>
+			<div class="cont_phone"><%= loc.contact.phone + (loc.contact.phone_ext ? ' (' + loc.contact.phone_ext + ')' : '') %></div>
+			<% } %>
+		</div>
 		<% } %>
 	</div>
 	<% if (loc.name) { %>
