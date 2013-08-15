@@ -56,7 +56,7 @@ ul#problem_list { padding: 0; list-style-type: none; }
 ul#problem_list li { padding: 0.5em 0; line-height: 1.6; cursor: pointer; }
 ul#problem_list li .problem_name { font-size: 1.2em; }
 ul#problem_list li#prob_manual { cursor: default; }
-ul#problem_list li#prob_manual input { margin: 0 0.5em 0 0; }
+ul#problem_list li#prob_manual input { width: 50%; margin: 0 0.5em 0 0; }
 ul#problem_list li#prob_manual button { font-size: 1.1em; }
 ul#problem_list li:hover { background-color: #e6e6e6; }
 ul#problem_list li.active { padding: 0.5em; border: 1px solid #000d22; border-radius: 2pt; background-color: #88b5ff; }

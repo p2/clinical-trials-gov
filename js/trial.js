@@ -174,14 +174,17 @@ var Trial = can.Construct({
 			
 			// show link to show the next batch
 			if (i < locs.length) {
+				var trial = this;
 				var next = Math.min(10, locs.length - i);
 				
 				var link = $('<a/>', {'href': 'javascript:void(0)'})
 				.text('Show ' + ((next < locs.length - i) ? 'next ' + next : ' all'))
 				.click(function(evt) {
-					var trial = elem.data('trial');
 					if (trial) {
 						trial.showClosestLocations(elem, i, next, true);
+					}
+					else {
+						console.error("The trial object is undefined");
 					}
 				});
 				
