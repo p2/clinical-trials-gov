@@ -204,6 +204,12 @@ var Trial = can.Construct({
 				}
 			}
 		}
+		
+		// no locations
+		else {
+			var div = $('<div class="trial_location"><h3>No trial locations available</h3></div>');
+			loc_elem.append(div);
+		}
 	}
 });
 
@@ -215,7 +221,6 @@ function _toggleEligibilityCriteria(elem) {
 	var link = $(elem);
 	var trial_elem = link.closest('.trial');
 	var crit_elem = trial_elem.find('.formatted_criteria').first();
-	console.log(link, trial_elem, crit_elem);
 	
 	// hide
 	if (crit_elem.is(':visible')) {
