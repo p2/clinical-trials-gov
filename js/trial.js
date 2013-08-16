@@ -207,3 +207,26 @@ var Trial = can.Construct({
 	}
 });
 
+
+/**
+ *  Shows or hides the trial's eligibility criteria
+ */
+function _toggleEligibilityCriteria(elem) {
+	var link = $(elem);
+	var trial_elem = link.closest('.trial');
+	var crit_elem = trial_elem.find('.formatted_criteria').first();
+	console.log(link, trial_elem, crit_elem);
+	
+	// hide
+	if (crit_elem.is(':visible')) {
+		crit_elem.hide();
+		link.text('Show eligibility criteria');
+	}
+	
+	// show
+	else {
+		crit_elem.show();
+		link.text('Hide eligibility criteria');
+	}
+}
+

@@ -6,7 +6,7 @@
 		<div class="supplement"><%= (!trial.phase || 'N/A' == trial.phase) ? '' : trial.phase %></div>
 		<a href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank"><%= trial.nct %></a>
 		<div class="show_elig_toggle supplement">
-			<a href="javascript:void(0);" onclick="$(this).parent().parent().siblings('.formatted_criteria').toggle()">show eligibility criteria</a>
+			<a href="javascript:void(0);" onclick="_toggleEligibilityCriteria(this)">Show eligibility criteria</a>
 		</div>
 		
 		<% if ('reason' in trial && trial.reason) { %>

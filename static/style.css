@@ -108,9 +108,9 @@ ul.trial_list li:first-child { border-top: none; }
 .trial .trial_locations .trial_location .loc_status, .trial .trial_locations .trial_location .loc_distance { color: rgba(0, 0, 0, 0.4); font-size: 0.9em; }
 .trial .trial_locations .trial_location .loc_city { font-weight: bold; }
 .trial .trial_locations .trial_location .loc_country { font-size: 1.2em; font-weight: bold; }
-.trial .trial_locations .trial_location .loc_contact { position: absolute; display: none; top: 1.5em; left: 0; padding: 1em; color: black; background-color: #ffffc8; border: 1em solid rgba(0, 0, 0, 0.2); border-radius: 1em; z-index: 2; }
+.trial .trial_locations .trial_location .loc_contact { position: absolute; display: none; top: 1.5em; left: 0; padding: 1.2em; color: black; font-size: 110%; line-height: 1.6; background-color: #ffffc8; border: 1em solid rgba(0, 0, 0, 0.2); border-radius: 1em; z-index: 2; }
 .trial .trial_locations .trial_location .loc_contact div { white-space: nowrap; }
-.trial .formatted_criteria { clear: right; display: none; margin: 0.5em 0 1em; padding: 1em; font-size: 10pt; white-space: pre-wrap; border: 1px solid #b4b4b4; border-radius: 2pt; background-color: whitesmoke; }
+.trial .formatted_criteria { clear: right; display: none; margin: 0.5em 0 1.5em; padding: 1em; font-size: 11pt; white-space: pre-wrap; border: 1px solid #c8c8c8; border-radius: 2pt; background-color: #f6f6f6; }
 
 /** Launch page and SMART specific styles */
 .list_select { overflow: hidden; background-color: white; border: 1px solid #afafaf; border-radius: 2pt; padding-left: 0; }

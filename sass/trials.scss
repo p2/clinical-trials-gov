@@ -166,8 +166,8 @@ ul.trial_list {
 			.loc_contact {
 				position: absolute; display: none;
 				top: 1.5em; left: 0;
-				padding: 1em;
-				color: black;
+				padding: 1.2em;
+				color: black; font-size: 110%; line-height: 1.6;
 				background-color: $col-note;
 				border: 1em solid rgba(0,0,0,0.2); border-radius: 1em;
 				z-index: 2;
@@ -182,10 +182,10 @@ ul.trial_list {
 	.formatted_criteria {
 		clear: right;
 		display: none;
-		margin: 0.5em 0 1em; padding: 1em;
-		font-size: 10pt; white-space: pre-wrap;
-		border: 1px solid rgb(180,180,180); border-radius: 2pt;
-		background-color: rgb(245,245,245); 
+		margin: 0.5em 0 1.5em; padding: 1em;
+		font-size: 11pt; white-space: pre-wrap;
+		border: 1px solid $col-border; border-radius: $border-radius;
+		background-color: $col-bg; 
 	}
 }
 

@@ -282,14 +282,16 @@ function _loadTrials(trial_tuples) {
 	}
 	
 	// add the trial type selector
-	var opt_goodbad = $('#selector_goodbad');
-	var good_trials = _getOptRadioElement('Potential Trials', num_good + ' of ' + trial_tuples.length, true);
-	good_trials.data('is-good', true);
-	opt_goodbad.append(good_trials);
-	
-	var bad_trials = _getOptRadioElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length, false);
-	bad_trials.data('is-good', false);
-	opt_goodbad.append(bad_trials);
+	if (num_bad > 0) {
+		var opt_goodbad = $('#selector_goodbad');
+		var good_trials = _getOptRadioElement('Potential Trials', num_good + ' of ' + trial_tuples.length, true);
+		good_trials.data('is-good', true);
+		opt_goodbad.append(good_trials);
+		
+		var bad_trials = _getOptRadioElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length, false);
+		bad_trials.data('is-good', false);
+		opt_goodbad.append(bad_trials);
+	}
 	
 	// fire off!
 	_loadTrialBatchContinuing(batches, -1, []);
