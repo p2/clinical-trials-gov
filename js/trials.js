@@ -54,6 +54,7 @@ function resetUI() {
 	
 	geo_clearAllPins();
 	geo_hideMap();
+	$('#selected_trial').empty().hide();
 	$('#g_map_toggle').hide().find('a').text('Show Map');
 }
 
@@ -665,6 +666,7 @@ function _showTrials(trials, start) {
 		if (trials.length > 0 && start >= trials.length) {
 			console.warn('Cannot show trials starting at: ', start, 'trials: ', trials);
 		}
+		$('#g_map_toggle > span').text('');
 		return;
 	}
 	
@@ -751,7 +753,7 @@ function toggleTrialMap() {
 				_trials[i].showPins(map, false);
 			}
 			geo_zoomToPins();
-		}, 500);
+		}, 200);
 	}
 }
 
