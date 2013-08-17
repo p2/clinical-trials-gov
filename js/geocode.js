@@ -4,55 +4,78 @@
 
 var g_map = null;
 var g_geocoder = null;
+var g_clusterer = null;
 
 var g_pins = [];
 var g_highlighted_pin = null;
 var g_patient_pin = null;
 var g_patient_location = null;
 
+var g_marker_green = null;
+var g_marker_red = null;
+
 
 
 /**
  *  Initially creates the map object
  */
-function initMap() {
+function _geo_initMap() {
 	if (g_map) {
 		return;
 	}
 	
-	// init
+	// init map
 	var mapOptions = {
 		zoom: 4,
+		maxZoom: 15,
 		// center: new google.maps.LatLng(42.358, -71.06),		// Boston
 		center: new google.maps.LatLng(38.5, -96.5),			// ~USA
 		mapTypeId: google.maps.MapTypeId.ROADMAP
 	}
 	g_map = new google.maps.Map($("#g_map").get(0), mapOptions);
 	
+	// init clusterer (REMEMBER we have MODIFIED MarkerClusterer 2.0.9!)
+	g_clusterer = new MarkerClusterer(g_map);
+	g_clusterer.onClick = function(clickedClusterIcon) { 
+		return _geo_multipleMarkersAtSameLocation(clickedClusterIcon.cluster_); 
+	}
+	
+	// markers
+	g_marker_green = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|33CC22",
+		new google.maps.Size(21, 34),
+		new google.maps.Point(0,0),
+		new google.maps.Point(10, 34)
+	);
+	g_marker_red = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|AA2200",
+		new google.maps.Size(21, 34),
+		new google.maps.Point(0,0),
+		new google.maps.Point(10, 34)
+	);
+	
 	// zoom to patient if we have the location
 	if (g_patient_location) {
-		zoomToPatient();
+		_geo_zoomToPatient();
 	}
 }
 
 /**
  *  Shows the map div after setting its height to 40% the window height
  */
-function showMap() {
+function geo_showMap() {
 	var h = Math.max(300, Math.round($(window).height() * 0.4));
 	$('#g_map').css('height', h + 'px').show();
 	
 	if (!g_map) {
-		initMap();
+		_geo_initMap();
 	}
 }
 
 /**
  *  Hide the map and unhighlight any pin
  */
-function hideMap() {
+function geo_hideMap() {
 	$('#g_map').hide();
-	unhighlightPin();
+	geo_unhighlightPin();
 }
 
 
@@ -60,7 +83,7 @@ function hideMap() {
 /**
  *  Pulls out the location text from the "#demo_location" field and geocodes the location, passing it into the callback.
  */
-function locatePatient(address, callback) {
+function geo_locatePatient(address, callback) {
 	if (!address) {
 		console.warn("Cannot locate patient, no address given");
 		g_patient_location = null;
@@ -69,12 +92,12 @@ function locatePatient(address, callback) {
 		}
 	}
 	
-	geocodeAddress(address, function(success, location) {
+	geo_codeAddress(address, function(success, location) {
 		g_patient_location = location;
 		
 		// set marker and center map
 		if (g_map && location) {
-			zoomToPatient();
+			_geo_zoomToPatient();
 		}
 		
 		// callback
@@ -89,7 +112,7 @@ function locatePatient(address, callback) {
  *  Locate the address via Google and display in our map.
  *  The callback receives a flag whether the geocoding was successful and a LatLng object.
  */
-function geocodeAddress(address, callback) {
+function geo_codeAddress(address, callback) {
 	if (!address) {
 		console.error("No address given, cannot geo-code");
 		if (callback) {
@@ -125,45 +148,43 @@ function geocodeAddress(address, callback) {
 	});
 }
 
+
 /**
- *  Adds a pin to our map.
- */ 
-function addPinToMap(lat, lng, title, color, animated, click_func) {
-	if (!lat || !lng) {
-		console.error("I need lat and long to place a pin");
+ *  Adds the given pins to our map.
+ */
+function geo_addPins(pins, animated, click_func) {
+	if (!pins || 0 == pins.length) {
 		return;
 	}
 	
-	// request marker images
-	var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2" + (color ? '|' + color : ''),
-		new google.maps.Size(21, 34),
-		new google.maps.Point(0,0),
-		new google.maps.Point(10, 34)
-	);
-	
-	// place the marker
-	var pin = new google.maps.Marker({
-		map: g_map,
-		position: new google.maps.LatLng(lat, lng),
-		title: title,
-		icon: pinImage,
-		animation: animated ? google.maps.Animation.DROP : null
-	});
-	
-	g_pins.push(pin);
-	
-	// add click handler
-	if (click_func) {
-		google.maps.event.addListener(pin, "click", click_func);
+	// add all
+	var markers = [];
+	for (var i = 0; i < pins.length; i++) {
+		var pin = pins[i];
+		var marker = new google.maps.Marker({
+			position: new google.maps.LatLng(pin.lat, pin.lng),
+			trial: pin.trial,
+			location: pin.location,
+			title: pin.trial.title,
+			icon: pin.reason ? g_marker_red : g_marker_green,
+			animation: animated ? google.maps.Animation.DROP : null
+		});
+		markers.push(marker);
+		// g_pins.push(marker);			// let the cluster handle zooming for now
+		
+		// add click handler
+		if (click_func) {
+			google.maps.event.addListener(marker, "click", click_func);
+		}
 	}
 	
-	return pin;
+	g_clusterer.addMarkers(markers);
 }
 
 /**
  *  Highlight the given pin and un-highlights other pins.
  */
-function highlightPin(pin) {
+function geo_highlightPin(pin) {
 	if (!pin) {
 		console.error("I need a pin to highlight");
 		return;
@@ -178,9 +199,25 @@ function highlightPin(pin) {
 }
 
 /**
+ *  Called when multiple pins are at the same location.
+ *
+ *  This is in our MODIFIED MarkerCluster class, as per:
+ *  http://stackoverflow.com/questions/3548920/google-maps-api-v3-multiple-markers-on-exact-same-spot
+ */
+function _geo_multipleMarkersAtSameLocation(cluster) {
+	if (cluster.getMarkers().length > 1) {
+		var markers = cluster.getMarkers();
+		showTrialsforPins(markers);
+		return false;
+	}
+	return true;
+}
+
+
+/**
  *  Unhighlight the currently highlighted pin, if any.
  */
-function unhighlightPin() {
+function geo_unhighlightPin() {
 	if (g_highlighted_pin) {
 		g_highlighted_pin.setAnimation();
 		g_highlighted_pin = null;
@@ -191,7 +228,10 @@ function unhighlightPin() {
 /**
  *  Zooms the map to show the current position marker and at least some pins (if there are any)
  */
-function zoomToPins(fit_num) {
+function geo_zoomToPins(fit_num) {
+	// disabled for now
+	return;
+	
 	if (!g_map || !$('#g_map').is(':visible')) {
 		return;
 	}
@@ -263,18 +303,22 @@ function zoomToPins(fit_num) {
 /**
  *  Clears all pins.
  */
-function clearAllPins() {
+function geo_clearAllPins() {
 	for (var i = 0; i < g_pins.length; i++) {
 		g_pins[i].setMap(null);
 	}
 	g_pins = [];
+	
+	if (g_clusterer) {
+		g_clusterer.clearMarkers();
+	}
 }
 
 
 /**
  *  Adds a patient pin and centers the map on it
  */
-function zoomToPatient() {
+function _geo_zoomToPatient() {
 	if (!g_patient_location) {
 		return;
 	}
@@ -303,9 +347,9 @@ function zoomToPatient() {
  */
 function kmDistanceBetweenLocationsLatLng(lat1, lng1, lat2, lng2) {
 	var R = 6371;									// Radius of the earth in km
-	var dLat = deg2rad(lat2 - lat1);
-	var dLon = deg2rad(lng2 - lng1); 
-	var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+	var dLat = _geo_deg2rad(lat2 - lat1);
+	var dLon = _geo_deg2rad(lng2 - lng1); 
+	var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(_geo_deg2rad(lat1)) * Math.cos(_geo_deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
 	var c = 2 * Math.asin(Math.sqrt(a));
 	
 	return R * c;
@@ -315,6 +359,16 @@ function kmDistanceBetweenLocations(l1, l2) {
 	return kmDistanceBetweenLocationsLatLng(l1.lat(), l1.lng(), l2.lat(), l2.lng());
 }
 
-function deg2rad(deg) {
+function _geo_deg2rad(deg) {
 	return deg * (Math.PI / 180)
 }
+
+
+
+/**
+ *  Enhancements to MarkerCluster (resolution to having multiple objects at the same location)
+ */
+MarkerClusterer.prototype.onClick = function() { 
+    return true; 
+};
+

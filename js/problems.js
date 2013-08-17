@@ -115,8 +115,10 @@ function cancelTrialSearchAndShowProblemList(problem_id) {
 	cancelTrialSearch();
 	
 	// show all problems again
+	var num_problems = 0;
 	$('#problem_list').find('li').each(function(idx, elem) {
 		$(elem).slideDown('fast');
+		num_problems++;
 	});
 	
 	// reset UI
@@ -125,7 +127,7 @@ function cancelTrialSearchAndShowProblemList(problem_id) {
 	$('#manual_cancel').hide();
 	$('#manual_submit').show();
 	
-	if (problem_id) {
+	if (problem_id && num_problems > 1) {
 		$('#' + problem_id).removeClass('active');
 	}
 }

@@ -10,8 +10,9 @@ var _trialBatchSize = 10;		// 25 might be too much for some computers
 var _trialNumExpected = 0;
 var _trialNumDone = 0;
 var _showGoodTrials = true;
+var _trialsPerPage = 50;
 
-var _shouldShowPinsForTrials = [];
+var _trials = null;
 
 
 /**
@@ -43,16 +44,17 @@ function cancelTrialSearch() {
 }
 
 function resetUI() {
-	_hideNoTrialsHint()
+	_hideNoTrialsHint();
+	_trials = null;
 	
 	$('#trial_selectors').find('.trial_selector').empty();
 	$('#trial_selectors').find('.trial_opt_selector > ul').empty();
 	$('#trial_selectors').hide();
 	$('#trial_list').empty();
 	
-	clearAllPins();
-	hideMap();
-	$('#g_map_toggle').text('Show Map').hide();
+	geo_clearAllPins();
+	geo_hideMap();
+	$('#g_map_toggle').hide().find('a').text('Show Map');
 }
 
 
@@ -223,7 +225,7 @@ function loadTrialsAfterLocatingPatient(trial_tuples) {
 	}
 	
 	// locate (asynchronously)
-	locatePatient(adr, function(success, location) {
+	geo_locatePatient(adr, function(success, location) {
 		if (success) {
 			_patient_loc = location;
 		}
@@ -317,6 +319,9 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_p
 	if (!drug_phases) {
 		drug_phases = [];
 	}
+	if (!_trials) {
+		_trials = [];
+	}
 	
 	var batch = batches[current];
 	var ncts = [];
@@ -338,7 +343,6 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_p
 		
 		// got trials
 		if ('success' == status) {
-			var trial_list = $('#trial_list');
 			var type_arr = [];
 			
 			// loop trials
@@ -364,20 +368,12 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_p
 				// trial
 				var trial = new Trial(trials[i]);
 				trial.reason = this.reasons[trial.nct];
-				trial.geocode(_patient_loc);
 				
 				// pull out intervention types and phases
 				intervention_types = intervention_types.concat(trial.interventionTypes());
 				drug_phases = drug_phases.concat(trial.trialPhases());
 				
-				// add the trial to the list
-				var li = $('<li/>').append(can.view('templates/trial_item.ejs', {'trial': trial}));
-				li.data('good', !trial.reason);
-				li.data('distance', trial.closest);
-				li.data('intervention-types', trial.interventionTypes());
-				li.data('phases', trial.trialPhases());
-				
-				trial_list.append(li);
+				_trials.push(trial);
 			}
 		}
 		
@@ -445,15 +441,21 @@ function _didLoadTrialBatches(batches, intervention_types, drug_phases) {
 		});
 	}
 	
-	// sort the trial list by distance
-	sortChildren($('#trial_list'), 'li', function(a, b) {
-		return $(a).data('distance') - $(b).data('distance');
-	});
-	
 	$('#trial_selectors').show();
 	$('#trials').show();
+	_geocodeTrials(_patient_loc);
 	_updateShownHiddenTrials();
 	_showTrialStatus();
+}
+
+
+function _geocodeTrials(to_location) {
+	Trial.geocode(_trials, _patient_loc);
+	
+	// now order them by distance
+	_trials.sort(function(a, b) {
+		return a.closest - b.closest;
+	});
 }
 
 
@@ -520,12 +522,10 @@ function _toggleOptCheckElement(evt) {
  *  Loops all trials and shows or hides according to our globals.
  */
 function _updateShownHiddenTrials() {
-	var hasMap = $('#g_map').is(':visible');
 	
 	// clean up pins
-	clearAllPins();
-	_shouldShowPinsForTrials = [];
-	$('#selected_trial').empty();
+	geo_clearAllPins();
+	$('#selected_trial').empty().hide();
 	
 	// get active intervention types
 	var active_types = [];
@@ -545,43 +545,45 @@ function _updateShownHiddenTrials() {
 		}
 	});
 	
-	// loop all trials and show or hide them accordingly
-	var num_shown = 0;
+	// loop all trials and collect those that we want to show
+	var to_show = [];
 	var num_w_phase = 0;
 	var per_type = {};
 	var per_phase = {};
-	$('#trial_list').children('li').each(function(idx, item) {
-		var elem = $(item);
+	
+	for (var i = 0; i < _trials.length; i++) {
+		var trial = _trials[i];
+		trial.did_add_pins = false;
 		
 		// good or bad
-		var show = (_showGoodTrials == elem.data('good'));
+		var show = (_showGoodTrials == (!trial.reason));
 		
 		// intervention type
 		if (show) {
-			var types = elem.data('intervention-types');
+			var types = trial.interventionTypes();
 			show = active_types.intersects(types);
 			
 			// count
-			for (var i = 0; i < types.length; i++) {
-				if (types[i] in per_type) {
-					per_type[types[i]]++;
+			for (var j = 0; j < types.length; j++) {
+				if (types[j] in per_type) {
+					per_type[types[j]]++;
 				}
 				else {
-					per_type[types[i]] = 1;
+					per_type[types[j]] = 1;
 				}
 			}
 		}
 		
 		// trial phase
 		if (show) {
-			var phases = elem.data('phases');
+			var phases = trial.trialPhases();
 			if (phases.length > 0) {
 				show = active_phases.intersects(phases);
 				var has_non_na_phase = false;
 				
 				// count
-				for (var i = 0; i < phases.length; i++) {
-					var phase = phases[i];
+				for (var j = 0; j < phases.length; j++) {
+					var phase = phases[j];
 					if (phase in per_phase) {
 						per_phase[phase]++;
 					}
@@ -599,41 +601,15 @@ function _updateShownHiddenTrials() {
 			}
 		}
 		
-		// apply
+		// show (unless over page limit)
 		if (show) {
-			var trial = elem.find('.trial').data('trial');
-			
-			if (hasMap) {
-				_showPinsForTrial(trial, !elem.is(':visible'));
-			}
-			else {
-				_shouldShowPinsForTrials.push(trial);
-			}
-			
-			// show trial locations
-			if (!elem.is(':visible') && trial) {
-				trial.showClosestLocations(elem, 0, 3);
-			}
-			
-			// elem.slideDown('fast');
-			elem.show();
-			num_shown++;
+			to_show.push(trial);
 		}
-		else {
-			// elem.slideUp('fast');
-			elem.hide().find('.trial_locations').empty();
-		}
-	});
-	
-	// nothing shown? Show hints
-	if (0 == num_shown) {
-		_showNoTrialsHint();
-	}
-	else {
-		_hideNoTrialsHint();
 	}
 	
-	window.setTimeout(zoomToPins, 100);
+	// show the trials
+	_showTrials(to_show, 0);
+	window.setTimeout(geo_zoomToPins, 100);
 	
 	// update good/bad selector
 	$('#selector_goodbad').children('li').each(function(idx, item) {
@@ -675,75 +651,151 @@ function _updateShownHiddenTrials() {
 }
 
 
+/**
+ *  Shows the given trials, up to _trialsPerPage, from the given start position.
+ */
+function _showTrials(trials, start) {
+	var trial_list = $('#trial_list');
+	if (!start || 0 == start) {
+		trial_list.empty();
+	}
+	$('#show_more_trials').remove();
+	
+	if (!trials || 0 == trials.length || start >= trials.length) {
+		if (trials.length > 0 && start >= trials.length) {
+			console.warn('Cannot show trials starting at: ', start, 'trials: ', trials);
+		}
+		return;
+	}
+	
+	var map = $('#g_map');
+	
+	var show_max = start + _trialsPerPage;
+	if (trials.length > show_max && trials.length < start + _trialsPerPage + (_trialsPerPage / 10)) {
+		// if it's less than 10% more, show them all
+		show_max = trials.length + start;
+	}
+	var has_more = false;
+	var num_locations = 0;
+	
+	for (var i = start; i < trials.length; i++) {
+		var trial = trials[i];
+		num_locations += trial.showPins(map, false);
+		
+		// add the trial element to the list
+		if (i < show_max) {
+			var li = $('<li/>').append(can.view('templates/trial_item.ejs', {'trial': trial}));
+			trial_list.append(li);
+			trial.showClosestLocations(li, 0, 3);
+		}
+		else {
+			has_more = true;
+		}
+	}
+	
+	$('#g_map_toggle > span').text(num_locations > 1000 ? ' (' + num_locations + ' trial locations)' : '');
+	
+	// nothing shown? Show hints
+	if (0 == trials.length) {
+		_showNoTrialsHint();
+	}
+	else {
+		_hideNoTrialsHint();
+		
+		// are there more?
+		if (has_more) {
+			var more = trials.length - show_max;
+			var li = $('<li/>', {'id': 'show_more_trials'}).append('<h1>There are ' + more + ' more trials</h1>');
+			var link = $('<a/>', {'href': 'javascript:void(0);'}).text('Show ' + ((_trialsPerPage < more) ? _trialsPerPage + ' more' : 'all'))
+			.click(function(e) {
+				_showTrials(trials, start + _trialsPerPage);
+			});
+			
+			li.append($('<h1/>').append(link));
+			trial_list.append(li);
+		}
+	}
+}
+
 
 
 /**
  *  Toggles the trial map
  */
 function toggleTrialMap() {
+	var map = $('#g_map');
 	
 	// hide
-	if ($('#g_map').is(':visible')) {
-		hideMap();
-		$('#g_map_toggle').text('Show Map');
+	if (map.is(':visible')) {
+		var link_offset = $('#g_map_toggle').offset().top - $(window).scrollTop();
+		geo_hideMap();
+		$('#g_map_toggle > a').text('Show Map');
 		$('#selected_trial').empty().hide();
+		
+		// scroll in place
+		var new_offset = $('#g_map_toggle').offset().top - $(window).scrollTop();
+		if (Math.abs(link_offset - new_offset) > 50) {
+			$(window).scrollTop(Math.max(0, $('#g_map_toggle').offset().top - link_offset));
+		}
 	}
 	
 	// show
 	else {
-		showMap();
-		$('#g_map_toggle').text('Hide Map');
+		geo_showMap();
+		// map.append('<div id="g_map_loading">Loading...</div>');
+		$('#g_map_toggle > a').text('Hide Map');
 		
 		// pins
-		if (_shouldShowPinsForTrials.length > 0) {
-			for (var i = 0; i < _shouldShowPinsForTrials.length; i++) {
-				_showPinsForTrial(_shouldShowPinsForTrials[i], false);
-			};
-		}
-		zoomToPins();
-	}
-}
-
-
-function _showPinsForTrial(trial, animated) {
-	if (!trial) {
-		console.error("No trial to show pins for");
-		return;
-	}
-	
-	if ('location' in trial) {
-		for (var i = 0; i < trial.location.length; i++) {
-			if ('geodata' in trial.location[i]) {
-				var lat = trial.location[i].geodata.latitude;
-				var lng = trial.location[i].geodata.longitude;
-				
-				addPinToMap(lat, lng, trial.title, trial.reason ? 'AA2200' : '33CC22', animated, function(e) {
-					highlightPin(this);
-					showSelectedTrial(trial);
-				});
+		window.setTimeout(function() {
+			for (var i = 0; i < _trials.length; i++) {
+				_trials[i].showPins(map, false);
 			}
-		}
+			geo_zoomToPins();
+		}, 500);
 	}
 }
 
-function showSelectedTrial(trial) {
-	var fragment = can.view('templates/trial_item.ejs', {'trial': trial});
+
+/**
+ *  May be called with multiple pins (if they are all clustered).
+ */
+function showTrialsforPins(pins) {
+	if (1 == pins.length) {
+		geo_highlightPin(pins[0]);
+	}
 	
-	// append
-	$('#selected_trial').show().empty()
-	.append(fragment)
-	.append('<a class="dismiss_link" href="javascript:void(0);" onclick="unloadSelectedTrial()">dismiss</a>');
+	var map_offset = $('#g_map').offset().top - $(window).scrollTop();
+	var area = $('#selected_trial').empty().show();
 	
-	// need to re-fetch to manipulate
-	var div = $('#selected_trial').find('.trial');
-	div.addClass('active');
+	// show all trials corresponding to the pins
+	for (var i = 0; i < pins.length; i++) {
+		var pin = pins[i];
+		
+		var li = $('<li/>').append(can.view('templates/trial_item.ejs', {'trial': pin.trial}));
+		li.append('<a class="dismiss_link" href="javascript:void(0);" onclick="dismissShownTrial(this)">dismiss</a>');
+		area.append(li);
+		
+		// and show the location
+		pin.trial.showLocation(li, pin.location);
+	}
 	
-	trial.showClosestLocations(div, 0, 3);
+	// scroll the map back
+	var new_offset = $('#g_map').offset().top - $(window).scrollTop();
+	if (Math.abs(new_offset - map_offset) > 50) {
+		$(window).scrollTop(Math.max(200, $('#g_map').offset().top - map_offset));
+	}
 }
 
-function unloadSelectedTrial() {
-	$('#selected_trial').slideUp('fast', function() { $(this).empty(); });
-	unhighlightPin();
+function dismissShownTrial(link) {
+	var elem = $(link).closest('li').slideUp('fast', function() {
+		$(this).remove();
+		
+		var area = $('#selected_trial');
+		if (0 == area.find('li').length) {
+			area.hide();
+		}
+	});
+	geo_unhighlightPin();
 }
 
 

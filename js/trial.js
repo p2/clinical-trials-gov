@@ -5,12 +5,21 @@
 
 var Trial = can.Construct({
 	
+	/**
+	 *  Geocode an array of trials.
+	 */
+	geocode: function(trials, to_location) {
+		for (var i = 0; i < trials.length; i++) {
+			trials[i].geocode(to_location);
+		}
+	}
 },
 {
 	reason: null,						// the reason why this trial is not suitable for the patient
 	intervention_types: null,
 	trial_phases: null,
 	trial_locations: null,
+	did_add_pins: false,
 	last_loc_distances: null,
 	closest: null,
 	
@@ -210,6 +219,47 @@ var Trial = can.Construct({
 			var div = $('<div class="trial_location"><h3>No trial locations available</h3></div>');
 			loc_elem.append(div);
 		}
+	},
+	
+	/**
+	 *  Show a single location.
+	 */
+	showLocation: function(elem, location) {
+		var fragment = can.view('templates/trial_location.ejs', {'loc': location});
+		elem.find('.trial_locations').append(fragment);
+	},
+	
+	
+	/**
+	 *  Adds the trial location pins to the map.
+	 *  @return The number of trial locations
+	 */
+	showPins: function(map, animated) {
+		var locs = this.locations();
+		
+		if (!this.did_add_pins && map.is(':visible')) {
+			this.did_add_pins = true;
+			var pins = [];
+			
+			for (var i = 0; i < locs.length; i++) {
+				if ('geodata' in locs[i]) {
+					var loc = {
+						'lat': locs[i].geodata.latitude,
+						'lng': locs[i].geodata.longitude,
+						'location': locs[i],
+						'trial': this
+					};
+					
+					pins.push(loc);
+				}
+			}
+			
+			geo_addPins(pins, false, function(e) {
+				showTrialsforPins([this]);
+			});
+		}
+		
+		return locs.length;
 	}
 });
 

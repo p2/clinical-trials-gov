@@ -25,7 +25,7 @@
 		border: 1px solid $col-main-fg; border-radius: $border-radius;
 		background-color: $col-main-bg;
 		@include placeholder {
-			color: lighten($col-main, 25%);
+			color: #701;
 		}
 	}
 	#demo_location {

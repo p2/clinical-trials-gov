@@ -19,7 +19,7 @@
 		&.active {
 			padding: 0 0.4em;
 			color: black;
-			border: 1px solid $col-main-fg;
+			border: 1px solid $col-main-border;
 			background-color: $col-main-bg;
 		}
 		
@@ -99,7 +99,6 @@ ul.trial_list {
 	list-style-type: none;
 	
 	li {
-		display: none;
 		margin-bottom: 1em; padding-top: 1em;
 		line-height: 1.4;
 		border-top: 1px solid $col-border;
@@ -107,26 +106,39 @@ ul.trial_list {
 		&:first-child {
 			border-top: none;
 		}
+		
+		h1 {
+			text-align: center;
+		}
 	}
 }
 
 #selected_trial {
-	position: relative;
+	display: none;
+	
+	li {
+		position: relative;
+		border-top-color: darken($col-border, 20%);
+	}
 	
 	.dismiss_link {
 		position: absolute; top: 3pt; right: 4pt;
 		font-size: 0.9em;
 	}
+	
+	&.active {
+		padding: 1em;
+		border: 1px solid $col-main-border; border-radius: $border-radius;
+		background-color: lighten($col-main-bg, 15%);
+		
+		.trial {
+			
+		}
+	}
 }
 
 
 .trial {
-	&.active {
-		padding: 1em;
-		border: 1px solid $col-main-fg; border-radius: $border-radius;
-		background-color: $col-main-bg;
-	}
-	
 	& > a:first-child {
 		margin-right: 1em;
 	}

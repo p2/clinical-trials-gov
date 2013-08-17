@@ -35,9 +35,12 @@
 			</div>
 			<div style="clear:left;"> </div>
 			
-			<ul id="selected_trial" class="trial_list"></ul>
+			<ul id="selected_trial" class="trial_list active"></ul>
 			<div id="g_map"></div>
-			<a id="g_map_toggle" href="javascript:void(0)" onclick="toggleTrialMap()">Show Map</a>
+			<div id="g_map_toggle">
+				<a href="javascript:void(0)" onclick="toggleTrialMap()">Show Map</a>
+				<span class="red"></span>
+			</div>
 			
 			<div id="trials">
 				<ul id="trial_list" class="trial_list"></ul>
@@ -48,8 +51,9 @@
 <script src="static/jquery-1.9.1.min.js"></script>
 <script src="static/can.custom.js"></script>
 <script src="static/moment.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ defs.google_api_key }}&sensor=false"></script>
+<script src="static/markerclusterer.min.js"></script>
 <script src="static/main.min.js"></script>
-<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key={{ defs.google_api_key }}&sensor=false"></script>
 {% if defs.smart_v05 %}
 <!-- SMART v0.5 hack -->
 <script src="http://sample-apps-v05.smartplatforms.org/framework/smart/scripts/smart-api-client.js"></script>
