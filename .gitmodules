@@ -3,4 +3,4 @@
 	url = git://github.com/chb/smart_client_python.git
 [submodule "ClinicalTrials"]
 	path = ClinicalTrials
-	url = git@github.com:p2/ClinicalTrials.git
+	url = git://github.com/p2/ClinicalTrials.git
