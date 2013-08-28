@@ -1,4 +1,4 @@
-html, body { height: 100%; margin: 0; padding: 0; font: 11pt "Helvetica-Neue", Helvetica, sans-serif; line-height: 1.3; background-color: #f6f6f6; }
+html, body { height: 100%; margin: 0; padding: 0; font: 11pt "Helvetica-Neue", Helvetica, sans-serif; line-height: 1.35; background-color: #f6f6f6; }
 
 h1 { font-weight: 300; }
 
@@ -9,9 +9,11 @@ h3:first-child { margin-top: 0.3em; }
 
 a { color: #0014be; text-decoration: none; }
 
-p { padding: 0.5em 0; }
+p { margin: 0.5em 0; }
 p:first-child { margin-top: 0; }
 p:last-child { margin-bottom: 0; }
+
+blockquote { margin: 1em 0; padding: 0 0 0 1em; border-left: 0.3em solid #afafaf; color: #505050; }
 
 table { border-collapse: collapse; }
 
@@ -21,12 +23,14 @@ td:last-child { padding-right: 0; }
 .back_to_select { margin: 1em 0 2em; }
 .back_to_select #back_to_patient { margin-right: 2em; }
 
-#container { max-width: 70em; min-height: 100%; margin: 0 auto; }
+#header { padding: 0.5em 3em 1em; text-align: right; }
 
+#container { max-width: 70em; min-height: 100%; margin: 0 auto; background-color: white; }
 @media screen and (min-width: 72em) { #container { border: 1px solid #c8c8c8; border-width: 0 1px; } }
-#container { background-color: white; }
 
-#content { padding: 2em 3em; }
+#content { padding: 0 3em 2em; }
+
+#footer { padding: 2em 3em; font-size: 90%; color: #505050; text-align: center; }
 
 #g_map { display: none; position: relative; width: 100%; height: 400px; margin-top: 1.5em; clear: left; }
 

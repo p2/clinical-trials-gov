@@ -8,3 +8,4 @@ rdfextras
 pymongo >= 2.4
 jinja2
 requests
+markdown

@@ -1,13 +1,12 @@
 #!/usr/bin/python
-#
-#
-
 
 import os
 import sys
 import logging
 import json
 import re
+import markdown
+import codecs
 from datetime import date, datetime
 import dateutil.parser
 
@@ -226,6 +225,31 @@ def index():
 	return template.render(defs=defs, api_base=api_base, last_manual_condition=sess.get('last_manual_condition', ''))
 
 
+@bottle.get('/help')
+@bottle.get('/help.html')
+def help():
+	""" Show the help page. """
+	help_html = os.path.join('static', 'help.html')
+	help_md = os.path.join('templates', 'help.md')
+	
+	# update help html from markdown if needed
+	if not os.path.exists(help_html) \
+		or os.path.getmtime(help_html) < os.path.getmtime(help_md):
+		
+		with codecs.open(help_md, 'r', 'utf-8') as read:
+			help = read.read()
+			template = _jinja_templates.get_template('master.html')
+			text = markdown.markdown(help)
+			links = [{'text': "Trial Eligibility App", 'href': '/'}]
+			html = template.render(content=text, links=links)
+			
+			# render to html
+			with codecs.open(help_html, 'w', 'utf-8') as write:
+				write.write(html)
+	
+	return _serve_static('help.html', 'static')
+
+
 @bottle.get('/authorize')
 def authorize():
 	""" Extract the oauth_verifier from the callback and exchange it for an
@@ -361,20 +385,19 @@ def problems():
 	# SMART 0.6+
 	elif USE_SMART:
 		smart = _get_smart()
-		if smart is None:
-			return {'problems': []}
-		
-		ret = smart.get_problems()
-		if 200 == int(ret.response.status):
-			prob_ld = json.loads(ret.graph.serialize(format='json-ld')) if ret.graph is not None else None
-		else:
-			logging.error("Failed to get problems: %d" % int(ret.response.status))
+		if smart is not None:
+			ret = smart.get_problems()
+			if 200 == int(ret.response.status):
+				prob_ld = json.loads(ret.graph.serialize(format='json-ld')) if ret.graph is not None else None
+			else:
+				logging.error("Failed to get problems: %d" % int(ret.response.status))
 	
 	# pick out the individual problems
 	problems = []
-	for gr in prob_ld.get("@graph", []):
-		if "sp:Problem" == gr.get("@type"):
-			problems.append(gr)
+	if prob_ld is not None:
+		for gr in prob_ld.get("@graph", []):
+			if "sp:Problem" == gr.get("@type"):
+				problems.append(gr)
 	
 	return {'problems': problems}
 

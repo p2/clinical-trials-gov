@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Trial Eligibility</title>
+	<link rel="stylesheet" type="text/css" href="static/style.css" />
+</head>
+<body>
+	<div id="container">
+		<div id="header">
+			{%- for link in links %}
+			<a href="{{ link.href }}">{{ link.text }}</a>
+			{%- else %}
+			&nbsp;
+			{%- endfor %}
+		</div>
+		<div id="content">
+			{{ content }}
+		</div>
+		<div id="footer">2013</div>
+	</div>
+</body>
+</html>
