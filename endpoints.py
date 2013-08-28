@@ -1,15 +1,7 @@
-# example settings file, copy to "settings.py" and adjust to your needs
+#!/usr/bin/python
+#
+#  The SMART endpoints to use in the app, if the env var USE_SMART is 1
 
-USE_APP_ID = "clinical-trials-localhost@apps.chip.org"
-USE_SMART = True
-USE_SMART_05 = False
-USE_NLP = True
-
-GOOGLE_API_KEY = 'xxx'
-
-DEBUG = False
-
-# configure servers
 ENDPOINTS = [
 	{
 		"url": "http://sandbox-api-v06.smartplatforms.org",
@@ -23,6 +15,6 @@ ENDPOINTS = [
 		"name": "Localhost :7000",
 		"app_id": "clinical-trials-localhost@apps.chip.org",
 		"consumer_key": "clinical-trials-localhost@apps.chip.org",
-		"consumer_secret": "xxx"
+		"consumer_secret": "FWJXOmuocStCWKaL"
 	}
 ]

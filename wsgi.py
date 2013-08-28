@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -15,8 +16,12 @@ import bottle
 from beaker.middleware import SessionMiddleware
 from jinja2 import Template, Environment, PackageLoader
 
+# settings
+USE_SMART = int(os.environ.get('USE_SMART', False))
+USE_SMART_05 = int(os.environ.get('USE_SMART_05', False))
+USE_NLP = int(os.environ.get('USE_NLP', False))
+
 # SMART
-from settings import USE_APP_ID, USE_SMART, USE_SMART_05, USE_NLP, GOOGLE_API_KEY, DEBUG, ENDPOINTS
 if USE_SMART and not USE_SMART_05:
 	from smart_client_python.client import SMARTClient
 if USE_SMART:
@@ -70,6 +75,7 @@ def _get_smart():
 	cons_key = sess.get('consumer_key')
 	cons_sec = sess.get('consumer_secret')
 	if not cons_key or not cons_sec:
+		from endpoints import ENDPOINTS
 		server = None
 		for ep in ENDPOINTS:
 			if ep.get('url') == api_base:
@@ -90,7 +96,7 @@ def _get_smart():
 	}
 	
 	try:
-		smart = SMARTClient(USE_APP_ID, api_base, config)
+		smart = SMARTClient(os.environ.get('USE_APP_ID'), api_base, config)
 		smart.record_id = sess.get('record_id')
 	except Exception, e:
 		logging.warning("Failed to instantiate SMART client: %s" % e)
@@ -219,7 +225,7 @@ def index():
 	defs = {
 		'use_smart': USE_SMART,
 		'smart_v05': USE_SMART_05,
-		'google_api_key': GOOGLE_API_KEY
+		'google_api_key': os.environ.get('GOOGLE_API_KEY')
 	}
 	
 	return template.render(defs=defs, api_base=api_base, last_manual_condition=sess.get('last_manual_condition', ''))
@@ -619,31 +625,30 @@ def ejs(ejs_name):
 # ------------------------------------------------------------------------------ MongoDB
 @bottle.get('/mongo')
 def mongotest():
-	from pymongo import Connection
-	
-	uri = mongodb_uri()
-	conn = Connection(uri)
-	coll = conn.db['ts']
-	coll.insert(dict(now=int(time.time())))
-	last_few = [str(x['now']) for x in coll.find(sort=[("_id", -1)], limit=10)]
-	body = "\n".join(last_few)
+	body = "MongoDB test : "
+	# body = "MongoDB test [%s] : " % mongodb_uri()
+	test_err = MNGObject.test_connection()
+	body += test_err if test_err is not None else 'success'
 	
 	return body
 
 def mongodb_uri():
+	""" Determine our MongoDB URI. """
+	
+	# Heroku/MongoHQ
+	if 'MONGOHQ_URL' in os.environ:
+		return os.environ['MONGOHQ_URL']
+	
+	# AppFog
 	services = json.loads(os.getenv("VCAP_SERVICES", "{}"))
-	if services:
-		creds = services['mongodb-1.8'][0]['credentials']
-		uri = "mongodb://%s:%s@%s:%d/%s" % (
-			creds['username'],
-			creds['password'],
-			creds['hostname'],
-			creds['port'],
-			creds['db'])
-		print >> sys.stderr, uri
-		return uri
-	else:
-		return "mongodb://localhost:27017"
+	if services and 'mongodb-1.8' in services:
+		try:
+			return services['mongodb-1.8'][0]['credentials']['url']
+		except Exception, e:
+			logging.error("Failed getting MongoDB credentials: %s" % e)
+	
+	# default
+	return "mongodb://localhost:27017"
 
 
 # remaining setup
@@ -652,7 +657,7 @@ MNGObject.database_uri = mongodb_uri()
 
 # start the server
 if '__main__' == __name__:
-	if DEBUG:
+	if os.environ.get('DEBUG'):
 		logging.basicConfig(level=logging.DEBUG)
 		bottle.run(app=app, host='0.0.0.0', port=8008, reloader=True)
 	else:

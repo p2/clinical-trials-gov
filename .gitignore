@@ -4,14 +4,16 @@
 # ignore databases
 databases/*
 
-# ignore UMLS settings
+# ignore settings
+env.sh
 umls.sh
 
 # ignore the run-directories
 run-*/
 
-# ignore generated report
+# ignore generated html
 report.html
+static/help.html
 
 # ignore ctakes and metamap
 ctakes

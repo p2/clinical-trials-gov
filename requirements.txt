@@ -5,7 +5,7 @@ rdflib >= 3.2.0
 # rdfextras needs pyparsing, but pyparsing > 1.5.7 targets Python 3.0, so we need to request 1.5.7 specifically
 pyparsing == 1.5.7
 rdfextras
-pymongo >= 2.4
+pymongo >= 2.6
 jinja2
 requests
 markdown
