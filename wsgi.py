@@ -316,7 +316,7 @@ def demographics():
 		demo_ld = {u"@graph": [json.loads(graph.serialize(format='json-ld'))]}
 	
 	# SMART 0.6+
-	else:
+	elif USE_SMART:
 		smart = _get_smart()
 		if smart is None:
 			return d
@@ -359,7 +359,7 @@ def problems():
 		prob_ld = json.loads(graph.serialize(format='json-ld'))
 	
 	# SMART 0.6+
-	else:
+	elif USE_SMART:
 		smart = _get_smart()
 		if smart is None:
 			return {'problems': []}
@@ -420,17 +420,16 @@ def find_trials():
 	
 	# configure
 	cond = bottle.request.query.get('cond')
+	term = bottle.request.query.get('term')
 	if cond:
 		cond = re.sub(r'\s+\((disorder|finding)\)', '', cond)
 		runner.condition = cond
+	elif term:
+		term = re.sub(r'\s+-(\w+)', r' NOT \1', term)
+		term = re.sub(r'\s*([^\w\d])\s+([^-])', r' AND \2', term)
+		runner.term = term
 	else:
-		term = bottle.request.query.get('term')
-		if not term:
-			bottle.abort(400, 'You need to specify "cond" or "term"')
-		else:
-			term = re.sub(r'\s*-(\w+)', r' NOT \1', term)
-			term = re.sub(r'\s*([^\w\d])\s+([^-])', r' AND \2', term)
-			runner.term = term
+		bottle.abort(400, 'You need to specify "cond" or "term"')
 	
 	# store in session
 	sess = _get_session()
@@ -556,19 +555,11 @@ def trial_filter_demo(run_id, filter_by):
 				if not reason:
 					trial = Study(nct)
 					trial.load()
-					for crit in trial.criteria:
-						
-						# check exclusion criteria
-						if not crit.get('is_inclusion') and crit.get('snomed') is not None:
-							match = None
-							for snomed_c in crit.get('snomed'):
-								if '-' != snomed_c[0:1]:		# SNOMED codes starting with a minus were negated
-									match = snomed_c if snomed_c in exclusion_codes else None
-							
-							# exclusion criterion matched
-							if match is not None:
-								reason = 'Matches exclusion criterium "%s" (SNOMED %s)'  % (snomed.lookup_code_meaning(match, True, True), match)
-								break
+					
+					# exclusion criterion matched
+					if trial.filter_snomed(exclusion_codes) is not None:
+						reason = 'Matches exclusion criterium "%s" (SNOMED %s)'  % (snomed.lookup_code_meaning(match, True, True), match)
+						break
 				
 				if reason:
 					keep.append((nct, reason))
