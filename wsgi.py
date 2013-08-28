@@ -8,8 +8,7 @@ import json
 import re
 import markdown
 import codecs
-from datetime import date, datetime
-import dateutil.parser
+from datetime import datetime
 
 # bottle
 import bottle
