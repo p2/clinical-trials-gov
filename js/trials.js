@@ -219,7 +219,6 @@ function _filterTrialsByProblems(run_id) {
 function loadTrialsAfterLocatingPatient(trial_tuples) {
 	var adr = $('#demo_location').val();
 	if (!adr) {
-		console.warn("No patient location information, loading trials without distance information");
 		_patient_loc = null;
 		_loadTrials(trial_tuples);
 		return;
@@ -445,13 +444,21 @@ function _didLoadTrialBatches(batches, intervention_types, drug_phases) {
 	$('#trial_selectors').show();
 	$('#trials').show();
 	_geocodeTrials(_patient_loc);
+	
+	// only a couple of trials? Show them!
+	if (_trials && _trials.length <= 15) {
+		$('#selector_inv_type > li').each(function(i, elem) {
+			$(elem).addClass('active').find('input[type="checkbox"]').prop('checked', true);
+		});
+	}
+	
 	_updateShownHiddenTrials();
 	_showTrialStatus();
 }
 
 
 function _geocodeTrials(to_location) {
-	Trial.geocode(_trials, _patient_loc);
+	Trial.geocode(_trials, to_location);
 	
 	// now order them by distance
 	_trials.sort(function(a, b) {
