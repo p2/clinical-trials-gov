@@ -185,7 +185,8 @@ var Trial = can.Construct({
 			// show link to show the next batch
 			if (i < locs.length) {
 				var trial = this;
-				var next = Math.min(10, locs.length - i);
+				var n_max = 10;
+				var next = (locs.length - i - n_max < 3) ? locs.length - i : n_max;
 				
 				var link = $('<a/>', {'href': 'javascript:void(0)'})
 				.text('Show ' + ((next < locs.length - i) ? 'next ' + next : ' all'))
