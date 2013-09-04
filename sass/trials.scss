@@ -98,7 +98,7 @@ ul.trial_list {
 	margin-top: 1em; padding: 0;
 	list-style-type: none;
 	
-	li {
+	> li {
 		margin-bottom: 1em; padding-top: 1em;
 		line-height: 1.4;
 		border-top: 1px solid $col-border;
@@ -116,7 +116,7 @@ ul.trial_list {
 #selected_trial {
 	display: none;
 	
-	li {
+	> li {
 		position: relative;
 		border-top-color: darken($col-border, 20%);
 	}
@@ -195,7 +195,6 @@ ul.trial_list {
 		clear: right;
 		display: none;
 		margin: 0.5em 0 1.5em; padding: 1em;
-		font-size: 11pt; white-space: pre-wrap;
 		border: 1px solid $col-border; border-radius: $border-radius;
 		background-color: $col-bg; 
 	}

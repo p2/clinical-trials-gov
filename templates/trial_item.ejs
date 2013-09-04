@@ -13,7 +13,7 @@
 			<tt class="exclusion_reason"><%= trial.reason %></tt>
 		<% } %>
 	</div>
-	<% console.log(trial); %>
+	
 	<div style="clear: right;"> </div>
-	<pre class="formatted_criteria"><%= 'eligibility' in trial && trial.eligibility && trial.eligibility.text ? trial.eligibility.text.replace(/ +/g, ' ') : "(unknown criteria)" %></pre>
+	<div class="formatted_criteria"><%== 'eligibility' in trial && trial.eligibility && trial.eligibility.text ? trial.eligibility.text.replace(/ +/g, ' ') : "(unknown criteria)" %></div>
 </div>
