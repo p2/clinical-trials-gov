@@ -227,7 +227,7 @@ def index():
 		'google_api_key': os.environ.get('GOOGLE_API_KEY')
 	}
 	
-	return template.render(defs=defs, api_base=api_base, last_manual_condition=sess.get('last_manual_condition', ''))
+	return template.render(defs=defs, api_base=api_base, last_manual_input=sess.get('last_manual_input', ''))
 
 
 @bottle.get('/help')
@@ -430,7 +430,7 @@ def find_trials():
 	- "cond" or "term", the prior taking precedence
 	- "gender" ('male' or 'female')
 	- "age" (in years)
-	- "remember_cond" if the condition should be stored in the session
+	- "remember_input" if the condition or term should be stored in the session
 	
 	This method forks off and prints the status to a file which can be read by
 	calling /trials_status/<run-id>. "run-id" is returned from this call.
@@ -469,11 +469,11 @@ def find_trials():
 	}
 	sess['runs'] = runs
 	
-	if bottle.request.query.get('remember_cond'):
-		if cond:
-			sess['last_manual_condition'] = cond
-		elif 'last_manual_condition' in sess:
-			del sess['last_manual_condition']
+	if 'true' == bottle.request.query.get('remember_input'):
+		if cond or term:
+			sess['last_manual_input'] = cond or term
+		elif 'last_manual_input' in sess:
+			del sess['last_manual_input']
 	
 	# launch and return id
 	runner.run(['id', 'acronym', 'brief_title', 'official_title', 'brief_summary', 'overall_contact', 'eligibility', 'location', 'attributes', 'intervention', 'intervention_browse', 'phase', 'study_design'])

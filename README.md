@@ -11,22 +11,11 @@ Requirements
 
 ### Python
 
-Python 2.7 (probably), with these modules:
-
-- bottle
-- beaker
-- oauth2
-- rdflib >= 3.2.0
-- pyparsing == 1.5.7  
-  rdfextras needs pyparsing, but pyparsing > 1.5.7 targets Python 3.0, so we need to request 1.5.7 specifically
-- rdfextras
-- pymongo >= 2.4
-- jinja2
-- requests
+Python 2.7 (probably), with the modules listed in [`requirements.txt`](requirements.txt).
 
 ### MongoDB
 
-We're using mongo to cache trial data locally.
+We're using MongoDB to cache trial data locally.
 
 ### SMART Container
 
@@ -36,7 +25,7 @@ If you want to connect to a SMART container, a SMART 0.6+ container is suggested
 Setup
 -----
 
-After initializing the submodules, the symlink to the databases should be functional. If not create it:
+After initializing the submodules, a symlink to the internally used databases should be functional. If not you must create it:
 
     $ cd clinical-trials-gov
     $ ln -s ClinicalTrials/databases
@@ -91,7 +80,7 @@ There is a SNOMED database at _ctakes/ctakes-dictionary-lookup/target/classes/or
 
 ### RxNorm ###
 
-The script will prompt you to install an RxNorm database.
+Run the script `ClinicalTrials/databases/rxnorm.sh`, it will guide you through installing RxNorm.
 
 
 [ct]: http://www.clinicaltrials.gov

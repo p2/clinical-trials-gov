@@ -18,9 +18,9 @@ var _trials = null;
 /**
  *  Entry function to trial search (by term)
  */
-function searchTrialsByTerm(prob_term, gender, age, remember_cond) {
+function searchTrialsByTerm(prob_term, gender, age, remember_term) {
 	_trialSearchMustStop = false;
-	_initTrialSearch(prob_term, null, gender, age, remember_cond);
+	_initTrialSearch(prob_term, null, gender, age, remember_term);
 }
 
 /**
@@ -64,7 +64,7 @@ function resetUI() {
  *
  *  "term" takes precedence over "condition", only one is ever being used.
  */
-function _initTrialSearch(term, condition, gender, age, remember_cond) {
+function _initTrialSearch(term, condition, gender, age, remember_input) {
 	if (_trialSearchInterval) {
 		console.warn('Already searching');
 		return;
@@ -78,7 +78,7 @@ function _initTrialSearch(term, condition, gender, age, remember_cond) {
 	var data = {
 		'gender': gender,
 		'age': age,
-		'remember_cond': remember_cond ? true : false
+		'remember_input': remember_input ? true : false
 	};
 	var term_or_cond = term ? term : condition;
 	data[term ? 'term' : 'cond'] = term_or_cond;
@@ -105,8 +105,8 @@ function _initTrialSearch(term, condition, gender, age, remember_cond) {
 	});
 	
 	// never forget
-	if (remember_cond) {
-		_last_manual_condition = term_or_cond;
+	if (remember_input) {
+		_last_manual_input = term_or_cond;
 	}
 }
 
@@ -669,11 +669,17 @@ function _showTrials(trials, start) {
 	}
 	$('#show_more_trials').remove();
 	
+	// no trials to show
 	if (!trials || 0 == trials.length || start >= trials.length) {
 		if (trials.length > 0 && start >= trials.length) {
 			console.warn('Cannot show trials starting at: ', start, 'trials: ', trials);
 		}
-		$('#g_map_toggle > span').text('');
+		
+		if (!trials || 0 == trials.length) {
+			$('#g_map_toggle > span').text('');
+			_showNoTrialsHint();
+		}
+		
 		return;
 	}
 	
@@ -703,26 +709,19 @@ function _showTrials(trials, start) {
 	}
 	
 	$('#g_map_toggle > span').text(num_locations > 1000 ? ' (' + num_locations + ' trial locations)' : '');
+	_hideNoTrialsHint();
 	
-	// nothing shown? Show hints
-	if (0 == trials.length) {
-		_showNoTrialsHint();
-	}
-	else {
-		_hideNoTrialsHint();
+	// are there more?
+	if (has_more) {
+		var more = trials.length - show_max;
+		var li = $('<li/>', {'id': 'show_more_trials'}).append('<h1>There are ' + more + ' more trials</h1>');
+		var link = $('<a/>', {'href': 'javascript:void(0);'}).text('Show ' + ((_trialsPerPage < more) ? _trialsPerPage + ' more' : 'all'))
+		.click(function(e) {
+			_showTrials(trials, start + _trialsPerPage);
+		});
 		
-		// are there more?
-		if (has_more) {
-			var more = trials.length - show_max;
-			var li = $('<li/>', {'id': 'show_more_trials'}).append('<h1>There are ' + more + ' more trials</h1>');
-			var link = $('<a/>', {'href': 'javascript:void(0);'}).text('Show ' + ((_trialsPerPage < more) ? _trialsPerPage + ' more' : 'all'))
-			.click(function(e) {
-				_showTrials(trials, start + _trialsPerPage);
-			});
-			
-			li.append($('<h1/>').append(link));
-			trial_list.append(li);
-		}
+		li.append($('<h1/>').append(link));
+		trial_list.append(li);
 	}
 }
 
