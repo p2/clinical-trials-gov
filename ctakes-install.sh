@@ -28,7 +28,7 @@ mvn package
 echo "->  Moving things into place"
 base=$(echo ctakes-distribution/target/*-bin.tar.gz)
 tar xzf $base
-mv $(basename ${base%-bin.tar.gz}) ctakes
+mv $(basename ${base%-bin.tar.gz}) ../ctakes
 
 # add special classes
 cd ..
