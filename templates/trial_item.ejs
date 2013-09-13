@@ -3,6 +3,14 @@
 	
 	<div class="trial_info">
 		<%= trial.title ? trial.title : 'Unnamed trial' %>
+		<% if (trial.keyword && trial.keyword.length > 0) { %>
+			<div class="trial_keywords">
+			<% for (var i = 0; i < trial.keyword.length; i++) {
+				var keyword = trial.keyword[i]; %>
+				<span><%== keyword.replace(/[^\w\d]\s*$/, '') %></span>
+			<% } %>
+			</div>
+		<% } %>
 		<div class="supplement"><%= (!trial.phase || 'N/A' == trial.phase) ? '' : trial.phase %></div>
 		<a href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank"><%= trial.nct %></a>
 		<div class="show_elig_toggle supplement">

@@ -17,7 +17,7 @@ static/help.html
 
 # ignore ctakes and metamap
 ctakes
-ctakes-svn
+ctakes-*
 metamap
 
 # ignore editor files

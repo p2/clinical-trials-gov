@@ -146,6 +146,13 @@ ul.trial_list {
 	.trial_info {
 		width: 35%;
 		
+		.trial_keywords > span {
+			display: inline-block;
+			margin: 0.4em 0.5em 0 0; padding: 0 0.4em;
+			color: $col-faded;
+			border: 1px solid $col-border-inactive; border-radius: $border-radius;
+		}
+		
 		.exclusion_reason {
 			display: block; margin-top: 0.3em;
 			font-size: 10pt; color: #A00;

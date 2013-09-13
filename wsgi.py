@@ -418,7 +418,7 @@ def get_trials(nct_list):
 		found = Study.retrieve(ncts)
 		
 		for trial in found:
-			trials.append(trial.json(['brief_summary', 'location', 'phase', 'intervention', 'study_design', 'overall_contact']))
+			trials.append(trial.json(['keyword', 'brief_summary', 'location', 'phase', 'intervention', 'study_design', 'primary_outcome', 'overall_contact']))
 	
 	return {'trials': trials}
 
@@ -476,7 +476,7 @@ def find_trials():
 			del sess['last_manual_input']
 	
 	# launch and return id
-	runner.run(['id', 'acronym', 'brief_title', 'official_title', 'brief_summary', 'overall_contact', 'eligibility', 'location', 'attributes', 'intervention', 'intervention_browse', 'phase', 'study_design'])
+	runner.run(['id', 'acronym', 'keyword', 'brief_title', 'official_title', 'brief_summary', 'overall_contact', 'eligibility', 'location', 'attributes', 'intervention', 'intervention_browse', 'phase', 'study_design', 'primary_outcome'])
 	
 	return run_id
 

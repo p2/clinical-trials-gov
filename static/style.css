@@ -110,6 +110,7 @@ ul.trial_list > li h1 { text-align: center; }
 
 .trial > a:first-child { margin-right: 1em; }
 .trial .trial_info { width: 35%; }
+.trial .trial_info .trial_keywords > span { display: inline-block; margin: 0.4em 0.5em 0 0; padding: 0 0.4em; color: #505050; border: 1px solid #b9b9b9; border-radius: 2pt; }
 .trial .trial_info .exclusion_reason { display: block; margin-top: 0.3em; font-size: 10pt; color: #A00; }
 .trial .trial_locations { float: right; width: 65%; }
 .trial .trial_locations > div { display: none; }
