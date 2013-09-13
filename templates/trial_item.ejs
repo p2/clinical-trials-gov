@@ -4,10 +4,12 @@
 	<div class="trial_info">
 		<%= trial.title ? trial.title : 'Unnamed trial' %>
 		<% if (trial.keyword && trial.keyword.length > 0) { %>
-			<div class="trial_keywords">
+			<div class="trial_keywords" <%= (el) -> can.data(el, 'trial-nct', trial.nct) %>>
 			<% for (var i = 0; i < trial.keyword.length; i++) {
-				var keyword = trial.keyword[i]; %>
-				<span><%== keyword.replace(/[^\w\d]\s*$/, '') %></span>
+				var keyword = trial.keyword[i];
+				var norm = _normalizeKeyword(keyword);
+				var active = active_keywords && active_keywords.contains(norm); %>
+				<span class="tag<%= active ? ' active' : '' %>" onclick="_toggleKeyword(this)" data-normalized="<%= norm %>"><%= keyword %></span>
 			<% } %>
 			</div>
 		<% } %>

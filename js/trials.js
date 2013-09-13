@@ -526,6 +526,67 @@ function _toggleOptCheckElement(evt) {
 }
 
 
+function _toggleKeyword(elem) {
+	var keyword = $(elem).text();
+	var norm = _normalizeKeyword(keyword);
+	var for_nct = $(elem).parent().data('trial-nct');
+	var offset = $(elem).offset().top;
+	var scroll_top = $(window).scrollTop();
+	
+	// determine if it's already present
+	var parent = $('#selector_keywords');
+	var present = false;
+	var num = 0;
+	parent.children('span').each(function(idx) {
+		if (norm == $(this).data('normalized')) {
+			present = true;
+			$(this).remove();
+		}
+		else {
+			num++;
+		}
+	});
+	
+	// add keyword
+	if (!present) {
+		var span = $('<span/>').addClass('tag').addClass('active')
+		.data('normalized', norm).text(keyword)
+		.click(function(e) {
+			_toggleKeyword(this);
+		});
+		parent.append(span).parent().show();
+	}
+	else if (0 == num) {
+		parent.parent().hide();
+	}
+	
+	_updateShownHiddenTrials();
+	
+	// restore scroll position (element has been removed from DOM and replaced!)
+	if (offset > 0) {
+		offset -= 144;			// TODO: figure out why this is necessary (not correct for 2+ tags)
+		
+		var new_elem = null;
+		$('#trial_list').children().each(function(idx) {
+			var trial = $(this).find('.trial').data('trial');
+			if (trial && trial.nct == for_nct) {
+				new_elem = $(this);
+				return false;
+			}
+		});
+		
+		if (new_elem) {
+			var new_top = new_elem.offset().top - (offset - scroll_top);
+			$(window).scrollTop(new_top);
+		}
+	}
+}
+
+function _normalizeKeyword(keyword) {
+	return keyword ? keyword.toLowerCase() : null;
+}
+
+
 /**
  *  Loops all trials and shows or hides according to our globals.
  */
@@ -551,6 +612,12 @@ function _updateShownHiddenTrials() {
 		if (elem.hasClass('active')) {
 			active_phases.push(elem.data('phase'));
 		}
+	});
+	
+	// get active keywords
+	var active_keywords = [];
+	$('#selector_keywords').children('span').each(function(idx, item) {
+		active_keywords.push($(item).data('normalized'));
 	});
 	
 	// loop all trials and collect those that we want to show
@@ -605,6 +672,19 @@ function _updateShownHiddenTrials() {
 				
 				if (has_non_na_phase) {
 					num_w_phase++;
+				}
+			}
+		}
+		
+		// keywords
+		if (show && active_keywords.length > 0) {
+			show = false;
+			if (trial.keyword) {
+				for (var j = 0; j < trial.keyword.length; j++) {
+					if (active_keywords.contains(_normalizeKeyword(trial.keyword[j]))) {
+						show = true;
+						break;
+					}
 				}
 			}
 		}
@@ -685,6 +765,13 @@ function _showTrials(trials, start) {
 	
 	var map = $('#g_map');
 	
+	// get active keywords
+	var active_keywords = [];
+	$('#selector_keywords').children('span').each(function(idx, item) {
+		active_keywords.push($(item).data('normalized'));
+	});
+	
+	// calculate range
 	var show_max = start + _trialsPerPage;
 	if (trials.length > show_max && trials.length < start + _trialsPerPage + (_trialsPerPage / 10)) {
 		// if it's less than 10% more, show them all
@@ -699,7 +786,7 @@ function _showTrials(trials, start) {
 		
 		// add the trial element to the list
 		if (i < show_max) {
-			var li = $('<li/>').append(can.view('templates/trial_item.ejs', {'trial': trial}));
+			var li = $('<li/>').append(can.view('templates/trial_item.ejs', {'trial': trial, 'active_keywords': active_keywords}));
 			trial_list.append(li);
 			trial.showClosestLocations(li, 0, 3);
 		}
