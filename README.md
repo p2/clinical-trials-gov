@@ -31,39 +31,6 @@ After initializing the submodules, a symlink to the internally used databases sh
     $ ln -s ClinicalTrials/databases
 
 
-### cTakes ###
-
-We checkout cTakes and add the pgpop module. Assuming we are in the main directory:
-
-- Install Maven (This is for OS X, requires [Homebrew][], adapt accordingly)
-    
-        brew install maven
-
-- Run the script `ctakes-install.sh`, which will:
-	- checkout a copy of cTAKES into `./ctakes-svn` (if you haven't already) or update from the SVN repo
-	- package cTAKES using Maven
-	- move the compiled version to `./ctakes`
-	- copy over the extras in `./ctakes-extras`
-
-- Create a file named `umls.sh` containing your UMLS username and password:
-      
-        UMLS_USERNAME='username'
-        UMLS_PASSWORD='password'
-
-- ...
-
-
-### MetaMap ###
-
-To evaluate MetaMap, download and install MetaMap:
-
-- Download [from NLM](http://metamap.nlm.nih.gov/#Downloads)
-- Extract the archive into our root directory and rename it to `metamap`
-- Run the install script:
-    
-        ./bin/install.sh
-
-
 ### SNOMED CT ###
 
 There is a SNOMED database at _ctakes/ctakes-dictionary-lookup/target/classes/org/apache/ctakes/dictionary/lookup/umls2011ab_ after checking out cTakes, but it's in HSQLDB format which is not easily usable from Python, so we download and use our own copy:

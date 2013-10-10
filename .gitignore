@@ -1,12 +1,12 @@
 .DS_Store
 *.pyc
+ctakes-svn*
 
 # ignore databases
 databases/*
 
 # ignore settings
 env.sh
-umls.sh
 
 # ignore the run-directories
 run-*/
@@ -14,11 +14,6 @@ run-*/
 # ignore generated html
 report.html
 static/help.html
-
-# ignore ctakes and metamap
-ctakes
-ctakes-*
-metamap
 
 # ignore editor files
 *.sublime-*
