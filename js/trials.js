@@ -361,7 +361,7 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_p
 						_showTrialStatus("Almost there...");
 					}
 					else {
-						_showTrialStatus("Loading, " + percent + "% done...");
+						_showTrialStatus("Loading (" + percent + "%)");
 					}
 				}
 				

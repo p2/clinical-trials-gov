@@ -24,8 +24,8 @@ run.discard_cached = False
 
 run.term = "juvenile rheumatoid arthritis"
 run.analyze_eligibility = False
-run.analyze_properties = set(['brief_summary'])
-# run.analyze_properties = set(['eligibility_inclusion', 'eligibility_exclusion', 'brief_summary', 'detailed_description'])
+run.analyze_keypaths = set(['brief_summary'])
+# run.analyze_keypaths = set(['eligibility_inclusion', 'eligibility_exclusion', 'brief_summary', 'detailed_description'])
 
 run.add_pipeline(nlp_metamap)
 # run.add_pipeline(nlp_nltkt)
@@ -60,7 +60,7 @@ def cb(success, trials):
 			# collect wanted semantic types
 			hier = {}
 			
-			for prop in run.analyze_properties:				# loop properties
+			for prop in run.analyze_keypaths:				# loop keypaths
 				print "============================"
 				
 				d_all = d.get(prop) or {}

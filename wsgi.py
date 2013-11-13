@@ -28,7 +28,7 @@ if USE_SMART:
 
 # App
 from ClinicalTrials.mngobject import MNGObject
-from ClinicalTrials.study import Study
+from ClinicalTrials.trial import Trial
 from ClinicalTrials.runner import Runner
 from ClinicalTrials.umls import SNOMEDLookup
 
@@ -415,7 +415,7 @@ def get_trials(nct_list):
 	
 	if nct_list:
 		ncts = nct_list.split(':')
-		found = Study.retrieve(ncts)
+		found = Trial.retrieve(ncts)
 		
 		for trial in found:
 			trials.append(trial.json(['keyword', 'brief_summary', 'location', 'phase', 'intervention', 'study_design', 'primary_outcome', 'overall_contact']))
@@ -443,8 +443,8 @@ def find_trials():
 		runner = Runner(run_id, "run-server")
 		runner.in_background = True
 		if USE_NLP:
-			runner.run_ctakes = True
-			#runner.run_metamap = True
+			# runner.run_ctakes = True
+			runner.run_metamap = True
 	
 	# configure
 	cond = bottle.request.query.get('cond')
@@ -532,7 +532,7 @@ def trial_filter_demo(run_id, filter_by):
 			reason = tpl[1] if len(tpl) > 1 else None
 			
 			if not reason:
-				trial = Study(nct)
+				trial = Trial(nct)
 				trial.load()
 				
 				# filter gender
@@ -581,7 +581,7 @@ def trial_filter_demo(run_id, filter_by):
 				
 				# if we already have a reason, this trial has already been filtered
 				if not reason:
-					trial = Study(nct)
+					trial = Trial(nct)
 					trial.load()
 					
 					# exclusion criterion matched
