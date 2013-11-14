@@ -27,6 +27,7 @@ function _geo_initMap() {
 	// init map
 	var mapOptions = {
 		zoom: 4,
+		minZoom: 3,
 		maxZoom: 15,
 		// center: new google.maps.LatLng(42.358, -71.06),		// Boston
 		center: new google.maps.LatLng(38.5, -96.5),			// ~USA

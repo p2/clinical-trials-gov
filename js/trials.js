@@ -344,6 +344,7 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_p
 		// got trials
 		if ('success' == status) {
 			var type_arr = [];
+			var status_every = Math.max(5, Math.round(_trialNumExpected / 25));
 			
 			// loop trials
 			var trials = 'trials' in obj1 ? obj1.trials : [];
@@ -355,14 +356,9 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_p
 					cont = false;
 					_showTrialStatus();
 				}
-				else {
+				else if (0 == _trialNumDone % status_every) {
 					var percent = Math.round(_trialNumDone / _trialNumExpected * 100);
-					if (percent >= 99) {
-						_showTrialStatus("Almost there...");
-					}
-					else {
-						_showTrialStatus("Loading (" + percent + "%)");
-					}
+					_showTrialStatus("Loading (" + percent + "%)");
 				}
 				
 				// trial
