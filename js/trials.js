@@ -96,7 +96,7 @@ function _initTrialSearch(term, condition, gender, age, remember_input) {
 			if (_trialSearchInterval) {
 				window.clearInterval(_trialSearchInterval);
 			}
-			_trialSearchInterval = window.setInterval(function() { _checkTrialStatus(obj1); }, 1000);
+			_trialSearchInterval = window.setInterval(function() { checkTrialStatus(obj1); }, 1000);
 		}
 		else {
 			console.error(obj1, ' -- ', status, ' -- ', obj2);
@@ -108,13 +108,39 @@ function _initTrialSearch(term, condition, gender, age, remember_input) {
 	if (remember_input) {
 		_last_manual_input = term_or_cond;
 	}
+	
+	// locate patient while waiting
+	locatePatient();
+}
+
+
+/**
+ *  This function obviously tries to locate the patient by the given address.
+ */
+function locatePatient() {
+	var adr = $('#demo_location').val();
+	if (!adr) {
+		_patient_loc = null;
+		return;
+	}
+	
+	// locate (asynchronously)
+	geo_locatePatient(adr, function(success, location) {
+		if (success) {
+			_patient_loc = location;
+		}
+		else {
+			console.warn("Failed to locate the patient");
+			_patient_loc = null;
+		}
+	});
 }
 
 
 /**
  *  This function is called at an interval, checking server side progress until the server signals "done".
  */
-function _checkTrialStatus(run_id) {
+function checkTrialStatus(run_id) {
 	$.ajax({
 		'url': 'trial_runs/' + run_id + '/progress'
 	})
@@ -130,8 +156,8 @@ function _checkTrialStatus(run_id) {
 				window.clearInterval(_trialSearchInterval);
 				_trialSearchInterval = null;
 				
-				_showTrialStatus('Retrieving results...');
-				_getTrialResults(run_id);
+				_showTrialStatus('Filtering by demographics...');
+				_filterTrialsByDemographics(run_id);
 			}
 			
 			// an error occurred
@@ -153,90 +179,54 @@ function _checkTrialStatus(run_id) {
 	});
 }
 
-function _getTrialResults(run_id) {
-	$.ajax({
-		'url': 'trial_runs/' + run_id + '/results',
-		'dataType': 'json'
-	})
-	.always(function(obj1, status, obj2) {
-		if (_trialSearchMustStop) {
-			return;
-		}
-		
-		if ('success' == status) {
-			_showTrialStatus('Found ' + obj1.length + ' trials, filtering by demographics...');
-			_filterTrialsByDemographics(run_id);
-		}
-		else {
-			console.error(obj1, status, obj2);
-			_showTrialStatus('Error getting trial results, see console');
-		}
-	});
-}
-
 function _filterTrialsByDemographics(run_id) {
-	$.ajax({
-		'url': 'trial_runs/' + run_id + '/filter/demographics',
-		'dataType': 'json'
-	})
-	.always(function(obj1, status, obj2) {
-		if (_trialSearchMustStop) {
-			return;
-		}
-		
-		if ('success' == status) {
+	loadJSON(
+		'trial_runs/' + run_id + '/filter/demographics',
+		function(obj1, status, obj2) {
 			_showTrialStatus('Filtering by problem list...');
 			_filterTrialsByProblems(run_id);
+		},
+		function(obj1, status, obj2) {
+			_showTrialStatus('Error filtering trials (demographics), see browser console');
 		}
-		else {
-			console.error(obj1, status, obj2);
-			_showTrialStatus('Error filtering trials (demographics), see console');
-		}
-	});
+	);
 }
 
 function _filterTrialsByProblems(run_id) {
-	$.ajax({
-		'url': 'trial_runs/' + run_id + '/filter/problems',
-		'dataType': 'json'
-	})
-	.always(function(obj1, status, obj2) {
-		if (_trialSearchMustStop) {
-			return;
+	loadJSON(
+		'trial_runs/' + run_id + '/filter/problems',
+		function(obj1, status, obj2) {
+			loadTrialOverview(run_id);
+		},
+		function(obj1, status, obj2) {
+			_showTrialStatus('Error filtering trials (problems), see browser console');
 		}
-		
-		if ('success' == status) {
-			loadTrialsAfterLocatingPatient(obj1);
-		}
-		else {
-			console.error(obj1, status, obj2);
-			_showTrialStatus('Error filtering trials (problems), see console');
-		}
-	});
+	);
 }
 
 
-function loadTrialsAfterLocatingPatient(trial_tuples) {
-	var adr = $('#demo_location').val();
-	if (!adr) {
-		_patient_loc = null;
-		_loadTrials(trial_tuples);
-		return;
-	}
-	
-	// locate (asynchronously)
-	geo_locatePatient(adr, function(success, location) {
-		if (success) {
-			_patient_loc = location;
+function loadTrialOverview(run_id) {
+	loadJSON(
+		'trial_runs/' + run_id + '/overview',
+		function(obj1, status, obj2) {
+			if ('intervention_types' in obj1 && 'drug_phases' in obj1) {
+				_showInterventionTypes(obj1['intervention_types']);
+				_showTrialPhases(obj1['drug_phases']);
+				
+				// WORKING HERE
+				// show UI
+				_showTrialStatus();
+				$('#trial_selectors').show();
+				$('#trials').show();
+			}
+			else {
+				console.error('Malformed response:', obj1)
+			}
+		},
+		function(obj1, status, obj2) {
+			_showTrialStatus('Error retrieving overview data, see browser console');
 		}
-		else {
-			console.warn("Failed to locate the patient");
-			_patient_loc = null;
-		}
-		
-		// load the trials
-		_loadTrials(trial_tuples);
-	});
+	);
 }
 
 
@@ -401,42 +391,11 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_p
 function _didLoadTrialBatches(batches, intervention_types, drug_phases) {
 	_showNoTrialsHint();
 	
-	// add all intervention types
-	if (intervention_types) {
-		intervention_types = intervention_types.uniqueArray();
-		var opt_type = $('#selector_inv_type');
-		
-		for (var i = 0; i < intervention_types.length; i++) {
-			var type = intervention_types[i];
-			var elem = _getOptCheckElement(type, 0, false);
-			elem.data('intervention-type', type);
-			opt_type.append(elem);
-		}
-		
-		// sort types alphabetically
-		sortChildren(opt_type, 'li', function(a, b) {
-			return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
-		});
-	}
+	// add all intervention types and phases
+	// _showInterventionTypes(intervention_types);
+	// _showTrialPhases(drug_phases);
 	
-	// add phases to the phase list
-	if (drug_phases) {
-		drug_phases = drug_phases.uniqueArray();
-		var opt_phase = $('#selector_inv_phase');
-		
-		for (var i = 0; i < drug_phases.length; i++) {
-			var phase = drug_phases[i];
-			var elem = _getOptCheckElement(phase, 0, true);
-			elem.data('phase', phase);
-			opt_phase.append(elem);
-		}
-		
-		// sort phases alphabetically
-		sortChildren(opt_phase, 'li', function(a, b) {
-			return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
-		});
-	}
-	
+	// show UI
 	$('#trial_selectors').show();
 	$('#trials').show();
 	_geocodeTrials(_patient_loc);
@@ -450,6 +409,51 @@ function _didLoadTrialBatches(batches, intervention_types, drug_phases) {
 	
 	_updateShownHiddenTrials();
 	_showTrialStatus();
+}
+
+
+function _showInterventionTypes(num_per_type) {
+	if (num_per_type) {
+		var opt_type = $('#selector_inv_type');
+		var itypes = sortedKeysFromDict(num_per_type);
+		
+		for (var i = 0; i < itypes.length; i++) {
+			var type = itypes[i];
+			var elem = _getOptCheckElement(type, 0, false);
+			elem.data('intervention-type', type);
+			opt_type.append(elem);
+			
+			// number of trials
+			elem.find('.num_matches').text(num_per_type[type]);
+		}
+		
+		// sort types alphabetically
+		sortChildren(opt_type, 'li', function(a, b) {
+			return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
+		});
+	}
+}
+
+function _showTrialPhases(num_per_phase) {
+	if (num_per_phase) {
+		var opt_phase = $('#selector_inv_phase');
+		var phases = sortedKeysFromDict(num_per_phase);
+		
+		for (var i = 0; i < phases.length; i++) {
+			var phase = phases[i];
+			var elem = _getOptCheckElement(phase, 0, true);
+			elem.data('phase', phase);
+			opt_phase.append(elem);
+			
+			// number of trials
+			elem.find('.num_matches').text(num_per_phase[phase]);
+		}
+		
+		// sort phases alphabetically
+		sortChildren(opt_phase, 'li', function(a, b) {
+			return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
+		});
+	}
 }
 
 

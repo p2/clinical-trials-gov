@@ -423,6 +423,7 @@ def get_trials(nct_list):
 	return {'trials': trials}
 
 
+# ------------------------------------------------------------------------------ Trial Runs
 @bottle.get('/trial_runs')
 def find_trials():
 	""" Initiates the chain to find trials for the given condition or search-
@@ -493,8 +494,25 @@ def trial_progress(run_id):
 	return runner.status
 
 
+@bottle.get('/trial_runs/<run_id>/overview')
+def run_overview(run_id):
+	""" Overview results for a run. """
+	
+	runner = Runner.get(run_id)
+	if runner is None:
+		bottle.abort(404)
+	
+	try:
+		overview = runner.overview()
+	except Exception, e:
+		bottle.abort(400, e)
+	
+	return json.dumps(overview)
+
+
+
 @bottle.get('/trial_runs/<run_id>/results')
-def trial_results(run_id):
+def run_results(run_id):
 	""" Returns the results from a given run-id. """
 	
 	runner = Runner.get(run_id)
@@ -502,14 +520,14 @@ def trial_results(run_id):
 		bottle.abort(404)
 	
 	if not runner.done:
-		bottle.abort(400, "Trial results are not available")
+		bottle.abort(400, "Trial results are not yet available")
 	
 	ncts = runner.get_ncts()
 	return json.dumps(ncts)
 
 
 @bottle.get('/trial_runs/<run_id>/filter/<filter_by>')
-def trial_filter_demo(run_id, filter_by):
+def trials_filter_by(run_id, filter_by):
 	runner = Runner.get(run_id)
 	if runner is None:
 		bottle.abort(404)
@@ -526,7 +544,6 @@ def trial_filter_demo(run_id, filter_by):
 		f_gender = run_data.get('gender')
 		f_age = int(run_data.get('age', 0))
 		
-		keep = []
 		for tpl in ncts:
 			nct = tpl[0]
 			reason = tpl[1] if len(tpl) > 1 else None
@@ -551,13 +568,8 @@ def trial_filter_demo(run_id, filter_by):
 					elif trial.max_age and trial.max_age < f_age:
 						reason = "Patient is too old (max age %d)" % trial.max_age
 			
-			if reason:
-				keep.append((nct, reason))
-			else:
-				keep.append((nct,))
-		
-		runner.write_ncts(keep)
-		ncts = keep
+			# REFACTOR into runner class!
+			# runner.write_trial_reason(nct, reason)
 	
 	# problems (only if NLP is on)
 	elif 'problems' == filter_by:
@@ -574,7 +586,6 @@ def trial_filter_demo(run_id, filter_by):
 					exclusion_codes.append(snomed_code)
 			
 			# look at trial criteria
-			keep = []
 			for tpl in ncts:
 				nct = tpl[0]
 				reason = tpl[1] if len(tpl) > 1 else None
@@ -589,19 +600,14 @@ def trial_filter_demo(run_id, filter_by):
 						reason = 'Matches exclusion criterium "%s" (SNOMED %s)'  % (snomed.lookup_code_meaning(match, True, True), match)
 						break
 				
-				if reason:
-					keep.append((nct, reason))
-				else:
-					keep.append((nct,))
-			
-			runner.write_ncts(keep)
-			ncts = keep
+				# REFACTOR
+				# runner.write_trial_reason(nct, reason)
 	
 	# unknown filtering property
 	else:
 		return '{"error": "We can not filter by %s"}' % filter_by
 	
-	return json.dumps(ncts)
+	return '{"status": "ok"}'
 
 
 # ------------------------------------------------------------------------------ Static Files

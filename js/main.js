@@ -48,6 +48,31 @@ function loadDemographics() {
 }
 
 
+/**
+ *  Generic AJAX loader.
+ */
+ function loadJSON(url, success_func, error_func) {
+	$.ajax({
+		'url': url,
+		'dataType': 'json'
+	})
+	.always(function(obj1, status, obj2) {
+		if ('success' == status) {
+			if (success_func) {
+				success_func(obj1, status, obj2);
+			}
+			else {
+				console.warn('Successfully loaded', url, 'but no success func is set')
+			}
+		}
+		else {
+			console.error('ERROR loading URL:', url, 'RETURNED', obj1, status, obj2);
+			if (success_func) {
+				error_func(obj1, status, obj2);
+			}
+		}
+	});
+}
 
 
 /*
@@ -97,6 +122,14 @@ Array.prototype.intersects = function(other) {
 	return false;
 }
 
+function sortedKeysFromDict(dict) {
+	var sorted = [];
+	for (var key in dict) {
+	    sorted[sorted.length] = key;
+	}
+	sorted.sort();
+	return sorted;
+}
 
 
 
