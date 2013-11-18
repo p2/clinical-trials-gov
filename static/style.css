@@ -73,7 +73,9 @@ ul#problem_list li #cancel_trials { margin-right: 1em; font-size: 1em; }
 #manual_cancel { display: none; }
 
 /** Styles for trial data */
-#trial_status, #trial_selectors, #trials { display: none; margin: 3em 0; }
+#trial_status, #trial_selectors { display: none; margin: 3em 0; }
+
+#trials { margin: 3em 0; }
 
 .trial_selector { margin-top: 1.5em; line-height: 1.6; }
 .trial_selector a { display: inline-block; margin-right: 1.5em; font-size: 1.2em; }
@@ -99,6 +101,8 @@ ul.trial_selector li span.num_matches:after, ul.trial_selector li span.num_match
 #selector_inv_phase_parent { display: none; }
 
 #selector_keywords_parent { display: none; margin-bottom: 3em; }
+
+.trial_synopsis { margin: 2em 0; }
 
 ul.trial_list { margin-top: 1em; padding: 0; list-style-type: none; }
 ul.trial_list > li { margin-bottom: 1em; padding-top: 1em; line-height: 1.4; border-top: 1px solid #c8c8c8; }

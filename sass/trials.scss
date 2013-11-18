@@ -2,8 +2,11 @@
  *  Styles for trial data
  */
 
-#trial_status, #trial_selectors, #trials {
+#trial_status, #trial_selectors {
 	display: none;
+	margin: 3em 0;
+}
+#trials {
 	margin: 3em 0;
 }
 

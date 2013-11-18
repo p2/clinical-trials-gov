@@ -45,13 +45,19 @@ function cancelTrialSearch() {
 }
 
 function resetUI() {
-	_hideNoTrialsHint();
 	_trials = null;
 	
 	$('#trial_selectors').find('.trial_selector').empty();
 	$('#trial_selectors').find('.trial_opt_selector > ul').empty();
 	$('#trial_selectors').hide();
+	
+	resetShownTrials();
+	hideNoTrialsHint();
+}
+
+function resetShownTrials() {
 	$('#trial_list').empty();
+	showNoTrialsHint();
 	
 	geo_clearAllPins();
 	geo_hideMap();
@@ -222,8 +228,8 @@ function loadTrialOverview(run_id) {
 				
 				// show UI
 				showTrialStatus();
+				showNoTrialsHint();
 				$('#trial_selectors').show();
-				$('#trials').show();
 			}
 			else {
 				console.error('Malformed response:', obj1)
@@ -395,7 +401,7 @@ function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_p
  *  Note that intervention_types and drug_phases possibly contains many duplicates.
  */
 function _didLoadTrialBatches(batches, intervention_types, drug_phases) {
-	_showNoTrialsHint();
+	showNoTrialsHint();
 	
 	// add all intervention types and phases
 	// _showInterventionTypes(intervention_types);
@@ -403,7 +409,6 @@ function _didLoadTrialBatches(batches, intervention_types, drug_phases) {
 	
 	// show UI
 	$('#trial_selectors').show();
-	$('#trials').show();
 	_geocodeTrials(_patient_loc);
 	
 	// only a couple of trials? Show them!
@@ -637,11 +642,17 @@ function updateShownHiddenTrials() {
 	$('#selector_keywords').children('span').each(function(idx, item) {
 		active_keywords.push($(item).data('normalized'));
 	});
-	if (active_keywords.length > 0) {
-		qry_parts.push('keywords=' + active_keywords.join('|'));
+//	if (active_keywords.length > 0) {
+//		qry_parts.push('keywords=' + active_keywords.join('|'));
+//	}
+	
+	// if there is no restriction by type or keyword, show nothing
+	if (0 == active_types.length && 0 == active_keywords.length) {
+		resetShownTrials();
+		return;
 	}
 	
-	var qry = (qry_parts.length > 0) ? qry_parts.join('&') : '';
+	var qry = qry_parts.join('&');
 	
 	// TODO: locally caching all trials (webSQL?) would be neat
 	loadJSON(
@@ -651,7 +662,7 @@ function updateShownHiddenTrials() {
 			window.setTimeout(geo_zoomToPins, 100);
 		},
 		function(obj1, status, obj2) {
-			
+			showTrialStatus(obj1);
 		}
 	);
 }
@@ -675,7 +686,7 @@ function _showTrials(trials, start) {
 		
 		if (!trials || 0 == trials.length) {
 			$('#g_map_toggle > span').text('');
-			_showNoTrialsHint();
+			showNoTrialsHint();
 		}
 		
 		return;
@@ -714,7 +725,7 @@ function _showTrials(trials, start) {
 	}
 	
 	$('#g_map_toggle > span').text(num_locations > 1000 ? ' (' + num_locations + ' trial locations)' : '');
-	_hideNoTrialsHint();
+	hideNoTrialsHint();
 	
 	// are there more?
 	if (has_more) {
@@ -827,7 +838,7 @@ function showTrialStatus(status) {
 
 
 
-function _showNoTrialsHint() {
+function showNoTrialsHint() {
 	var hint = $('#no_trials_hint');
 	if (!hint.is('*')) {
 		hint = $('<h3/>', {'id': 'no_trials_hint'});
@@ -867,7 +878,7 @@ function _showNoTrialsHint() {
 	$('#trials').append(hint);
 }
 
-function _hideNoTrialsHint() {
+function hideNoTrialsHint() {
 	$('#no_trials_hint').remove();
 }
 
