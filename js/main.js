@@ -3,9 +3,6 @@
  */
 
 
-var _ruleCtrl = null;
-var _reportCtrl = null;
-
 
 /**
  *  Called when the DOM is ready, this function starts loading patient data.
@@ -83,17 +80,18 @@ function loadDemographics() {
 
 Array.prototype.contains = function(obj) {
 	return (this.indexOf(obj) >= 0);
-}
+};
 
 if ( ! ('indexOf' in Array.prototype)) {
 	Array.prototype.indexOf = function(obj) {
 		for(var i = 0; i < this.length; i++) {
-			if (this[i] == obj)
+			if (this[i] == obj) {
 				return i;
+			}
 		}
 		
 		return -1;
-	}
+	};
 }
 
 Array.prototype.uniqueArray = function() {
@@ -108,7 +106,7 @@ Array.prototype.uniqueArray = function() {
 	}
 	
 	return new_arr;
-}
+};
 
 Array.prototype.intersects = function(other) {
 	for (var i = 0; i < this.length; i++) {
@@ -116,11 +114,11 @@ Array.prototype.intersects = function(other) {
 			if (this[i] === other[j]) {
 				return true;
 			}
-		};
-	};
+		}
+	}
 	
 	return false;
-}
+};
 
 function sortedKeysFromDict(dict) {
 	var sorted = [];
@@ -157,8 +155,9 @@ function sortChildren(parent, selector, sortFunc) {
  */
 
 function text2html(string) {
-	if (!string)
+	if (!string) {
 		return '';
+	}
 	
 	var conv = string.replace(/(^\s+)|(\s+$)/g, '');			// replace leading/trailing whitespace
 	conv = conv.replace(/(\r\n|\n)/g, "<br />");				// replace \n with <br />
@@ -168,10 +167,10 @@ function text2html(string) {
 
 function newUUID() {
 	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-	    var r = Math.random()*16|0;
-	    var v = c == 'x' ? r : (r&0x3|0x8);
-	    return v.toString(16);
-	});
+		var r = Math.random()*16|0;
+		var v = c == 'x' ? r : (r&0x3|0x8);
+	return v.toString(16);
+});
 }
 
 

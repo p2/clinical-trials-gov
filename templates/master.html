@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Trial Eligibility</title>
+	<title>{{ title|default("Trial Eligibility") }}</title>
 	<link rel="stylesheet" type="text/css" href="static/style.css" />
 </head>
 <body>
@@ -14,7 +14,7 @@
 			{%- endfor %}
 		</div>
 		<div id="content">
-			{{ content }}
+			{% block content %}{% endblock %}
 		</div>
 		<div id="footer">Made at <a href="http://www.chip.org" target="_blank">CHIP</a></div>
 	</div>

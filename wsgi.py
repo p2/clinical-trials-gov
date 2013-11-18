@@ -443,9 +443,6 @@ def find_trials():
 	if runner is None:
 		runner = Runner(run_id, "run-server")
 		runner.in_background = True
-		if USE_NLP:
-			# runner.run_ctakes = True
-			runner.run_metamap = True
 	
 	# configure
 	cond = bottle.request.query.get('cond')
@@ -510,20 +507,27 @@ def run_overview(run_id):
 	return json.dumps(overview)
 
 
-
-@bottle.get('/trial_runs/<run_id>/results')
-def run_results(run_id):
-	""" Returns the results from a given run-id. """
+@bottle.get('/trial_runs/<run_id>/trials')
+def run_trials(run_id):
+	""" Returns the trials from a given run-id.
+	You can filter the returned trias by supplying 'intv' for intervention
+	types to be included and 'phases' for trial phases to be active """
 	
 	runner = Runner.get(run_id)
 	if runner is None:
 		bottle.abort(404)
 	
 	if not runner.done:
-		bottle.abort(400, "Trial results are not yet available")
+		bottle.abort(400, "Trial trials are not yet available")
 	
-	ncts = runner.get_ncts()
-	return json.dumps(ncts)
+	# get request vars
+	intv = bottle.request.query.intv
+	intv = intv.split('|') if intv else []
+	phases = bottle.request.query.phases
+	phases = phases.split('|') if phases else []
+	
+	trials = runner.trials(intv, phases)
+	return json.dumps(trials)
 
 
 @bottle.get('/trial_runs/<run_id>/filter/<filter_by>')
@@ -608,6 +612,13 @@ def trials_filter_by(run_id, filter_by):
 		return '{"error": "We can not filter by %s"}' % filter_by
 	
 	return '{"status": "ok"}'
+
+
+# ------------------------------------------------------------------------------ TESTING
+@bottle.get('/enroll')
+def enroll():
+	template = _jinja_templates.get_template('enroll.html')
+	return template.render({'title': "Randomize"})
 
 
 # ------------------------------------------------------------------------------ Static Files

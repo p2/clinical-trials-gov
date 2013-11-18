@@ -35,4 +35,5 @@ def cb(success, trials):
 			print "\n"
 
 # run!
+print 'Run id %d' % run.run_id
 run.run(callback=cb)

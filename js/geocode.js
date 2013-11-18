@@ -32,14 +32,14 @@ function _geo_initMap() {
 		// center: new google.maps.LatLng(42.358, -71.06),		// Boston
 		center: new google.maps.LatLng(38.5, -96.5),			// ~USA
 		mapTypeId: google.maps.MapTypeId.ROADMAP
-	}
+	};
 	g_map = new google.maps.Map($("#g_map").get(0), mapOptions);
 	
 	// init clusterer (REMEMBER we have MODIFIED MarkerClusterer 2.0.9!)
 	g_clusterer = new MarkerClusterer(g_map);
 	g_clusterer.onClick = function(clickedClusterIcon) { 
 		return _geo_multipleMarkersAtSameLocation(clickedClusterIcon.cluster_); 
-	}
+	};
 	
 	// markers
 	g_marker_green = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|33CC22",
@@ -154,7 +154,7 @@ function geo_codeAddress(address, callback) {
  *  Adds the given pins to our map.
  */
 function geo_addPins(pins, animated, click_func) {
-	if (!pins || 0 == pins.length) {
+	if (!pins || 0 === pins.length) {
 		return;
 	}
 	
@@ -294,7 +294,7 @@ function geo_zoomToPins(fit_num) {
 	}
 	
 	for (var i = 2; i < latlngs.length; i++) {
-		bounds.extend(latlngs[i])
+		bounds.extend(latlngs[i]);
 	}
 	
 	// g_map.panToBounds(bounds);

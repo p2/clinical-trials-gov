@@ -83,37 +83,39 @@ var Trial = can.Construct({
 	 */
 	locations: function() {
 		if (null === this.trial_locations) {
-			var locs = [];
-			for (var i = 0; i < this.location.length; i++) {
-				var loc = this.location[i];
-				var loc_parts = ('formatted' in loc.geodata && loc.geodata.formatted && loc.geodata.formatted.length > 0) ? loc.geodata.formatted.split(/,\s+/) : ["Unknown"];
-				var loc_country = loc_parts.pop();
-				var loc_stat_m_recr = loc.status ? loc.status.match(/recruiting/i) : null;
-				var loc_stat_m_not = loc.status ? loc.status.match(/not\s+[\w\s]*\s+recruiting/i) : null;
-				
-				var loc_contact = 'contact' in loc && loc.contact ? loc.contact : null;
-				if (!loc_contact || ((! ('email' in loc_contact) || !loc_contact.email) && (! ('phone' in loc_contact) || !loc_contact.phone))) {
-					loc_contact = 'contact_backup' in loc && loc.contact_backup ? loc.contact_backup : null;
+			if ('location' in this && this.location) {
+				var locs = [];
+				for (var i = 0; i < this.location.length; i++) {
+					var loc = this.location[i];
+					var loc_parts = ('formatted' in loc.geodata && loc.geodata.formatted && loc.geodata.formatted.length > 0) ? loc.geodata.formatted.split(/,\s+/) : ["Unknown"];
+					var loc_country = loc_parts.pop();
+					var loc_stat_m_recr = loc.status ? loc.status.match(/recruiting/i) : null;
+					var loc_stat_m_not = loc.status ? loc.status.match(/not\s+[\w\s]*\s+recruiting/i) : null;
+					
+					var loc_contact = 'contact' in loc && loc.contact ? loc.contact : null;
+					if (!loc_contact || ((! ('email' in loc_contact) || !loc_contact.email) && (! ('phone' in loc_contact) || !loc_contact.phone))) {
+						loc_contact = 'contact_backup' in loc && loc.contact_backup ? loc.contact_backup : null;
+					}
+					if (!loc_contact || ((! ('email' in loc_contact) || !loc_contact.email) && (! ('phone' in loc_contact) || !loc_contact.phone))) {
+						loc_contact = 'overall_contact' in this ? this.overall_contact : null;
+					}
+					
+					var loc_dict = {
+						'trial': this,
+						'name': ('facility' in loc && loc.facility.name) ? loc.facility.name : '',
+						'city': (loc_parts.length > 0) ? loc_parts.join(', ') : '',
+						'country': loc_country,
+						'geodata': ('geodata' in loc ? loc.geodata : null),
+						'status': loc.status,
+						'status_color': loc_stat_m_not ? 'orange' : (loc_stat_m_recr ? 'green' : 'red'),
+						'contact': loc_contact
+					}
+					
+					locs.push(new TrialLocation(loc_dict));
 				}
-				if (!loc_contact || ((! ('email' in loc_contact) || !loc_contact.email) && (! ('phone' in loc_contact) || !loc_contact.phone))) {
-					loc_contact = 'overall_contact' in this ? this.overall_contact : null;
-				}
 				
-				var loc_dict = {
-					'trial': this,
-					'name': ('facility' in loc && loc.facility.name) ? loc.facility.name : '',
-					'city': (loc_parts.length > 0) ? loc_parts.join(', ') : '',
-					'country': loc_country,
-					'geodata': ('geodata' in loc ? loc.geodata : null),
-					'status': loc.status,
-					'status_color': loc_stat_m_not ? 'orange' : (loc_stat_m_recr ? 'green' : 'red'),
-					'contact': loc_contact
-				}
-				
-				locs.push(new TrialLocation(loc_dict));
+				this.trial_locations = locs;
 			}
-			
-			this.trial_locations = locs;
 		}
 		
 		return this.trial_locations;
@@ -129,14 +131,15 @@ var Trial = can.Construct({
 		
 		var by_dist = [];
 		var locs = this.locations();
-		for (var i = 0; i < locs.length; i++) {
-			var loc = locs[i];
-			by_dist.push([loc.kmDistanceTo(to_location), loc]);
+		if (locs) {
+			for (var i = 0; i < locs.length; i++) {
+				var loc = locs[i];
+				by_dist.push([loc.kmDistanceTo(to_location), loc]);
+			}
+			
+			by_dist.sort(function(a, b) { return a[0] - b[0]; });
+			this.last_loc_distances = by_dist;
 		}
-		
-		by_dist.sort(function(a, b) { return a[0] - b[0]; });
-		this.last_loc_distances = by_dist;
-		
 		return by_dist;
 	},
 	
@@ -238,7 +241,7 @@ var Trial = can.Construct({
 	showPins: function(map, animated) {
 		var locs = this.locations();
 		
-		if (!this.did_add_pins && map.is(':visible')) {
+		if (locs && !this.did_add_pins && map.is(':visible')) {
 			this.did_add_pins = true;
 			var pins = [];
 			
@@ -260,7 +263,7 @@ var Trial = can.Construct({
 			});
 		}
 		
-		return locs.length;
+		return locs ? locs.length : 0;
 	}
 });
 
