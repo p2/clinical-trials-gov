@@ -83,14 +83,19 @@ function geo_hideMap() {
 
 /**
  *  Pulls out the location text from the "#demo_location" field and geocodes the location, passing it into the callback.
+ *  The callback receives:
+ *  - success (bool)
+ *  - latitude (string)
+ *  - longitude (string)
+ *  The LatLng object gets put into the "g_patient_location" global variable.
  */
 function geo_locatePatient(address, callback) {
-	if (!address) {
-		console.warn("Cannot locate patient, no address given");
+	if (!address || 0 == address.length) {
 		g_patient_location = null;
 		if (callback) {
-			callback(false, null);
+			callback(false, null, null);
 		}
+		return;
 	}
 	
 	geo_codeAddress(address, function(success, location) {
@@ -103,7 +108,7 @@ function geo_locatePatient(address, callback) {
 		
 		// callback
 		if (callback) {
-			callback(success, location);
+			callback(success, location ? location.lat() : null, location ? location.lng() : null);
 		}
 	});
 }
@@ -115,7 +120,7 @@ function geo_locatePatient(address, callback) {
  */
 function geo_codeAddress(address, callback) {
 	if (!address) {
-		console.error("No address given, cannot geo-code");
+		console.warn("No address given, cannot geo-code");
 		if (callback) {
 			callback(false, null);
 		}

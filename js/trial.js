@@ -157,14 +157,15 @@ var Trial = can.Construct({
 	
 	/**
 	 *  Adds the next x locations to the trial view.
+	 *  @param to_location The location to measure the distance to
 	 *  @param elem The trial view element, locations will be added to a child div
 	 *  @param start The start index, can be used to incrementally add locations
 	 *  @param num The number of locations to add, will round up if less than 3 are left
 	 *  @param animated Whether to animate blend-in, DOES NOT YET WORK
 	 */
-	showClosestLocations: function(elem, start, num, animated) {
+	showClosestLocations: function(to_location, elem, start, num, animated) {
 		var loc_elem = elem.find('.trial_locations');
-		var locs = this.locationsByDistance();
+		var locs = this.locationsByDistance(to_location);
 		
 		// add locations
 		if (locs && locs.length > 0) {
@@ -195,7 +196,7 @@ var Trial = can.Construct({
 				.text('Show ' + ((next < locs.length - i) ? 'next ' + next : ' all'))
 				.click(function(evt) {
 					if (trial) {
-						trial.showClosestLocations(elem, i, next, true);
+						trial.showClosestLocations(to_location, elem, i, next, true);
 					}
 					else {
 						console.error("The trial object is undefined");

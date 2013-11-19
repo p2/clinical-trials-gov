@@ -2,7 +2,6 @@
  *  Function for trial searching, fetching and listing.
  */
 
-var _patient_loc = null;
 var _trialSearchInterval = null;
 var _trialSearchMustStop = false;
 
@@ -82,66 +81,40 @@ function _initTrialSearch(term, condition, gender, age, remember_input) {
 	_run_id = null;
 	showTrialStatus('Starting...');
 	
-	// determine term or condition
-	var data = {
-		'gender': gender,
-		'age': age,
-		'remember_input': remember_input ? true : false
-	};
-	var term_or_cond = term ? term : condition;
-	data[term ? 'term' : 'cond'] = term_or_cond;
-	
-	// fire off AJAX call
-	$.ajax({
-		'url': 'trial_runs',
-		'data': data
-	})
-	.always(function(obj1, status, obj2) {
-		if (_trialSearchMustStop) {
-			return;
-		}
-		if ('success' == status) {
-			_run_id = obj1;
-			if (_trialSearchInterval) {
-				window.clearInterval(_trialSearchInterval);
+	// locate the patient first; will just call the callback if no location has been given
+	geo_locatePatient($('#demo_location').val(), function(success, lat, lng) {
+		var location = success ? (lat + ',' + lng) : null;
+		
+		// determine term or condition
+		var data = {
+			'gender': gender,
+			'age': age,
+			'latlng': location,
+			'remember_input': remember_input ? true : false
+		};
+		var term_or_cond = term ? term : condition;
+		data[term ? 'term' : 'cond'] = term_or_cond;
+		
+		// fire off AJAX call
+		$.ajax({
+			'url': 'trial_runs',
+			'data': data
+		})
+		.always(function(obj1, status, obj2) {
+			if (_trialSearchMustStop) {
+				return;
 			}
-			_trialSearchInterval = window.setInterval(function() { checkTrialStatus(); }, 1000);
-		}
-		else {
-			console.error(obj1, ' -- ', status, ' -- ', obj2);
-			showTrialStatus('Error searching for trials: ' + status + ', see console');
-		}
-	});
-	
-	// never forget
-	if (remember_input) {
-		_last_manual_input = term_or_cond;
-	}
-	
-	// locate patient while waiting
-	locatePatient();
-}
-
-
-/**
- *  This function obviously tries to locate the patient by the given address.
- */
-function locatePatient() {
-	var adr = $('#demo_location').val();
-	if (!adr) {
-		_patient_loc = null;
-		return;
-	}
-	
-	// locate (asynchronously)
-	geo_locatePatient(adr, function(success, location) {
-		if (success) {
-			_patient_loc = location;
-		}
-		else {
-			console.warn("Failed to locate the patient");
-			_patient_loc = null;
-		}
+			if ('success' == status) {
+				_run_id = obj1;
+				if (_trialSearchInterval) {
+					window.clearInterval(_trialSearchInterval);
+				}
+				_trialSearchInterval = window.setInterval(function() { checkTrialStatus(); }, 1000);
+			}
+			else {
+				showTrialStatus('Error searching for trials: ' + obj2);
+			}
+		});
 	});
 }
 
@@ -185,7 +158,7 @@ function checkTrialStatus() {
 		}
 		else {
 			console.error(obj1, status, obj2);
-			showTrialStatus('Error checking trial status, see console');
+			showTrialStatus('Error checking trial status: ' + obj2);
 			window.clearInterval(_trialSearchInterval);
 			_trialSearchInterval = null;
 		}
@@ -200,7 +173,7 @@ function _filterTrialsByDemographics(run_id) {
 			_filterTrialsByProblems(run_id);
 		},
 		function(obj1, status, obj2) {
-			showTrialStatus('Error filtering trials (demographics), see browser console');
+			showTrialStatus('Error filtering trials (demographics): ' + obj2);
 		}
 	);
 }
@@ -212,7 +185,7 @@ function _filterTrialsByProblems(run_id) {
 			loadTrialOverview(run_id);
 		},
 		function(obj1, status, obj2) {
-			showTrialStatus('Error filtering trials (problems), see browser console');
+			showTrialStatus('Error filtering trials (problems): ' + obj2);
 		}
 	);
 }
@@ -236,190 +209,9 @@ function loadTrialOverview(run_id) {
 			}
 		},
 		function(obj1, status, obj2) {
-			showTrialStatus('Error retrieving overview data, see browser console');
+			showTrialStatus('Error retrieving overview data: ' + obj2);
 		}
 	);
-}
-
-
-
-function _loadTrials(trial_tuples) {
-	if (!trial_tuples || trial_tuples.length < 1) {
-		showTrialStatus("There are no such trials");
-		return;
-	}
-	
-	showTrialStatus("Loading " + trial_tuples.length + " trial" + (1 == trial_tuples.length ? "" : "s") + "...");
-	$('#g_map_toggle').show();
-	
-	_trialNumExpected = trial_tuples.length;
-	_trialNumDone = 0;
-	_showGoodTrials = true;
-	
-	// batch the trials
-	var batch = {};
-	var batches = [];
-	
-	var num_good = 0;
-	var num_bad = 0;
-	
-	for (var i = 0; i < trial_tuples.length; i++) {
-		var tpl = trial_tuples[i];
-		var nct = tpl[0];
-		var reason = null;
-		if (tpl.length > 1) {
-			reason = tpl[1];
-			if (reason) {
-				num_bad++;
-			}
-		}
-		else {
-			num_good++;
-		}
-		
-		// manage the batch
-		batch[nct] = reason;
-		if (0 == (i + 1) % _trialBatchSize || i == trial_tuples.length - 1) {
-			batches.push(batch);
-			batch = {};
-		}
-	}
-	
-	// add the trial type selector
-	if (num_bad > 0) {
-		var opt_goodbad = $('#selector_goodbad');
-		var good_trials = _getOptRadioElement('Potential Trials', num_good + ' of ' + trial_tuples.length, true);
-		good_trials.data('is-good', true);
-		opt_goodbad.append(good_trials);
-		
-		var bad_trials = _getOptRadioElement('Ineligible Trials', num_bad + ' of ' + trial_tuples.length, false);
-		bad_trials.data('is-good', false);
-		opt_goodbad.append(bad_trials);
-	}
-	
-	// fire off!
-	_loadTrialBatchContinuing(batches, -1, []);
-}
-
-
-/**
- *  Fetches the given batch of studies, does all the magic and calls itself until all batches have been loaded
- */
-function _loadTrialBatchContinuing(batches, previous, intervention_types, drug_phases) {
-	var current = previous + 1;
-	if (!batches || current >= batches.length) {
-		console.warn("We should have stopped, there's no batch number " + current + " in these batches: ", batches);
-		return;
-	}
-	if (_trialSearchMustStop) {
-		return;
-	}
-	
-	if (!intervention_types) {
-		intervention_types = [];
-	}
-	if (!drug_phases) {
-		drug_phases = [];
-	}
-	if (!_trials) {
-		_trials = [];
-	}
-	
-	var batch = batches[current];
-	var ncts = [];
-	for (var nct in batch) {
-		ncts.push(nct);
-	}
-	
-	// fetch
-	$.ajax({
-		'url': 'trials/' + ncts.join(':'),
-		'dataType': 'json',
-		'context': {'reasons': batch}
-	})
-	.always(function(obj1, status, obj2) {
-		if (_trialSearchMustStop) {
-			return;
-		}
-		var cont = true;
-		
-		// got trials
-		if ('success' == status) {
-			var type_arr = [];
-			var status_every = Math.max(5, Math.round(_trialNumExpected / 25));
-			
-			// loop trials
-			var trials = 'trials' in obj1 ? obj1.trials : [];
-			for (var i = 0; i < trials.length; i++) {
-				
-				// update status
-				_trialNumDone++;
-				if (_trialNumDone >= _trialNumExpected) {
-					cont = false;
-					showTrialStatus();
-				}
-				else if (0 == _trialNumDone % status_every) {
-					var percent = Math.round(_trialNumDone / _trialNumExpected * 100);
-					showTrialStatus("Loading (" + percent + "%)");
-				}
-				
-				// trial
-				var trial = new Trial(trials[i]);
-				trial.reason = this.reasons[trial.nct];
-				
-				// pull out intervention types and phases
-				intervention_types = intervention_types.concat(trial.interventionTypes());
-				drug_phases = drug_phases.concat(trial.trialPhases());
-				
-				_trials.push(trial);
-			}
-		}
-		
-		// error, make sure the counter is still accurate and log a warning
-		else {
-			_trialNumDone += this.reasons.length;
-			if (_trialNumDone >= _trialNumExpected) {
-				showTrialStatus();
-			}
-			console.error("Failed loading NCTs:", ncts.join(', '), "obj1:", obj1, "obj2:", obj2);
-		}
-		
-		// finish or fetch next
-		if (cont) {
-			_loadTrialBatchContinuing(batches, current, intervention_types, drug_phases);
-		}
-		else {
-			_didLoadTrialBatches(batches, intervention_types, drug_phases);
-		}
-	});
-}
-
-
-/**
- *  Called when the last batch has been loaded.
- *
- *  Note that intervention_types and drug_phases possibly contains many duplicates.
- */
-function _didLoadTrialBatches(batches, intervention_types, drug_phases) {
-	showNoTrialsHint();
-	
-	// add all intervention types and phases
-	// _showInterventionTypes(intervention_types);
-	// _showTrialPhases(drug_phases);
-	
-	// show UI
-	$('#trial_selectors').show();
-	_geocodeTrials(_patient_loc);
-	
-	// only a couple of trials? Show them!
-	if (_trials && _trials.length <= 15) {
-		$('#selector_inv_type > li').each(function(i, elem) {
-			$(elem).addClass('active').find('input[type="checkbox"]').prop('checked', true);
-		});
-	}
-	
-	updateShownHiddenTrials();
-	showTrialStatus();
 }
 
 
@@ -465,16 +257,6 @@ function _showTrialPhases(num_per_phase) {
 			return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
 		});
 	}
-}
-
-
-function _geocodeTrials(to_location) {
-	Trial.geocode(_trials, to_location);
-	
-	// now order them by distance
-	_trials.sort(function(a, b) {
-		return a.closest - b.closest;
-	});
 }
 
 
@@ -654,7 +436,7 @@ function updateShownHiddenTrials() {
 	
 	var qry = qry_parts.join('&');
 	
-	// TODO: locally caching all trials (webSQL?) would be neat
+	// TODO: locally caching all trials (webSQL?) might be neat?
 	loadJSON(
 		'trial_runs/' + _run_id + '/trials?' + qry,
 		function(obj1, status, obj2) {
@@ -717,7 +499,7 @@ function _showTrials(trials, start) {
 		if (i < show_max) {
 			var li = $('<li/>').append(can.view('templates/trial_item.ejs', {'trial': trial, 'active_keywords': active_keywords}));
 			trial_list.append(li);
-			trial.showClosestLocations(li, 0, 3);
+			trial.showClosestLocations(g_patient_location, li, 0, 3);
 		}
 		else {
 			has_more = true;

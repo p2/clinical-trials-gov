@@ -431,6 +431,7 @@ def find_trials():
 	- "cond" or "term", the prior taking precedence
 	- "gender" ('male' or 'female')
 	- "age" (in years)
+	- "latlng", comma-separated latitude and longituted of the patient
 	- "remember_input" if the condition or term should be stored in the session
 	
 	This method forks off and prints the status to a file which can be read by
@@ -457,13 +458,28 @@ def find_trials():
 	else:
 		bottle.abort(400, 'You need to specify "cond" or "term"')
 	
+	# latitude and longitude
+	latlng = bottle.request.query.get('latlng')
+	if latlng is None or 0 == len(latlng):
+		latlng = '42.358,-71.06'		# default to Boston
+	parts = latlng.split(',', 2)
+	if parts is None or 2 != len(parts):
+		bottle.abort(400, '"latlng" must be two numbers separated by a comma')
+	
+	lat = parts[0]
+	lng = parts[1]
+	runner.reference_location = (lat, lng)
+	
 	# store in session
+	age = bottle.request.query.get('age')
+	
 	sess = _get_session()
 	runs = sess.get('runs', {})
 	runs[run_id] = {
 		'cond': cond,
 		'gender': bottle.request.query.get('gender'),
-		'age': int(bottle.request.query.get('age'))
+		'age': int(age) if age else None,
+		'latlng': latlng
 	}
 	sess['runs'] = runs
 	
@@ -518,7 +534,7 @@ def run_trials(run_id):
 		bottle.abort(404)
 	
 	if not runner.done:
-		bottle.abort(400, "Trial trials are not yet available")
+		bottle.abort(400, "Trials are not yet available")
 	
 	# get request vars
 	intv = bottle.request.query.intv
@@ -526,7 +542,7 @@ def run_trials(run_id):
 	phases = bottle.request.query.phases
 	phases = phases.split('|') if phases else []
 	
-	trials = runner.trials(intv, phases)
+	trials = runner.trials_json(intv, phases)
 	return json.dumps(trials)
 
 
