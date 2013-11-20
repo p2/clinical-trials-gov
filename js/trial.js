@@ -79,7 +79,7 @@ var Trial = can.Construct({
 	
 	
 	/**
-	 *  Comment
+	 *  Get the trial's recruitment locations.
 	 */
 	locations: function() {
 		if (null === this.trial_locations) {
@@ -234,17 +234,14 @@ var Trial = can.Construct({
 		elem.find('.trial_locations').append(fragment);
 	},
 	
-	
 	/**
-	 *  Adds the trial location pins to the map.
-	 *  @return The number of trial locations
+	 *  Get pins for all locations.
 	 */
-	showPins: function(map, animated) {
+	locationPins: function() {
 		var locs = this.locations();
+		var pins = [];
 		
-		if (locs && !this.did_add_pins && map.is(':visible')) {
-			this.did_add_pins = true;
-			var pins = [];
+		if (locs && locs.length > 0) {
 			
 			for (var i = 0; i < locs.length; i++) {
 				if ('geodata' in locs[i]) {
@@ -258,13 +255,9 @@ var Trial = can.Construct({
 					pins.push(loc);
 				}
 			}
-			
-			geo_addPins(pins, false, function(e) {
-				showTrialsforPins([this]);
-			});
 		}
 		
-		return locs ? locs.length : 0;
+		return pins;
 	}
 });
 

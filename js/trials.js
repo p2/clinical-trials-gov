@@ -12,7 +12,7 @@ var _showGoodTrials = true;
 var _trialsPerPage = 50;
 
 var _run_id = null;
-var _trials = null;
+var _trial_locations= null;
 
 
 /**
@@ -44,8 +44,6 @@ function cancelTrialSearch() {
 }
 
 function resetUI() {
-	_trials = null;
-	
 	$('#trial_selectors').find('.trial_selector').empty();
 	$('#trial_selectors').find('.trial_opt_selector > ul').empty();
 	$('#trial_selectors').hide();
@@ -58,6 +56,7 @@ function resetShownTrials() {
 	$('#trial_list').empty();
 	showNoTrialsHint();
 	
+	_trial_locations = null;
 	geo_clearAllPins();
 	geo_hideMap();
 	$('#selected_trial').empty().hide();
@@ -444,7 +443,7 @@ function updateShownHiddenTrials() {
 			window.setTimeout(geo_zoomToPins, 100);
 		},
 		function(obj1, status, obj2) {
-			showTrialStatus(obj1);
+			showTrialStatus('Error loading trials: ' + obj2);
 		}
 	);
 }
@@ -459,6 +458,7 @@ function _showTrials(trials, start) {
 		trial_list.empty();
 	}
 	$('#show_more_trials').remove();
+	$('#g_map_toggle').show();
 	
 	// no trials to show
 	if (!trials || 0 == trials.length || start >= trials.length) {
@@ -474,8 +474,6 @@ function _showTrials(trials, start) {
 		return;
 	}
 	
-	var map = $('#g_map');
-	
 	// get active keywords
 	var active_keywords = [];
 	$('#selector_keywords').children('span').each(function(idx, item) {
@@ -489,11 +487,14 @@ function _showTrials(trials, start) {
 		show_max = trials.length + start;
 	}
 	var has_more = false;
-	var num_locations = 0;
+	var map = $('#g_map');
+	if (!_trial_locations) {
+		_trial_locations = [];
+	}
 	
 	for (var i = start; i < trials.length; i++) {
 		var trial = new Trial(trials[i]);
-		num_locations += trial.showPins(map, false);
+		_trial_locations.push.apply(_trial_locations, trial.locationPins());
 		
 		// add the trial element to the list
 		if (i < show_max) {
@@ -506,7 +507,7 @@ function _showTrials(trials, start) {
 		}
 	}
 	
-	$('#g_map_toggle > span').text(num_locations > 1000 ? ' (' + num_locations + ' trial locations)' : '');
+	$('#g_map_toggle > span').text(_trial_locations.length > 1000 ? ' (' + _trial_locations.length + ' trial locations)' : '');
 	hideNoTrialsHint();
 	
 	// are there more?
@@ -553,9 +554,9 @@ function toggleTrialMap() {
 		
 		// pins
 		window.setTimeout(function() {
-			for (var i = 0; i < _trials.length; i++) {
-				_trials[i].showPins(map, false);
-			}
+			geo_addPins(_trial_locations, false, function(e) {
+				showTrialsforPins([this]);
+			});
 			geo_zoomToPins();
 		}, 200);
 	}
@@ -577,7 +578,8 @@ function showTrialsforPins(pins) {
 	for (var i = 0; i < pins.length; i++) {
 		var pin = pins[i];
 		
-		var li = $('<li/>').append(can.view('templates/trial_item.ejs', {'trial': pin.trial}));
+		// TODO: collect active keywords
+		var li = $('<li/>').append(can.view('templates/trial_item.ejs', {'trial': pin.trial, 'active_keywords': null}));
 		li.append('<a class="dismiss_link" href="javascript:void(0);" onclick="dismissShownTrial(this)">dismiss</a>');
 		area.append(li);
 		
