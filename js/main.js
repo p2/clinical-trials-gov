@@ -176,6 +176,21 @@ function newUUID() {
 
 
 
+/*
+ *  -------------
+ *  Local Storage
+ *  -------------
+ */
+function hasLocalStorage() {
+	try {
+		return 'localStorage' in window && window['localStorage'] !== null;
+	}
+	catch (e) {}
+	return false;
+}
+
+
+
 /**
  *  Thanks Twitter, with this we can use console.xy without fear.
  */

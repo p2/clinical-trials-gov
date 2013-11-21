@@ -252,9 +252,15 @@ function _showTrialPhases(num_per_phase) {
 		}
 		
 		// sort phases alphabetically
-		sortChildren(opt_phase, 'li', function(a, b) {
-			return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
-		});
+		if (phases.length > 0) {
+			sortChildren(opt_phase, 'li', function(a, b) {
+				return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
+			});
+			opt_phase.show();
+		}
+		else {
+			opt_phase.hide();
+		}
 	}
 }
 
@@ -388,6 +394,9 @@ function updateShownHiddenTrials() {
 		return;
 	}
 	
+	// inactivate checkboxes
+	$('#trial_selectors').find('input[type="checkbox"]').prop('disabled', true);
+	
 	// clean up pins
 	geo_clearAllPins();
 	$('#selected_trial').empty().hide();
@@ -440,10 +449,12 @@ function updateShownHiddenTrials() {
 		'trial_runs/' + _run_id + '/trials?' + qry,
 		function(obj1, status, obj2) {
 			_showTrials(obj1, 0);
+			$('#trial_selectors').find('input[type="checkbox"]').prop('disabled', false);
 			window.setTimeout(geo_zoomToPins, 100);
 		},
 		function(obj1, status, obj2) {
 			showTrialStatus('Error loading trials: ' + obj2);
+			$('#trial_selectors').find('input[type="checkbox"]').prop('disabled', false);
 		}
 	);
 }

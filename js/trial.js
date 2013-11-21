@@ -165,7 +165,8 @@ var Trial = can.Construct({
 	 */
 	showClosestLocations: function(to_location, elem, start, num, animated) {
 		var loc_elem = elem.find('.trial_locations');
-		var locs = this.locationsByDistance(to_location);
+		var locs = this.locations();
+		// var locs = this.locationsByDistance(to_location);	// locations are ordered on the server already
 		
 		// add locations
 		if (locs && locs.length > 0) {
@@ -181,7 +182,8 @@ var Trial = can.Construct({
 			// show desired ones
 			var i = start;
 			for (; i < max; i++) {
-				var loc = locs[i][1];			// the list has tuples, distance and the location object
+				var loc = locs[i];
+				// var loc = locs[i][1];			// the list has tuples, distance and the location object, if we use "locationsByDistance"
 				var fragment = can.view('templates/trial_location.ejs', {'loc': loc});
 				loc_elem.append(fragment);
 			}
