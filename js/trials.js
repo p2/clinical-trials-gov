@@ -56,11 +56,15 @@ function resetShownTrials() {
 	$('#trial_list').empty();
 	showNoTrialsHint();
 	
+	cleanMap();
+	geo_hideMap();
+	$('#g_map_toggle').hide().find('a').text('Show Map');
+}
+
+function cleanMap() {
 	_trial_locations = null;
 	geo_clearAllPins();
-	geo_hideMap();
 	$('#selected_trial').empty().hide();
-	$('#g_map_toggle').hide().find('a').text('Show Map');
 }
 
 
@@ -195,8 +199,8 @@ function loadTrialOverview(run_id) {
 		'trial_runs/' + run_id + '/overview',
 		function(obj1, status, obj2) {
 			if ('intervention_types' in obj1 && 'drug_phases' in obj1) {
-				_showInterventionTypes(obj1['intervention_types']);
-				_showTrialPhases(obj1['drug_phases']);
+				_fillInterventionTypes(obj1['intervention_types']);
+				_fillTrialPhases(obj1['drug_phases']);
 				
 				// show UI
 				showTrialStatus();
@@ -214,7 +218,7 @@ function loadTrialOverview(run_id) {
 }
 
 
-function _showInterventionTypes(num_per_type) {
+function _fillInterventionTypes(num_per_type) {
 	if (num_per_type) {
 		var opt_type = $('#selector_inv_type');
 		var itypes = sortedKeysFromDict(num_per_type);
@@ -236,7 +240,7 @@ function _showInterventionTypes(num_per_type) {
 	}
 }
 
-function _showTrialPhases(num_per_phase) {
+function _fillTrialPhases(num_per_phase) {
 	if (num_per_phase) {
 		var opt_phase = $('#selector_inv_phase');
 		var phases = sortedKeysFromDict(num_per_phase);
@@ -256,10 +260,6 @@ function _showTrialPhases(num_per_phase) {
 			sortChildren(opt_phase, 'li', function(a, b) {
 				return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
 			});
-			opt_phase.show();
-		}
-		else {
-			opt_phase.hide();
 		}
 	}
 }
@@ -277,7 +277,7 @@ function _getOptRadioElement(main, accessory, active) {
 	
 	if (active) {
 		elem.addClass('active');
-		input.attr('checked', true);
+		input.prop('checked', true);
 	}
 	
 	return elem;
@@ -295,7 +295,7 @@ function _getOptCheckElement(main, accessory, active) {
 	
 	if (active) {
 		elem.addClass('active');
-		input.attr('checked', true);
+		input.prop('checked', true);
 	}
 	
 	return elem;
@@ -325,6 +325,7 @@ function _toggleOptCheckElement(evt) {
 
 
 function _toggleKeyword(elem) {
+	alert('not implemented');
 	var keyword = $(elem).text();
 	var norm = _normalizeKeyword(keyword);
 	var for_nct = $(elem).parent().data('trial-nct');
@@ -394,12 +395,9 @@ function updateShownHiddenTrials() {
 		return;
 	}
 	
-	// inactivate checkboxes
+	// inactivate checkboxes and clean up pins
 	$('#trial_selectors').find('input[type="checkbox"]').prop('disabled', true);
-	
-	// clean up pins
-	geo_clearAllPins();
-	$('#selected_trial').empty().hide();
+	cleanMap();
 	
 	var qry_parts = [];
 	
@@ -416,15 +414,35 @@ function updateShownHiddenTrials() {
 	}
 	
 	// get active phases
+	var all_phases = [];
 	var active_phases = [];
 	$('#selector_inv_phase').children('li').each(function(idx, item) {
 		var elem = $(item);
+		all_phases.push(elem);
 		if (elem.hasClass('active')) {
 			active_phases.push(elem.data('phase'));
 		}
 	});
 	if (active_phases.length > 0) {
-		qry_parts.push('phases=' + active_phases.join('|'));
+		if (active_phases.length < all_phases.length) {		// only pass as param if not all of them are selected
+			qry_parts.push('phases=' + active_phases.join('|'));
+		}
+	}
+	
+	// no phases selected, check all of them
+	else {
+		$(all_phases).each(function(idx, elem) {
+			elem.find('input').prop('checked', true);
+			elem.addClass('active');
+		});
+	}
+	
+	// show if we have phases and have selected a type
+	if (all_phases.length > 0 && active_types.length > 0) {
+		$('#selector_inv_phase_parent').show();
+	}
+	else {
+		$('#selector_inv_phase_parent').hide();
 	}
 	
 	// get active keywords
@@ -651,7 +669,7 @@ function showNoTrialsHint() {
 	// if there is a type, make sure we have selected at least one phase
 	if (has_type) {
 		var has_phase = false;
-		if ($('#').is(':visible')) {
+		if ($('#selector_inv_phase').is(':visible')) {
 			$('#selector_inv_phase').children('li').each(function(idx, item) {
 				if ($(item).find('input').prop('checked')) {
 					has_phase = true;
