@@ -242,7 +242,7 @@ function _fillInterventionTypes(num_per_type) {
 
 function _fillTrialPhases(num_per_phase) {
 	if (num_per_phase) {
-		var opt_phase = $('#selector_inv_phase');
+		var opt_phase = $('#selector_inv_phase').empty();
 		var phases = sortedKeysFromDict(num_per_phase);
 		
 		for (var i = 0; i < phases.length; i++) {
@@ -304,6 +304,7 @@ function _getOptCheckElement(main, accessory, active) {
 
 
 function _toggleShowGoodTrials(evt) {
+	alert('re-implement me!');
 	_showGoodTrials = !_showGoodTrials;
 	updateShownHiddenTrials();
 }
@@ -320,7 +321,9 @@ function _toggleOptCheckElement(evt) {
 		elem.removeClass('active');
 	}
 	
-	updateShownHiddenTrials();
+	// update trials
+	var from_types = 'selector_inv_type' == elem.parent().attr('id');
+	updateShownHiddenTrials(from_types);
 }
 
 
@@ -359,8 +362,6 @@ function _toggleKeyword(elem) {
 		parent.parent().hide();
 	}
 	
-	updateShownHiddenTrials();
-	
 	// restore scroll position (element has been removed from DOM and replaced!)
 	if (offset > 0) {
 		offset -= 144;			// TODO: figure out why this is necessary (not correct for 2+ tags)
@@ -389,16 +390,16 @@ function _normalizeKeyword(keyword) {
 /**
  *  Loops all trials and shows or hides according to our globals.
  */
-function updateShownHiddenTrials() {
+function updateShownHiddenTrials(from_types) {
 	if (!_run_id) {
 		showTrialStatus("I have lost track of our run, please search again");
 		return;
 	}
 	
-	// inactivate checkboxes and clean up pins
+	// inactivate checkboxes
 	$('#trial_selectors').find('input[type="checkbox"]').prop('disabled', true);
-	cleanMap();
 	
+	cleanMap();
 	var qry_parts = [];
 	
 	// get active intervention types
@@ -457,16 +458,25 @@ function updateShownHiddenTrials() {
 	// if there is no restriction by type or keyword, show nothing
 	if (0 == active_types.length && 0 == active_keywords.length) {
 		resetShownTrials();
+		$('#trial_selectors').find('input[type="checkbox"]').prop('disabled', false);
 		return;
 	}
 	
+	// do we need to reload the numbers per trial phase
+	if (from_types) {
+		qry_parts.push('reload_phases=1');
+		$('#selector_inv_phase').find('.num_matches').text('…');
+	}
 	var qry = qry_parts.join('&');
 	
 	// TODO: locally caching all trials (webSQL?) might be neat?
 	loadJSON(
 		'trial_runs/' + _run_id + '/trials?' + qry,
 		function(obj1, status, obj2) {
-			_showTrials(obj1, 0);
+			_showTrials(obj1['trials'], 0);
+			if ('drug_phases' in obj1) {
+				_fillTrialPhases(obj1['drug_phases']);
+			}
 			$('#trial_selectors').find('input[type="checkbox"]').prop('disabled', false);
 			window.setTimeout(geo_zoomToPins, 100);
 		},
@@ -537,6 +547,9 @@ function _showTrials(trials, start) {
 	}
 	
 	$('#g_map_toggle > span').text(_trial_locations.length > 1000 ? ' (' + _trial_locations.length + ' trial locations)' : '');
+	if ($('#g_map').is(':visible')) {
+		updateTrialLocations();
+	}
 	hideNoTrialsHint();
 	
 	// are there more?
@@ -565,6 +578,7 @@ function toggleTrialMap() {
 	if (map.is(':visible')) {
 		var link_offset = $('#g_map_toggle').offset().top - $(window).scrollTop();
 		geo_hideMap();
+		geo_clearAllPins();
 		$('#g_map_toggle > a').text('Show Map');
 		$('#selected_trial').empty().hide();
 		
@@ -583,12 +597,21 @@ function toggleTrialMap() {
 		
 		// pins
 		window.setTimeout(function() {
-			geo_addPins(_trial_locations, false, function(e) {
-				showTrialsforPins([this]);
-			});
-			geo_zoomToPins();
+			updateTrialLocations();
 		}, 200);
 	}
+}
+
+function updateTrialLocations() {
+	if (!_trial_locations || 0 == _trial_locations.length) {
+		return;
+	}
+	
+	geo_clearAllPins();
+	geo_addPins(_trial_locations, false, function(e) {
+		showTrialsforPins([this]);
+	});
+	geo_zoomToPins();
 }
 
 

@@ -541,9 +541,15 @@ def run_trials(run_id):
 	intv = intv.split('|') if intv else []
 	phases = bottle.request.query.phases
 	phases = phases.split('|') if phases else []
+	reload_phases = bottle.request.query.reload_phases
 	
-	trials = runner.trials_json(intv, phases)
-	return json.dumps(trials)
+	ret_dict = {
+		'trials': runner.trials_json(intv, phases)
+	}
+	if reload_phases:
+		ret_dict['drug_phases'] = runner.trial_phases(intv)
+	
+	return json.dumps(ret_dict)
 
 
 @bottle.get('/trial_runs/<run_id>/filter/<filter_by>')
