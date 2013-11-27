@@ -397,6 +397,7 @@ function updateShownHiddenTrials(from_types) {
 	}
 	
 	// inactivate checkboxes
+	showNoTrialsHint('Loading…');
 	$('#trial_selectors').find('input[type="checkbox"]').prop('disabled', true);
 	
 	cleanMap();
@@ -473,6 +474,7 @@ function updateShownHiddenTrials(from_types) {
 	loadJSON(
 		'trial_runs/' + _run_id + '/trials?' + qry,
 		function(obj1, status, obj2) {
+			hideNoTrialsHint();
 			_showTrials(obj1['trials'], 0);
 			if ('drug_phases' in obj1) {
 				_fillTrialPhases(obj1['drug_phases']);
@@ -482,6 +484,7 @@ function updateShownHiddenTrials(from_types) {
 		},
 		function(obj1, status, obj2) {
 			showTrialStatus('Error loading trials: ' + obj2);
+			hideNoTrialsHint();
 			$('#trial_selectors').find('input[type="checkbox"]').prop('disabled', false);
 		}
 	);
@@ -674,10 +677,17 @@ function showTrialStatus(status) {
 
 
 
-function showNoTrialsHint() {
+function showNoTrialsHint(override_text) {
 	var hint = $('#no_trials_hint');
 	if (!hint.is('*')) {
 		hint = $('<h3/>', {'id': 'no_trials_hint'});
+		$('#trials').prepend(hint);
+	}
+	
+	// display arbitrary text? We can do that
+	if (override_text && override_text.length > 0) {
+		hint.text(override_text);
+		return;
 	}
 	
 	// check if at least one study type has been selected
@@ -685,7 +695,7 @@ function showNoTrialsHint() {
 	$('#selector_inv_type').children('li').each(function(idx, item) {
 		if ($(item).find('input').prop('checked')) {
 			has_type = true;
-			return false;
+			return;
 		}
 	});
 	
@@ -696,7 +706,7 @@ function showNoTrialsHint() {
 			$('#selector_inv_phase').children('li').each(function(idx, item) {
 				if ($(item).find('input').prop('checked')) {
 					has_phase = true;
-					return false;
+					return;
 				}
 			});
 		}
@@ -711,7 +721,6 @@ function showNoTrialsHint() {
 	else {
 		hint.text("Please select at least one intervention or observation");
 	}
-	$('#trials').append(hint);
 }
 
 function hideNoTrialsHint() {

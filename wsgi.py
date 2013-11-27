@@ -529,6 +529,9 @@ def run_trials(run_id):
 	You can filter the returned trias by supplying 'intv' for intervention
 	types to be included and 'phases' for trial phases to be active """
 	
+	# from pycallgraph import PyCallGraph
+	# from pycallgraph.output import GraphvizOutput
+	# with PyCallGraph(output=GraphvizOutput()):
 	runner = Runner.get(run_id)
 	if runner is None:
 		bottle.abort(404)

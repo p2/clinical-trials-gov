@@ -93,14 +93,6 @@ var Trial = can.Construct({
 					var loc_stat_m_recr = loc.status ? loc.status.match(/recruiting/i) : null;
 					var loc_stat_m_not = loc.status ? loc.status.match(/not\s+[\w\s]*\s+recruiting/i) : null;
 					
-					var loc_contact = 'contact' in loc && loc.contact ? loc.contact : null;
-					if (!loc_contact || ((! ('email' in loc_contact) || !loc_contact.email) && (! ('phone' in loc_contact) || !loc_contact.phone))) {
-						loc_contact = 'contact_backup' in loc && loc.contact_backup ? loc.contact_backup : null;
-					}
-					if (!loc_contact || ((! ('email' in loc_contact) || !loc_contact.email) && (! ('phone' in loc_contact) || !loc_contact.phone))) {
-						loc_contact = 'overall_contact' in this ? this.overall_contact : null;
-					}
-					
 					var loc_dict = {
 						'trial': this,
 						'name': ('facility' in loc && loc.facility.name) ? loc.facility.name : '',
@@ -109,7 +101,7 @@ var Trial = can.Construct({
 						'geodata': ('geodata' in loc ? loc.geodata : null),
 						'status': loc.status,
 						'status_color': loc_stat_m_not ? 'orange' : (loc_stat_m_recr ? 'green' : 'red'),
-						'contact': loc_contact
+						'contact': ('contact' in loc && loc.contact) ? loc.contact : null
 					}
 					
 					locs.push(new TrialLocation(loc_dict));
