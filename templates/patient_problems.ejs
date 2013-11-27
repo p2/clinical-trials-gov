@@ -4,8 +4,8 @@ var probs = (data && 'problems' in data) ? data['problems'] : [];
 <ul id="problem_list">
 	<li id="prob_manual" class="<%= probs.length > 0 ? '' : 'active' %>">
 		<form method="get" action="" onsubmit="hideProblemsAndStartTrialSearch('prob_manual'); return false;">
-			<input type="text" size="50" class="problem_name" id="manual_problem" placeholder="Enter search terms" value="Rheumatoid Arthritis" />
-			<!-- input type="text" size="50" class="problem_name" id="manual_problem" placeholder="Enter search terms" value="<%= last_manual_input %>" /-->
+			<!--input type="text" size="50" class="problem_name" id="manual_problem" placeholder="Enter search terms" value="Rheumatoid Arthritis" /-->
+			<input type="text" size="50" class="problem_name" id="manual_problem" placeholder="Enter search terms" value="<%= last_manual_input %>" />
 			<button id="manual_cancel" type="button" onclick="window.event.stopPropagation(); cancelTrialSearchAndShowProblemList('prob_manual');">Cancel</button>
 			<button id="manual_submit" type="submit">Search</button>
 		</form>
