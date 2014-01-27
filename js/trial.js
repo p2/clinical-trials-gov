@@ -304,3 +304,17 @@ function _loadEligibilityCriteria(into_elem, trial_nct) {
 	);
 }
 
+function hideTooManyCategoryTags(link) {
+	var elem = $(link);
+	var reference = elem.parent();
+	var before_height = reference.height();
+	
+	// hide accordingly
+	elem.siblings().show().filter('.over_limit').hide();
+	elem.hide();
+	
+	// adjust scroll
+	var offset = reference.height() - before_height;
+	window.scrollBy(0, offset);
+}
+

@@ -10,4 +10,4 @@ else
 fi
 
 # start the server
-./wsgi.py
+python wsgi.py

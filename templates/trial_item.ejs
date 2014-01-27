@@ -3,18 +3,27 @@
 	
 	<div class="trial_info">
 		<%= trial.title ? trial.title : 'Unnamed trial' %>
+		<div class="supplement"><%= (!trial.phase || 'N/A' == trial.phase) ? '' : trial.phase %></div>
+		<a class="ctgov_link" href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank"><%= trial.nct %></a>
+		
 		<% if (trial.keyword && trial.keyword.length > 0) { %>
 			<div class="trial_keywords" <%= (el) -> can.data(el, 'trial-nct', trial.nct) %>>
-			<% for (var i = 0; i < trial.keyword.length; i++) {
+			<% var max_keyword = (trial.keyword.length < 8) ? 8 : 5;
+			var has_more = trial.keyword.length > max_keyword;
+			
+			for (var i = 0; i < trial.keyword.length; i++) {
 				var keyword = trial.keyword[i];
 				var norm = _normalizeKeyword(keyword);
 				var active = active_keywords && active_keywords.contains(norm); %>
-				<span class="tag<%= active ? ' active' : '' %>" onclick="_toggleKeyword(this)" data-normalized="<%= norm %>"><%= keyword %></span>
+				<span class="tag<%= active ? ' active' : '' %><%= (i >= max_keyword) ? ' over_limit' : '' %>" style="<%= (i >= max_keyword) ? 'display:none;' : '' %>" onclick="_toggleKeyword(this)" data-normalized="<%= norm %>"><%= keyword %></span>
+			<% }
+			if (has_more) { %>
+				<a href="javascript:void(0);" class="tag" onclick="$(this).siblings().show();$(this).hide();">show all <%= trial.keyword.length %></a>
+				<a href="javascript:void(0);" class="tag" onclick="hideTooManyCategoryTags(this)" style="display:none;">hide all but 5</a>
 			<% } %>
 			</div>
 		<% } %>
-		<div class="supplement"><%= (!trial.phase || 'N/A' == trial.phase) ? '' : trial.phase %></div>
-		<a href="http://www.clinicaltrials.gov/ct2/show/<%= trial.nct %>" target="_blank"><%= trial.nct %></a>
+		
 		<div class="show_elig_toggle supplement">
 			<a href="javascript:void(0);" onclick="_toggleEligibilityCriteria(this, '<%= trial.nct %>')">Show eligibility criteria</a>
 		</div>

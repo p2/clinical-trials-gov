@@ -574,7 +574,7 @@ def trials_filter_by(run_id, filter_by):
 	if not runner.done:
 		bottle.abort(400, "Trial results are not available")
 	
-	ncts = runner.get_ncts()
+	ncts = runner.get_ncts(restrict='none')
 	sess = _get_session()
 	run_data = sess.get('runs', {}).get(run_id, {})
 	
@@ -594,21 +594,24 @@ def trials_filter_by(run_id, filter_by):
 				# filter gender
 				if f_gender:
 					if 'male' == f_gender:
-						if trial.gender == 2:
+						if trial.eligibility.gender == 2:
 							reason = "Limited to women"
 					else:
-						if trial.gender == 1:
+						if trial.eligibility.gender == 1:
 							reason = "Limited to men"
 				
 				# filter age
 				if f_age > 0:
-					if trial.min_age and trial.min_age > f_age:
-						reason = "Patient is too young (min age %d)" % trial.min_age
-					elif trial.max_age and trial.max_age < f_age:
-						reason = "Patient is too old (max age %d)" % trial.max_age
+					if trial.eligibility.min_age and trial.eligibility.min_age > f_age:
+						reason = "Patient is too young (min age %d)" % trial.eligibility.min_age
+					elif trial.eligibility.max_age and trial.eligibility.max_age < f_age:
+						reason = "Patient is too old (max age %d)" % trial.eligibility.max_age
 			
-			# REFACTOR into runner class!
-			# runner.write_trial_reason(nct, reason)
+			# TODO: REFACTOR into runner class!
+			if reason:
+				runner.write_trial_reason(nct, reason)
+		
+		runner.commit_transactions()
 	
 	# problems (only if NLP is on)
 	elif 'problems' == filter_by:
@@ -639,7 +642,7 @@ def trials_filter_by(run_id, filter_by):
 						reason = 'Matches exclusion criterium "%s" (SNOMED %s)'  % (snomed.lookup_code_meaning(match, True, True), match)
 						break
 				
-				# REFACTOR
+				# TODO: REFACTOR
 				# runner.write_trial_reason(nct, reason)
 	
 	# unknown filtering property

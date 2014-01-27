@@ -147,5 +147,7 @@ div.supplement { margin-top: 0.5em; }
 
 .small { font-size: 0.85em; }
 
-.tag { display: inline-block; margin: 0.4em 0.5em 0 0; padding: 0 0.4em; color: #505050; border: 1px solid #b9b9b9; border-radius: 2pt; cursor: pointer; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+.tag { display: inline-block; margin: 0.4em 0.5em 0 0; padding: 0 0.4em; border: 1px solid #b9b9b9; border-radius: 2pt; }
 .tag.active { color: black; background-color: #b9b9b9; }
+
+span.tag { color: #505050; }

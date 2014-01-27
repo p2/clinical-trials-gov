@@ -162,13 +162,16 @@ div.supplement {
 .tag {
 	display: inline-block;
 	margin: 0.4em 0.5em 0 0; padding: 0 0.4em;
-	color: $col-faded;
 	border: 1px solid $col-border-inactive; border-radius: $border-radius;
-	cursor: pointer; @include user-select(none);
 	
 	&.active {
 		color: black;
 		background-color: $col-border-inactive;
 	}
+}
+	
+span.tag {
+	color: $col-faded;
+//	cursor: pointer; @include user-select(none);
 }
 
