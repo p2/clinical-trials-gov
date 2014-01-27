@@ -261,7 +261,7 @@ var Trial = can.Construct({
 /**
  *  Shows or hides the trial's eligibility criteria
  */
-function _toggleEligibilityCriteria(elem) {
+function _toggleEligibilityCriteria(elem, trial_nct) {
 	var link = $(elem);
 	var trial_elem = link.closest('.trial');
 	var crit_elem = trial_elem.find('.formatted_criteria').first();
@@ -272,10 +272,35 @@ function _toggleEligibilityCriteria(elem) {
 		link.text('Show eligibility criteria');
 	}
 	
-	// show
+	// show (after loading if necessary)
 	else {
 		crit_elem.show();
 		link.text('Hide eligibility criteria');
+		
+		if (0 == crit_elem.text().length) {
+			_loadEligibilityCriteria(crit_elem, trial_nct);
+		}
 	}
+}
+
+function _loadEligibilityCriteria(into_elem, trial_nct) {
+	var crit_elem = $(into_elem);
+	crit_elem.text('Loading...');
+	
+	loadJSON(
+		'trials/' + trial_nct + '/criteria_html',
+		function(obj1, status, obj2) {
+			if ('criteria' in obj1) {
+				crit_elem.html(obj1['criteria']);
+			}
+			else {
+				console.log('Expected JSON response with a "criteria" dictionary, but got these: ', obj1, status, obj2);
+				crit_elem.text("(unknown criteria)")
+			}
+		},
+		function(obj1, status, obj2) {
+			crit_elem.html('Error getting criteria: ' + obj2 + '.<br /><a href="javascript:void();" onclick="_loadEligibilityCriteria(this.parentNode, \'' + trial_nct + '\')">Try again</a>.');
+		}
+	);
 }
 

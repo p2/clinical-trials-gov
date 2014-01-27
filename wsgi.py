@@ -423,6 +423,16 @@ def get_trials(nct_list):
 	return {'trials': trials}
 
 
+@bottle.get('/trials/<nct>/criteria_html')
+def get_trial_criteria(nct):
+	""" Returns JSON containing HTML formatted eligibility criteria for one
+	trial. """
+	trial = Trial(nct)
+	trial.load()
+	
+	return {'criteria': trial.eligibility.formatted_html}
+
+
 # ------------------------------------------------------------------------------ Trial Runs
 @bottle.get('/trial_runs')
 def find_trials():

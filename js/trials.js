@@ -328,7 +328,9 @@ function _toggleOptCheckElement(evt) {
 
 
 function _toggleKeyword(elem) {
-	alert('not implemented');
+	console.warn('keyword selection has been turned off');
+	return;
+	
 	var keyword = $(elem).text();
 	var norm = _normalizeKeyword(keyword);
 	var for_nct = $(elem).parent().data('trial-nct');
