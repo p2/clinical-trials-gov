@@ -23,12 +23,12 @@ td:last-child { padding-right: 0; }
 .back_to_select { margin: 1em 0 2em; }
 .back_to_select #back_to_patient { margin-right: 2em; }
 
-#header { padding: 0.5em 3em 1em; text-align: right; }
+header { padding: 0.5em 3em 0; text-align: right; }
 
 #container { max-width: 70em; min-height: 100%; margin: 0 auto; background-color: white; }
 @media screen and (min-width: 72em) { #container { border: 1px solid #c8c8c8; border-width: 0 1px; } }
 
-#content { padding: 0 3em 2em; }
+#content { padding: 1em 3em 2em; }
 
 #footer { padding: 2em 3em; font-size: 90%; color: #505050; text-align: center; }
 

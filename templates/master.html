@@ -6,13 +6,13 @@
 </head>
 <body>
 	<div id="container">
-		<div id="header">
+		<header>
 			{%- for link in links %}
 			<a href="{{ link.href }}">{{ link.text }}</a>
 			{%- else %}
 			&nbsp;
 			{%- endfor %}
-		</div>
+		</header>
 		<div id="content">
 			{% block content %}{% endblock %}
 		</div>

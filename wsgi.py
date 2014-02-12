@@ -25,6 +25,7 @@ if USE_SMART and not USE_SMART_05:
 	from smart_client_python.client import SMARTClient
 if USE_SMART:
 	from rdflib.graph import Graph
+	from endpoints import ENDPOINTS
 
 # App
 from ClinicalTrials.mngobject import MNGObject
@@ -74,7 +75,6 @@ def _get_smart():
 	cons_key = sess.get('consumer_key')
 	cons_sec = sess.get('consumer_secret')
 	if not cons_key or not cons_sec:
-		from endpoints import ENDPOINTS
 		server = None
 		for ep in ENDPOINTS:
 			if ep.get('url') == api_base:
@@ -136,6 +136,10 @@ def _reset_session(with_runs=False):
 		del sess['record_id']
 	if 'token' in sess:
 		del sess['token']
+	if 'consumer_key' in sess:
+		del sess['consumer_key']
+	if 'consumer_secret' in sess:
+		del sess['consumer_secret']
 	
 	# clear run data
 	if with_runs:
@@ -189,7 +193,7 @@ def index():
 	# try to connect to SMART
 	smart = _get_smart()
 	if smart is None and 'none' != api_base:
-		return "Cannot connect to SMART sandbox"
+		return "Cannot connect to SMART sandbox at %s" % api_base
 	
 	# using SMART, make sure we have a patient id
 	if smart is not None:
@@ -282,6 +286,11 @@ def authorize():
 @bottle.get('/endpoint_select')
 def endpoints():
 	""" Shows all possible endpoints, sending the user back to index when one is chosen """
+	
+	# reset session api_base
+	sess = _get_session()
+	if 'api_base' in sess:
+		del sess['api_base']
 	
 	# get the callback
 	# NOTE: this is done very cheaply, we need to make sure to end the url with either "?" or "&"
