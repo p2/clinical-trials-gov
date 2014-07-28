@@ -97,7 +97,7 @@ def _get_smart():
 	try:
 		smart = SMARTClient(os.environ.get('USE_APP_ID'), api_base, config)
 		smart.record_id = sess.get('record_id')
-	except Exception, e:
+	except Exception as e:
 		logging.warning("Failed to instantiate SMART client: %s" % e)
 		smart = None
 	
@@ -123,7 +123,7 @@ def _test_record_token():
 		# did work!
 		if 200 == int(ret.response.status):
 			return True
-	except Exception, e:
+	except Exception as e:
 		pass
 	
 	return False
@@ -213,7 +213,7 @@ def index():
 			smart.token = None
 			try:
 				sess['token'] = smart.fetch_request_token()
-			except Exception, e:
+			except Exception as e:
 				_reset_session()
 				logging.error("Failed getting request token. %s" % e)
 				return "Failed to obtain access permissions, please reload"
@@ -274,7 +274,7 @@ def authorize():
 	try:
 		sess = _get_session()
 		sess['token'] = smart.exchange_token(verifier)
-	except Exception, e:
+	except Exception as e:
 		logging.error("Token exchange failed: %s" % e)
 		return str(e)
 	
@@ -346,7 +346,7 @@ def demographics():
 			demo_rdf = demo_rdf.replace('<v:', '<vcard:')
 			demo_rdf = demo_rdf.replace('</v:', '</vcard:')
 			graph = Graph().parse(data=demo_rdf)
-		except Exception, e:
+		except Exception as e:
 			logging.error("Failed to parse demographics: %s" % e)
 			return d
 		
@@ -390,7 +390,7 @@ def problems():
 		# use session data (parse RDF, convert to json-ld-serialization, load json... :P)
 		try:
 			graph = Graph().parse(data=prob_rdf)
-		except Exception, e:
+		except Exception as e:
 			logging.error("Failed to parse problems: %s\n%s" % (e, prob_rdf))
 			return {'problems': []}
 		
@@ -536,7 +536,7 @@ def run_overview(run_id):
 	
 	try:
 		overview = runner.overview()
-	except Exception, e:
+	except Exception as e:
 		bottle.abort(400, e)
 	
 	return json.dumps(overview)
@@ -673,7 +673,7 @@ def _serve_static(file, root):
 	""" Serves a static file or a 404 """
 	try:
 		return bottle.static_file(file, root=root)
-	except Exception, e:
+	except Exception as e:
 		bottle.abort(404)
 
 @bottle.get('/static/<filename>')
@@ -707,7 +707,7 @@ def mongodb_uri():
 	if services and 'mongodb-1.8' in services:
 		try:
 			return services['mongodb-1.8'][0]['credentials']['url']
-		except Exception, e:
+		except Exception as e:
 			logging.error("Failed getting MongoDB credentials: %s" % e)
 	
 	# default
